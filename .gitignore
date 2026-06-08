@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment variables - never commit these
+.env
+.env.local
+.env.production
+
+# Build outputs
+dist/
+build/
+*.js.map
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+postgres_data/
+
+# React Native
+mobile/node_modules/
+mobile/.expo/
+mobile/android/
+mobile/ios/
+
+# VS Code
+.vscode/settings.json
