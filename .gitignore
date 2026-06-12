@@ -35,4 +35,6 @@ mobile/ios/
 # VS Code
 .vscode/settings.json
 
+database/database.json
+
 note/
