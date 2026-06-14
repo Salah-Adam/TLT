@@ -1,36 +1,48 @@
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
-import dotenv from 'dotenv';
+import Fastify from 'fastify'
+import helmet from '@fastify/helmet'
+import { config } from './config'
+import { webhookRoutes } from './routes/webhooks'
 
-dotenv.config();
+const app = Fastify({
+  logger: {
+    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+    transport: process.env.NODE_ENV !== 'production'
+      ? { target: 'pino-pretty' }   // readable logs in development
+      : undefined,                   // JSON logs in production
+  },
+})
 
-const server = Fastify({
-  logger: true
-});
+// Security headers on every response
+app.register(helmet)
 
-server.register(cors, {
-  origin: true
-});
+// Webhook routes
+// v5 compatible — explicit plugin wrapping
+app.register(async (instance) => {
+  await webhookRoutes(instance)
+})
+// app.register(webhookRoutes)
 
-// Health check
-server.get('/health', async (request, reply) => {
+// Health check — kept from Phase 1
+app.get('/health', async () => {
   return {
     status: 'ok',
     service: 'webhook-server',
-    timestamp: new Date().toISOString()
-  };
-});
-
-const start = async () => {
-  try {
-    const port = Number(process.env.PORT) || 3001;
-    const host = process.env.HOST || '0.0.0.0';
-    await server.listen({ port, host });
-    console.log(`Webhook server running on port ${port}`);
-  } catch (err) {
-    server.log.error(err);
-    process.exit(1);
+    timestamp: new Date().toISOString(),
   }
-};
+})
 
-start();
+// Start server
+const start = async (): Promise<void> => {
+  try {
+    await app.listen({
+      port: config.server.port,
+      host: config.server.host,
+    })
+    console.log(`Webhook server running on port ${config.server.port}`)
+  } catch (error) {
+    app.log.error(error)
+    process.exit(1)
+  }
+}
+
+start()
