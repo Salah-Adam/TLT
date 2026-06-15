@@ -12,6 +12,8 @@ venv/
 
 *.env
 
+backend/workers/.env
+
 # Build outputs
 dist/
 build/
