@@ -12,6 +12,10 @@ venv/
 
 *.env
 
+backend/workers/deleted_env
+backend/webhook-server/deleted_env
+
+
 backend/workers/.env
 
 # Build outputs

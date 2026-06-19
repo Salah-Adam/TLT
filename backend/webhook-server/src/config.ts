@@ -1,4 +1,6 @@
 import dotenv from 'dotenv'
+import path from "path";
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 dotenv.config()
 
@@ -16,7 +18,7 @@ function requireEnv(name: string): string {
 // imports config and reads config.database.host or config.redis.port.
 export const config = {
   server: {
-    port: parseInt(process.env.PORT || '3001', 10),
+    port: parseInt(process.env.WEBHOOK_PORT || '3001', 10),
     host: '0.0.0.0',
   },
   database: {
