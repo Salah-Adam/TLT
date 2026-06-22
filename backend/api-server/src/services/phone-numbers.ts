@@ -138,49 +138,127 @@ export async function updatePhoneNumber(input: UpdatePhoneNumberInput): Promise<
 
 // ── Delete (last number → delete account) ────────────────────────
 
+// export async function deletePhoneNumber(
+//   userId: string,
+//   phoneNumberId: string
+// ): Promise<{ accountDeleted: boolean }> {
+//   const result = await pool.query(
+//     `SELECT id, is_primary FROM phone_numbers WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`,
+//     [phoneNumberId, userId]
+//   );
+//   if (!result.rowCount || result.rowCount === 0) throw new AppError("PHONE_NOT_FOUND", 404);
+//   const number = result.rows[0];
+
+//   const countResult = await pool.query(
+//     `SELECT COUNT(*) FROM phone_numbers WHERE user_id = $1 AND deleted_at IS NULL`,
+//     [userId]
+//   );
+//   const totalNumbers = parseInt(countResult.rows[0].count);
+
+//   const client = await pool.connect();
+//   try {
+//     await client.query("BEGIN");
+
+//     await client.query(
+//       `UPDATE phone_numbers SET deleted_at=NOW(), is_active=FALSE, updated_at=NOW() WHERE id=$1`,
+//       [phoneNumberId]
+//     );
+
+//     if (totalNumbers === 1) {
+//       await client.query(`UPDATE users SET deleted_at=NOW(), is_active=FALSE, updated_at=NOW() WHERE id=$1`, [userId]);
+//       await client.query(`UPDATE refresh_tokens SET is_revoked=TRUE WHERE user_id=$1`, [userId]);
+//       await client.query("COMMIT");
+//       return { accountDeleted: true };
+//     }
+
+//     if (number.is_primary) {
+//       await client.query(
+//         `UPDATE phone_numbers SET is_primary=TRUE, updated_at=NOW()
+//          WHERE id = (
+//            SELECT id FROM phone_numbers
+//            WHERE user_id=$1 AND id<>$2 AND deleted_at IS NULL
+//            ORDER BY created_at ASC LIMIT 1
+//          )`,
+//         [userId, phoneNumberId]
+//       );
+//     }
+
+//     await client.query("COMMIT");
+//     return { accountDeleted: false };
+//   } catch (e) {
+//     await client.query("ROLLBACK");
+//     throw e;
+//   } finally {
+//     client.release();
+//   }
+// }
+
 export async function deletePhoneNumber(
   userId: string,
   phoneNumberId: string
 ): Promise<{ accountDeleted: boolean }> {
   const result = await pool.query(
-    `SELECT id, is_primary FROM phone_numbers WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`,
+    `SELECT id, is_primary, number FROM phone_numbers
+     WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`,
     [phoneNumberId, userId]
   );
   if (!result.rowCount || result.rowCount === 0) throw new AppError("PHONE_NOT_FOUND", 404);
-  const number = result.rows[0];
+  const target = result.rows[0];
 
+  // Count the user's ACTIVE numbers — exclude historical/reclaimed-away inactive rows.
   const countResult = await pool.query(
-    `SELECT COUNT(*) FROM phone_numbers WHERE user_id = $1 AND deleted_at IS NULL`,
+    `SELECT COUNT(*) FROM phone_numbers
+     WHERE user_id = $1 AND is_active = TRUE AND deleted_at IS NULL`,
     [userId]
   );
-  const totalNumbers = parseInt(countResult.rows[0].count);
+  const activeNumbers = parseInt(countResult.rows[0].count);
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
+    // Soft-delete + fully retire the row: inactive, NOT primary, token detached.
     await client.query(
-      `UPDATE phone_numbers SET deleted_at=NOW(), is_active=FALSE, updated_at=NOW() WHERE id=$1`,
+      `UPDATE phone_numbers
+       SET deleted_at = NOW(), is_active = FALSE, is_primary = FALSE,
+           webhook_token = NULL, updated_at = NOW()
+       WHERE id = $1`,
       [phoneNumberId]
     );
 
-    if (totalNumbers === 1) {
-      await client.query(`UPDATE users SET deleted_at=NOW(), is_active=FALSE, updated_at=NOW() WHERE id=$1`, [userId]);
-      await client.query(`UPDATE refresh_tokens SET is_revoked=TRUE WHERE user_id=$1`, [userId]);
+    // Last active number → delete the account too.
+    if (activeNumbers <= 1) {
+      await client.query(`UPDATE users SET deleted_at = NOW(), is_active = FALSE, updated_at = NOW() WHERE id = $1`, [userId]);
+      await client.query(`UPDATE refresh_tokens SET is_revoked = TRUE WHERE user_id = $1`, [userId]);
       await client.query("COMMIT");
       return { accountDeleted: true };
     }
 
-    if (number.is_primary) {
+    // Promote the oldest remaining ACTIVE number to primary (only if we just removed the primary).
+    if (target.is_primary) {
       await client.query(
-        `UPDATE phone_numbers SET is_primary=TRUE, updated_at=NOW()
+        `UPDATE phone_numbers SET is_primary = TRUE, updated_at = NOW()
          WHERE id = (
            SELECT id FROM phone_numbers
-           WHERE user_id=$1 AND id<>$2 AND deleted_at IS NULL
+           WHERE user_id = $1 AND is_active = TRUE AND deleted_at IS NULL
            ORDER BY created_at ASC LIMIT 1
          )`,
-        [userId, phoneNumberId]
+        [userId]
       );
+    }
+
+    // Keep users.phone_number in sync if the deleted number was the identity number.
+    const u = await client.query(`SELECT phone_number FROM users WHERE id = $1`, [userId]);
+    if (u.rows[0]?.phone_number === target.number) {
+      const repl = await client.query(
+        `SELECT number FROM phone_numbers
+         WHERE user_id = $1 AND is_active = TRUE AND deleted_at IS NULL
+         ORDER BY is_primary DESC, created_at ASC LIMIT 1`,
+        [userId]
+      );
+      if (repl.rowCount && repl.rowCount > 0) {
+        await client.query(`UPDATE users SET phone_number = $1, updated_at = NOW() WHERE id = $2`, [repl.rows[0].number, userId]);
+      }
     }
 
     await client.query("COMMIT");
@@ -192,7 +270,6 @@ export async function deletePhoneNumber(
     client.release();
   }
 }
-
 
 
 

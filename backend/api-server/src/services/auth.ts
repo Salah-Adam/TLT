@@ -71,11 +71,18 @@ async function transferNumberToUser(
   const previousOwnerId: string = old.user_id;
   const carriedToken: string | null = old.webhook_token;
 
+  // await client.query(
+  //   `UPDATE phone_numbers
+  //    SET is_active = FALSE, is_primary = FALSE, webhook_token = NULL, updated_at = NOW()
+  //    WHERE id = $1`,
+  //   [old.id]
+  // );
   await client.query(
     `UPDATE phone_numbers
-     SET is_active = FALSE, is_primary = FALSE, webhook_token = NULL, updated_at = NOW()
+     SET is_active = FALSE, is_primary = FALSE, webhook_token = NULL,
+         reclaimed_by = $2, updated_at = NOW()
      WHERE id = $1`,
-    [old.id]
+    [old.id, newUserId]
   );
 
   if (old.is_primary) {
@@ -89,6 +96,28 @@ async function transferNumberToUser(
       [previousOwnerId]
     );
   }
+
+  // Keep the previous owner's identity number in sync. If the reclaimed number
+  // was their stored login identity, repoint it to a number they still own
+  // (their current primary). If none remain, leave it (column is NOT NULL) —
+  // they become dormant and simply can't log in by phone until they re-add one.
+  const prevOwner = await client.query(`SELECT phone_number FROM users WHERE id = $1`, [previousOwnerId]);
+  if (prevOwner.rows[0]?.phone_number === number) {
+    const repl = await client.query(
+      `SELECT number FROM phone_numbers
+       WHERE user_id = $1 AND is_active = TRUE AND deleted_at IS NULL
+       ORDER BY is_primary DESC, created_at ASC
+       LIMIT 1`,
+      [previousOwnerId]
+    );
+    if (repl.rowCount && repl.rowCount > 0) {
+      await client.query(
+        `UPDATE users SET phone_number = $1, updated_at = NOW() WHERE id = $2`,
+        [repl.rows[0].number, previousOwnerId]
+      );
+    }
+  }
+
 
   const inserted = await client.query(
     `INSERT INTO phone_numbers
