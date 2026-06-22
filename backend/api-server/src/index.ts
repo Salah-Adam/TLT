@@ -10,6 +10,8 @@ import transactionRoutes from "./routes/transactions";
 import { AppError } from "./lib/errors";
 import { resolveLang } from "./lib/http";
 import { t } from "./lib/messages";
+import analyticsRoutes from "./routes/analytics";
+
 
 const app = Fastify({
   logger: { level: "debug", transport: { target: "pino-pretty" } },
@@ -69,6 +71,7 @@ app.register(authRoutes);
 app.register(phoneNumberRoutes);
 // app.register(phoneNumberRoutes);
 app.register(transactionRoutes);   // ← add this line
+app.register(analyticsRoutes);   // ← add this line
 
 const start = async (): Promise<void> => {
   try {

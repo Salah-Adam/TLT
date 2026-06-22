@@ -62,6 +62,8 @@ export const MESSAGES: Record<string, Entry> = {
   TRANSACTION_DELETED:     { en: "Transaction deleted.", so: "Dhaqdhaqaaqa waa la tirtiray." },
   TRANSACTION_RESTORED:    { en: "Transaction restored.", so: "Dhaqdhaqaaqa waa la soo celiyay." },
   TRANSACTION_UPDATED:     { en: "Transaction updated.", so: "Dhaqdhaqaaqa waa la cusboonaysiiyay." },
+
+  UNCATEGORIZED: { en: "Uncategorized", so: "Aan la kala saarin" },
 };
 
 /** Pick one language for a code, interpolating {name}-style params. */
