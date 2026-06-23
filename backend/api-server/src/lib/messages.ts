@@ -64,6 +64,26 @@ export const MESSAGES: Record<string, Entry> = {
   TRANSACTION_UPDATED:     { en: "Transaction updated.", so: "Dhaqdhaqaaqa waa la cusboonaysiiyay." },
 
   UNCATEGORIZED: { en: "Uncategorized", so: "Aan la kala saarin" },
+
+
+    // ── Report insights ──
+  INSIGHT_NO_DATA:       { en: "No transactions this month yet.", so: "Weli ma jiraan wax-ku-dhaqaaq bishaan." },
+  INSIGHT_NET_SAVED:     { en: "You came out ahead by {amount} {currency} this month.", so: "Bishaan waxaad faa'iido u heshay {amount} {currency}." },
+  INSIGHT_NET_DEFICIT:   { en: "You spent {amount} {currency} more than you received this month.", so: "Bishaan waxaad bixisay {amount} {currency} oo ka badan intaad heshay." },
+  INSIGHT_TOP_CATEGORY:  { en: "Most of your spending went to {category} ({amount} {currency}).", so: "Intooda badan kharashkaagu wuxuu galay {category} ({amount} {currency})." },
+  INSIGHT_SPENDING_UP:   { en: "You spent {pct}% more than last month.", so: "Waxaad bixisay {pct}% ka badan bishii hore." },
+  INSIGHT_SPENDING_DOWN: { en: "You spent {pct}% less than last month.", so: "Waxaad bixisay {pct}% ka yar bishii hore." },
+
+  CONTACT_UNKNOWN:       { en: "a contact", so: "qof" },
+  INSIGHT_TOP_SPEND:     { en: "You spent {amount} {currency} on {category} ({pct}%).", so: "Waxaad {category} ku bixisay {amount} {currency} ({pct}%)." },
+  INSIGHT_TOP_SENDER:    { en: "{name} sent you {amount} {currency} ({count}x).", so: "{name} wuxuu kuu soo diray {amount} {currency} ({count} jeer)." },
+  INSIGHT_TOP_RECIPIENT: { en: "You sent {name} {amount} {currency} ({count}x).", so: "Waxaad u dirtay {name} {amount} {currency} ({count} jeer)." },
+  INSIGHT_LARGEST_OUT:   { en: "Biggest payment: {amount} {currency} to {name}.", so: "Lacagta ugu badan ee aad bixisay: {amount} {currency} oo aad u dirtay {name}." },
+  INSIGHT_LARGEST_IN:    { en: "Biggest receipt: {amount} {currency} from {name}.", so: "Lacagta ugu badan ee aad heshay: {amount} {currency} oo ka timid {name}." },
+  INSIGHT_BUSIEST_DAY:   { en: "Your busiest day was {day} with {count} transactions.", so: "Maalintaada ugu firfircoonayd waxay ahayd {day} oo leh {count} dhaqdhaqaaq." },
+  INSIGHT_TREND_UP:      { en: "Your spending has been trending up lately.", so: "Kharashkaagu dhawaanahan wuu kordhayaa." },
+  INSIGHT_TREND_DOWN:    { en: "Your spending has been trending down lately.", so: "Kharashkaagu dhawaanahan wuu yaraanayaa." },
+  
 };
 
 /** Pick one language for a code, interpolating {name}-style params. */

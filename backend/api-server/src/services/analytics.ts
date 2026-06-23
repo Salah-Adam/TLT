@@ -6,7 +6,8 @@ import { Lang, t } from "../lib/messages";
  * Delete hides from the feed list, not from reality. DO NOT add an is_deleted filter.
  */
 
-interface Scope {
+// interface Scope {
+export interface Scope {
   phoneNumberIds?: string[];
   provider?: string;
   type?: string;
@@ -14,7 +15,8 @@ interface Scope {
 }
 
 /** Build the optional scope AND-clauses, appending params. */
-function scopeFilters(s: Scope, params: any[]): string {
+// function scopeFilters(s: Scope, params: any[]): string {
+export function scopeFilters(s: Scope, params: any[]): string {
   const parts: string[] = [];
   if (s.phoneNumberIds?.length) { params.push(s.phoneNumberIds); parts.push(`AND t.phone_number_id = ANY($${params.length}::uuid[])`); }
   if (s.provider)   { params.push(s.provider);   parts.push(`AND t.provider = $${params.length}`); }
