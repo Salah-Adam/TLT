@@ -83,7 +83,22 @@ export const MESSAGES: Record<string, Entry> = {
   INSIGHT_BUSIEST_DAY:   { en: "Your busiest day was {day} with {count} transactions.", so: "Maalintaada ugu firfircoonayd waxay ahayd {day} oo leh {count} dhaqdhaqaaq." },
   INSIGHT_TREND_UP:      { en: "Your spending has been trending up lately.", so: "Kharashkaagu dhawaanahan wuu kordhayaa." },
   INSIGHT_TREND_DOWN:    { en: "Your spending has been trending down lately.", so: "Kharashkaagu dhawaanahan wuu yaraanayaa." },
-  
+
+
+  // ── Tracked contacts ──
+  INVALID_TRACKED_NUMBER: { en: "Enter the number in full international format (e.g. 2526xxxxxxx).", so: "Geli lambarka qaab caalami buuxa (tusaale 2526xxxxxxx)." },
+  NUMBER_ALREADY_TRACKED: { en: "This number is already tracked under a contact.", so: "Lambarkan horey ayaa loogu xiray xiriiriye." },
+  CONTACT_NOT_FOUND:      { en: "Contact not found.", so: "Xiriiriyaha lama helin." },
+  TRACKED_NUMBER_NOT_FOUND:{ en: "Tracked number not found.", so: "Lambarka la raacayo lama helin." },
+  CONTACT_DELETED:        { en: "Contact removed.", so: "Xiriiriyaha waa la saaray." },
+  NUMBER_ADDED:           { en: "Number added.", so: "Lambarka waa lagu daray." },
+  NUMBER_REMOVED:         { en: "Number removed.", so: "Lambarka waa la saaray." },
+
+  ALERT_NOT_FOUND:        { en: "Spending alert not found.", so: "Digniinta kharashka lama helin." },
+  ALERT_ALREADY_EXISTS:   { en: "You already have an alert for this category and period.", so: "Horey ayaad u leedahay digniin qaybtan iyo muddadan." },
+  ALERT_DELETED:          { en: "Alert removed.", so: "Digniinta waa la saaray." },
+  INVALID_LIMIT:          { en: "The limit must be greater than zero.", so: "Xadku waa inuu ka weynaado eber." },
+
 };
 
 /** Pick one language for a code, interpolating {name}-style params. */

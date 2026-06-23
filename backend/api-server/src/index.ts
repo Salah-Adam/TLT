@@ -12,6 +12,8 @@ import { resolveLang } from "./lib/http";
 import { t } from "./lib/messages";
 import analyticsRoutes from "./routes/analytics";
 import reportRoutes from "./routes/reports";
+import trackedContactRoutes from "./routes/tracked-contacts";
+import spendingAlertRoutes from "./routes/spending-alerts";
 
 const app = Fastify({
   logger: { level: "debug", transport: { target: "pino-pretty" } },
@@ -73,6 +75,8 @@ app.register(phoneNumberRoutes);
 app.register(transactionRoutes);   // ← add this line
 app.register(analyticsRoutes);   // ← add this line
 app.register(reportRoutes);
+app.register(trackedContactRoutes);   // ← add this line
+app.register(spendingAlertRoutes);   // ← add this line
 
 const start = async (): Promise<void> => {
   try {
