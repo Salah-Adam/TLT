@@ -104,6 +104,12 @@ export const MESSAGES: Record<string, Entry> = {
   NOTIFICATIONS_MARKED_READ: { en: "All notifications marked as read.", so: "Dhammaan ogeysiisyada waa la akhriyay." },
   NOTIFICATION_DELETED:      { en: "Notification removed.", so: "Ogeysiiska waa la saaray." },
 
+  // ── Settings / users ──
+  EMAIL_TAKEN:            { en: "This email is already in use.", so: "Iimaylkan horey ayaa loo isticmaalay." },
+  CURRENT_PASSWORD_WRONG: { en: "Your current password is incorrect.", so: "Furahaaga hadda waa khalad." },
+  PASSWORD_UNCHANGED:     { en: "New password must be different from the current one.", so: "Furaha cusub waa inuu ka duwanaadaa kan hadda." },
+  PASSWORD_CHANGED:       { en: "Password changed successfully.", so: "Furaha si guul leh ayaa loo beddelay." },
+  DEVICE_REGISTERED:      { en: "Device registered for notifications.", so: "Aaladda waa loo diiwaan geliyay ogeysiisyada." },
 };
 
 /** Pick one language for a code, interpolating {name}-style params. */
