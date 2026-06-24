@@ -99,6 +99,11 @@ export const MESSAGES: Record<string, Entry> = {
   ALERT_DELETED:          { en: "Alert removed.", so: "Digniinta waa la saaray." },
   INVALID_LIMIT:          { en: "The limit must be greater than zero.", so: "Xadku waa inuu ka weynaado eber." },
 
+  // ── Notifications ──
+  NOTIFICATION_NOT_FOUND:    { en: "Notification not found.", so: "Ogeysiiska lama helin." },
+  NOTIFICATIONS_MARKED_READ: { en: "All notifications marked as read.", so: "Dhammaan ogeysiisyada waa la akhriyay." },
+  NOTIFICATION_DELETED:      { en: "Notification removed.", so: "Ogeysiiska waa la saaray." },
+
 };
 
 /** Pick one language for a code, interpolating {name}-style params. */
