@@ -16,6 +16,7 @@ import trackedContactRoutes from "./routes/tracked-contacts";
 import spendingAlertRoutes from "./routes/spending-alerts";
 import notificationRoutes from "./routes/notifications";
 import userRoutes from "./routes/users";
+import categoryRoutes from "./routes/categories";
 
 const app = Fastify({
   logger: { level: "debug", transport: { target: "pino-pretty" } },
@@ -81,6 +82,7 @@ app.register(trackedContactRoutes);   // ← add this line
 app.register(spendingAlertRoutes);   // ← add this line
 app.register(notificationRoutes);
 app.register(userRoutes);
+app.register(categoryRoutes);
 
 const start = async (): Promise<void> => {
   try {
