@@ -11,7 +11,7 @@ async function authRoutes(app: FastifyInstance): Promise<void> {
       type: "object", required: ["fullName", "phoneNumber", "password"],
       properties: {
         fullName:    { type: "string", minLength: 2, maxLength: 100 },
-        phoneNumber: { type: "string", minLength: 6, maxLength: 20 },
+        phoneNumber: { type: "string", minLength: 6, maxLength: 12 },
         password:    { type: "string", minLength: 4 },
         language:    { type: "string", enum: ["en", "so"] },
       },
@@ -25,7 +25,7 @@ async function authRoutes(app: FastifyInstance): Promise<void> {
     schema: { body: {
       type: "object", required: ["phoneNumber", "otp"],
       properties: {
-        phoneNumber: { type: "string", minLength: 6, maxLength: 20 },
+        phoneNumber: { type: "string", minLength: 6, maxLength: 12 },
         otp:         { type: "string", minLength: 6, maxLength: 6 },
         deviceInfo:  { type: "string" },
       },
@@ -75,7 +75,7 @@ async function authRoutes(app: FastifyInstance): Promise<void> {
     schema: { body: {
       type: "object", required: ["phoneNumber", "otp", "newPassword"],
       properties: {
-        phoneNumber: { type: "string", minLength: 6, maxLength: 20 },
+        phoneNumber: { type: "string", minLength: 6, maxLength: 12 },
         otp:         { type: "string", minLength: 6, maxLength: 6 },
         newPassword: { type: "string", minLength: 4 },
         deviceInfo:  { type: "string" },
@@ -92,7 +92,7 @@ async function authRoutes(app: FastifyInstance): Promise<void> {
       type: "object", required: ["fullName", "phoneNumber", "password"],
       properties: {
         fullName:    { type: "string", minLength: 2, maxLength: 100 },
-        phoneNumber: { type: "string", minLength: 6, maxLength: 20 },
+        phoneNumber: { type: "string", minLength: 6, maxLength: 12 },
         password:    { type: "string", minLength: 4 },
         language:    { type: "string", enum: ["en", "so"] },
       },
@@ -106,7 +106,7 @@ async function authRoutes(app: FastifyInstance): Promise<void> {
     schema: { body: {
       type: "object", required: ["phoneNumber", "otp"],
       properties: {
-        phoneNumber: { type: "string", minLength: 6, maxLength: 20 },
+        phoneNumber: { type: "string", minLength: 6, maxLength: 12 },
         otp:         { type: "string", minLength: 6, maxLength: 6 },
         deviceInfo:  { type: "string" },
       },

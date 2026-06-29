@@ -1,7 +1,5 @@
 // SafeAreaProvider handles the notch/nav-bar insets; NavigationContainer is the root of all navigation; it renders your tab navigator.
 
-// : on launch it loads any saved tokens from secure storage before rendering (showing a brief emerald spinner). 
-// In Step 2 we'll branch here: accessToken ? <Tabs/> : <AuthStack/>.
 
 import "./src/i18n";
 import { useEffect } from "react";
@@ -9,17 +7,21 @@ import { ActivityIndicator, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import TabNavigator from "./src/navigation/TabNavigator";
+import RootNavigator from "./src/navigation/RootNavigator";
+import { OfflineBanner } from "./src/components/OfflineBanner";
 import { useSession } from "./src/store/useSession";
+import { useNetwork } from "./src/store/useNetwork";
 import { colors } from "./src/theme";
 
 export default function App() {
   const hydrated = useSession((s) => s.hydrated);
   const hydrate = useSession((s) => s.hydrate);
 
+  useEffect(() => { hydrate(); }, [hydrate]);
   useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+    const unsub = useNetwork.getState().init();
+    return unsub;
+  }, []);
 
   if (!hydrated) {
     return (
@@ -28,12 +30,14 @@ export default function App() {
       </View>
     );
   }
-
   return (
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar style="dark" />
-        <TabNavigator />
+        <View style={{ flex: 1 }}>
+          <OfflineBanner />
+          <RootNavigator />
+        </View>
       </NavigationContainer>
     </SafeAreaProvider>
   );
@@ -42,18 +46,34 @@ export default function App() {
 
 
 // import "./src/i18n";
+// import { useEffect } from "react";
+// import { ActivityIndicator, View } from "react-native";
 // import { NavigationContainer } from "@react-navigation/native";
 // import { SafeAreaProvider } from "react-native-safe-area-context";
 // import { StatusBar } from "expo-status-bar";
-// import TabNavigator from "./src/navigation/TabNavigator";
+// import RootNavigator from "./src/navigation/RootNavigator";
+// import { useSession } from "./src/store/useSession";
+// import { colors } from "./src/theme";
 
 // export default function App() {
+//   const hydrated = useSession((s) => s.hydrated);
+//   const hydrate = useSession((s) => s.hydrate);
+//   useEffect(() => { hydrate(); }, [hydrate]);
+
+//   if (!hydrated) {
+//     return (
+//       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
+//         <ActivityIndicator size="large" color={colors.primary} />
+//       </View>
+//     );
+//   }
 //   return (
 //     <SafeAreaProvider>
 //       <NavigationContainer>
 //         <StatusBar style="dark" />
-//         <TabNavigator />
+//         <RootNavigator />
 //       </NavigationContainer>
 //     </SafeAreaProvider>
 //   );
 // }
+

@@ -4,6 +4,8 @@
 
 import { create } from "zustand";
 import { tokenStore } from "../api/tokens";
+import { wipeDb } from "../api/../db"; // i.e. "../db"
+
 
 export type User = { id: string; full_name: string; language: "en" | "so" } | null;
 
@@ -39,6 +41,11 @@ export const useSession = create<SessionState>((set) => ({
   setUser: (user) => set({ user }),
   signOut: async () => {
     await tokenStore.clear();
+    try { await wipeDb(); } catch {}
     set({ accessToken: null, refreshToken: null, user: null });
   },
+  // signOut: async () => {
+  //   await tokenStore.clear();
+  //   set({ accessToken: null, refreshToken: null, user: null });
+  // },
 }));

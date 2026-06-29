@@ -26,7 +26,9 @@
     "plugins": [
       "expo-secure-store",
       "expo-localization",
-      "expo-dev-client"
+      "expo-dev-client",
+      ["expo-sqlite", { "useSQLCipher": true }]
+      // "expo-sqlite"
     ],
     "extra": {
       "eas": {

@@ -23,8 +23,8 @@ export const MESSAGES: Record<string, Entry> = {
 
   // ── Phone / provider ──
   PHONE_PREFIX_UNRECOGNISED: { en: "Phone number prefix not recognised. Only Hormuud (25261, 25277) and Somtel (25262) are supported.", so: "Horgalaha lambarka lama aqoonsan. Waxaa kaliya la taageeraa Hormuud (25261, 25277) iyo Somtel (25262)." },
-  PHONE_ALREADY_REGISTERED:  { en: "This number is already registered. If it's yours, use reclaim.", so: "Lambarkan horey ayaa loo diiwaan geliyay. Haddii uu kuu yahay, isticmaal dib-u-qaadasho." },
-  NUMBER_OWNED_BY_OTHER:     { en: "This number is registered to another account. Use reclaim if it's yours.", so: "Lambarkan waxaa leh akoon kale. Isticmaal dib-u-qaadasho haddii uu kuu yahay." },
+  PHONE_ALREADY_REGISTERED:  { en: "This number is already registered. If it's yours, Login or reclaim.", so: "Lambarkan horey ayaa loo diiwaan geliyay. Haddii uu yahay Lambarkaaga, isticmaal Login ama dib-u-qaadasho." },
+  NUMBER_OWNED_BY_OTHER:     { en: "This number is registered to another account. If it`s users, Login or reclaim.", so: "Lambarkan waxaa leh akoon kale. Hadii uu yahay Lambarkaaga, samee Login ama dib-u-qaadasho" },
   ALREADY_ADDED_NUMBER:      { en: "You have already added this number.", so: "Horey ayaad ugu dartay lambarkan." },
   ALREADY_OWN_NUMBER:        { en: "You already own this number.", so: "Horey ayaad u leedahay lambarkan." },
   NUMBER_NOT_ACTIVE:         { en: "This number is not active on any account.", so: "Lambarkan kuma firfircoona akoon kasta." },
