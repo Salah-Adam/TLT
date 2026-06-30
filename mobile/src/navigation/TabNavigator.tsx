@@ -6,10 +6,16 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { colors } from "../theme";
-import HomeScreen from "../screens/HomeScreen";
+// import HomeScreen from "../screens/HomeScreen";
 import TransactionsScreen from "../screens/TransactionsScreen";
+// import AnalyticsScreen from "../screens/AnalyticsScreen";
+// import NotificationsScreen from "../screens/NotificationsScreen";
+
+import HomeScreen from "../screens/HomeScreen";
+import TransactionsStack from "./TransactionsStack";
 import AnalyticsScreen from "../screens/AnalyticsScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
+
 
 const Tab = createBottomTabNavigator();
 
@@ -34,11 +40,23 @@ export default function TabNavigator() {
         ),
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ title: t("tabs.home") }} />
-      <Tab.Screen name="Transactions" component={TransactionsScreen} options={{ title: t("tabs.transactions") }} />
+      {/* <Tab.Screen name="Home" component={HomeScreen} options={{ title: t("tabs.home") }} /> */}
+      {/* <Tab.Screen name="Home" component={HomeScreen} options={{ title: t("tabs.home"), headerShown: false }} /> */}
+      {/* <Tab.Screen name="Transactions" component={TransactionsScreen} options={{ title: t("tabs.transactions") }} />
+      <Tab.Screen name="Analytics" component={AnalyticsScreen} options={{ title: t("tabs.analytics") }} />
+      <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ title: t("tabs.notifications") }} /> */}
+
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: t("tabs.home"), headerShown: false }} />
+      <Tab.Screen name="Transactions" component={TransactionsStack} options={{ title: t("tabs.transactions"), headerShown: false }} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} options={{ title: t("tabs.analytics") }} />
       <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ title: t("tabs.notifications") }} />
+
+
+
     </Tab.Navigator>
+
+
+
   );
 }
 

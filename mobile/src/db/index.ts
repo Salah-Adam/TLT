@@ -7,15 +7,59 @@ import * as Crypto from "expo-crypto";
 const KEY_NAME = "tlt_db_key";
 let dbInstance: SQLite.SQLiteDatabase | null = null;
 
+
+// const SCHEMA = `
+
+//   CREATE TABLE IF NOT EXISTS categories (
+//     id TEXT PRIMARY KEY, name TEXT NOT NULL, icon TEXT, color TEXT, is_system INTEGER
+//   );
+
+//   CREATE TABLE IF NOT EXISTS kv_cache (
+//     key TEXT PRIMARY KEY, value TEXT NOT NULL, fetched_at TEXT NOT NULL
+//   );
+//   CREATE TABLE IF NOT EXISTS meta (
+//     key TEXT PRIMARY KEY, value TEXT
+//   );
+// `;
+
 const SCHEMA = `
+
   CREATE TABLE IF NOT EXISTS categories (
     id TEXT PRIMARY KEY, name TEXT NOT NULL, icon TEXT, color TEXT, is_system INTEGER
   );
+
   CREATE TABLE IF NOT EXISTS kv_cache (
     key TEXT PRIMARY KEY, value TEXT NOT NULL, fetched_at TEXT NOT NULL
   );
   CREATE TABLE IF NOT EXISTS meta (
     key TEXT PRIMARY KEY, value TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS transactions (
+    id TEXT PRIMARY KEY,
+    phone_number_id TEXT,
+    provider TEXT,
+    amount REAL,
+    currency TEXT,
+    direction TEXT,
+    type TEXT,
+    balance_after REAL,
+    service_charge REAL,
+    counterparty_name TEXT,
+    counterparty_number TEXT,
+    counterparty_available INTEGER,
+    category_id TEXT,
+    category_name TEXT,
+    note TEXT,
+    provider_reference TEXT,
+    is_auto_categorized INTEGER,
+    transacted_at TEXT,
+    transacted_date TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_tx_time ON transactions (transacted_at DESC, id DESC);
+
+  CREATE TABLE IF NOT EXISTS phone_numbers (
+    id TEXT PRIMARY KEY, number TEXT, provider TEXT, provider_name TEXT, display_name TEXT, is_primary INTEGER
   );
 `;
 
@@ -34,14 +78,36 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
   const key = await getKey();
   const db = await SQLite.openDatabaseAsync("tlt.db");
   await db.execAsync(`PRAGMA key = '${key}'`);
+
+  const ver = await db.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
+  const v = ver?.user_version ?? 0;
+  if (v < 3) await db.execAsync("DROP TABLE IF EXISTS categories;");
+  if (v < 4) await db.execAsync("DROP TABLE IF EXISTS transactions;");
+  if (v < 4) await db.execAsync("PRAGMA user_version = 4;");
+  if (v < 4) await db.execAsync("DROP TABLE IF EXISTS phone_numbers;");
+  
+
+  // const ver = await db.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
+  // if ((ver?.user_version ?? 0) < 3) {
+  //   await db.execAsync("DROP TABLE IF EXISTS categories;");
+  //   await db.execAsync("PRAGMA user_version = 3;");
+  // }
+
+
   await db.execAsync(SCHEMA);
   dbInstance = db;
   return db;
 }
 
+// export async function wipeDb(): Promise<void> {
+//   const db = await getDb();
+//   await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta;");
+// }
 export async function wipeDb(): Promise<void> {
   const db = await getDb();
-  await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta;");
+  await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta; DELETE FROM transactions;");
+
+  await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta; DELETE FROM transactions; DELETE FROM phone_numbers;");
 }
 
 export function closeDb(): void {

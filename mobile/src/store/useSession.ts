@@ -26,10 +26,19 @@ export const useSession = create<SessionState>((set) => ({
   refreshToken: null,
   user: null,
   hydrated: false,
+
+  // hydrate: async () => {
+  //   const { access, refresh } = await tokenStore.load();
+  //   set({ accessToken: access, refreshToken: refresh, hydrated: true });
+  // },
+
   hydrate: async () => {
     const { access, refresh } = await tokenStore.load();
-    set({ accessToken: access, refreshToken: refresh, hydrated: true });
+    const user = await tokenStore.loadUser<User>();
+    set({ accessToken: access, refreshToken: refresh, user, hydrated: true });
   },
+  setUser: (user) => { tokenStore.saveUser(user); set({ user }); },
+
   signIn: async (tokens, user = null) => {
     await tokenStore.save(tokens.accessToken, tokens.refreshToken);
     set({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, user });
@@ -38,7 +47,8 @@ export const useSession = create<SessionState>((set) => ({
     await tokenStore.saveAccess(access);
     set({ accessToken: access });
   },
-  setUser: (user) => set({ user }),
+
+  // setUser: (user) => set({ user }),
   signOut: async () => {
     await tokenStore.clear();
     try { await wipeDb(); } catch {}

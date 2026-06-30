@@ -23,7 +23,7 @@ export class ApiError extends Error {
 
 type Options = { method?: "GET" | "POST" | "PATCH" | "DELETE"; body?: unknown; auth?: boolean };
 
-async function request<T>(path: string, opts: Options = {}, isRetry = false): Promise<T> {
+async function requestEnvelope<T>(path: string, opts: Options = {}, isRetry = false): Promise<{ data: T; meta: any }> {
   const { method = "GET", body, auth = true } = opts;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
 
@@ -38,7 +38,7 @@ async function request<T>(path: string, opts: Options = {}, isRetry = false): Pr
 
   if (res.status === 401 && auth && !isRetry) {
     const ok = await tryRefresh();
-    if (ok) return request<T>(path, opts, true);
+    if (ok) return requestEnvelope<T>(path, opts, true);
   }
 
   const json = await res.json().catch(() => null);
@@ -46,8 +46,38 @@ async function request<T>(path: string, opts: Options = {}, isRetry = false): Pr
     const err = json?.error ?? {};
     throw new ApiError(res.status, err.code ?? "ERROR", err.message ?? "Request failed", err.field);
   }
-  return json.data as T;
+  return { data: json.data as T, meta: json.meta ?? null };
 }
+
+async function request<T>(path: string, opts: Options = {}): Promise<T> {
+  return (await requestEnvelope<T>(path, opts)).data;
+}
+
+// async function request<T>(path: string, opts: Options = {}, isRetry = false): Promise<T> {
+//   const { method = "GET", body, auth = true } = opts;
+//   const headers: Record<string, string> = { "Content-Type": "application/json" };
+
+//   const { accessToken } = useSession.getState();
+//   if (auth && accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
+//   const res = await fetch(`${BASE_URL}${path}`, {
+//     method,
+//     headers,
+//     body: body !== undefined ? JSON.stringify(body) : undefined,
+//   });
+
+//   if (res.status === 401 && auth && !isRetry) {
+//     const ok = await tryRefresh();
+//     if (ok) return request<T>(path, opts, true);
+//   }
+
+//   const json = await res.json().catch(() => null);
+//   if (!res.ok || !json?.success) {
+//     const err = json?.error ?? {};
+//     throw new ApiError(res.status, err.code ?? "ERROR", err.message ?? "Request failed", err.field);
+//   }
+//   return json.data as T;
+// }
 
 async function tryRefresh(): Promise<boolean> {
   const { refreshToken, setAccessToken, signOut } = useSession.getState();
@@ -70,13 +100,20 @@ async function tryRefresh(): Promise<boolean> {
   return false;
 }
 
+// export const api = {
+//   get: <T>(path: string, auth = true) => request<T>(path, { method: "GET", auth }),
+//   post: <T>(path: string, body?: unknown, auth = true) => request<T>(path, { method: "POST", body, auth }),
+//   patch: <T>(path: string, body?: unknown, auth = true) => request<T>(path, { method: "PATCH", body, auth }),
+//   del: <T>(path: string, auth = true) => request<T>(path, { method: "DELETE", auth }),
+// };
+
 export const api = {
   get: <T>(path: string, auth = true) => request<T>(path, { method: "GET", auth }),
+  getWithMeta: <T>(path: string, auth = true) => requestEnvelope<T>(path, { method: "GET", auth }),
   post: <T>(path: string, body?: unknown, auth = true) => request<T>(path, { method: "POST", body, auth }),
   patch: <T>(path: string, body?: unknown, auth = true) => request<T>(path, { method: "PATCH", body, auth }),
   del: <T>(path: string, auth = true) => request<T>(path, { method: "DELETE", auth }),
 };
-
 
 // const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 

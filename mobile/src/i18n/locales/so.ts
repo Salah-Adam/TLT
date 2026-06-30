@@ -35,6 +35,39 @@ export default {
   },
 
   offline: { banner: "Xog la keydiyay · markii ugu dambeysay" },
+
+  home: {
+    greeting: "Salaan", balance: "Haraagaaga la qiyaasay waa",
+    todayReceived: "Maanta la helay", todaySpent: "Maanta la bixiyay",
+    monthTitle: "Bishaan", kept: "Waxaa kuu hartay", moneyIn: "Lacagta ku soo gashey", moneyOut: "Lacagta baxday",
+    question: "Su'aasha", questionSub: "Meesha ugu badan lacagtaada ku baxday",
+    recent: "Dhaqdhaqaaqii ugu dambeeyey", seeAll: "Arag Dhammaan", empty: "Wax dhaqdhaqaaq ah weli ma jiraan", lastSynced: "La cusbooneysiiyay",
+  },
+
+
+  tx: {
+    detailTitle: "Dhaqdhaqaaq",
+    searchPlaceholder: "Raadi magac ama lambar",
+    all: "Dhammaan", in: "Soo gashay", out: "Baxday",
+    date: "Taariikh", date_all: "Waqti kasta", date_today: "Maanta", date_week: "7-dii maalmood", date_month: "Bishaan",
+    today: "Maanta", yesterday: "Shalay",
+    empty: "Wax dhaqdhaqaaq ah lama helin",
+    received: "Lacag soo gashay", spent: "Lacag baxday",
+    counterparty: "Cidda", notAvailable: "Lama hayo",
+    category: "Nooca", uncategorized: "Aan la kala saarin", autoTag: "Otomaatig", pickCategory: "Dooro nooca",
+    note: "Faallo", addNote: "Ku dar faallo",
+    type: "Nuuca", provider: "Shabakada", balanceAfter: "Haraaga kadib", charge: "Khidmada",
+    dateTime: "Taariikh & waqti", reference: "Tixraac",
+    changeCategory: "Nooca", editNote: "Faallo", delete: "Tirtir",
+    deleteConfirmTitle: "Tirtir dhaqdhaqaaqa?",
+    deleteConfirmBody: "Waxaa laga qarin doonaa dhaqdhaqaaqaaga. Tani ma beddesho haraagaaga.",
+    cancel: "Jooji", save: "Keydi",
+    offlineAction: "Ku xidh internetka si aad tan u samayso.",
+
+    colTransaction: "Dhaqdhaqaaq", colCategory: "Nooca", colAmount: "Qiimaha", colBalance: "Haraaga",
+    net: "saafi", allSims: "Dhammaan SIM-yada", sims: "SIM", filterSim: "Shaandhee SIM",
+    pickDates: "Ama dooro taariikho gaar ah", apply: "Dabbaq",
+  },
 };
 
 

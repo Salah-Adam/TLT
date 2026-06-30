@@ -151,10 +151,10 @@ export async function updateTransaction(input: {
   }
 
   if (input.categoryId !== undefined) {
-    await pool.query(`UPDATE transactions SET category_id=$1, is_auto_categorized=FALSE updated_at=NOW()  WHERE id=$2`, [input.categoryId, id]);
+    await pool.query(`UPDATE transactions SET category_id=$1, is_auto_categorized=FALSE, updated_at=NOW()  WHERE id=$2`, [input.categoryId, id]);
   }
   if (input.note !== undefined) {
-    await pool.query(`UPDATE transactions SET note=$1 updated_at=NOW()  WHERE id=$2`, [input.note, id]);
+    await pool.query(`UPDATE transactions SET note=$1, updated_at=NOW()  WHERE id=$2`, [input.note, id]);
   }
 
   // A non-null category was set/changed → re-check spending alerts (best-effort).
@@ -189,7 +189,7 @@ export async function deleteTransaction(userId: string, id: string) {
        RETURNING permanent_delete_at`,
       [id]
     );
-    await client.query(`UPDATE transactions SET is_deleted=TRUE, deleted_at=NOW() updated_at=NOW()  WHERE id=$1`, [id]);
+    await client.query(`UPDATE transactions SET is_deleted=TRUE, deleted_at=NOW(), updated_at=NOW()  WHERE id=$1`, [id]);
     await client.query("COMMIT");
     return { recoverableUntil: snap.rows[0].permanent_delete_at };
   } catch (e) {
@@ -243,7 +243,7 @@ export async function recoverTransaction(userId: string, id: string, lang: Lang)
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    await client.query(`UPDATE transactions SET is_deleted=FALSE, deleted_at=NULL updated_at=NOW() WHERE id=$1 AND user_id=$2`, [id, userId]);
+    await client.query(`UPDATE transactions SET is_deleted=FALSE, deleted_at=NULL, updated_at=NOW() WHERE id=$1 AND user_id=$2`, [id, userId]);
     await client.query(`UPDATE deleted_transactions SET is_recovered=TRUE, recovered_at=NOW() WHERE id=$1`, [id]);
     await client.query("COMMIT");
   } catch (e) {

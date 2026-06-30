@@ -35,6 +35,38 @@ export default {
   },
 
   offline: { banner: "Viewing saved data · last synced" },
+
+  home: {
+    greeting: "Hello", balance: "Your estimated balance",
+    todayReceived: "Received today", todaySpent: "Spent today",
+    monthTitle: "This month", kept: "You kept", moneyIn: "Money in", moneyOut: "Money out",
+    question: "The question", questionSub: "Where most of your money went",
+    recent: "Recent activity", seeAll: "See all", empty: "No transactions yet", lastSynced: "Last synced",
+  },
+
+  tx: {
+    detailTitle: "Transaction",
+    searchPlaceholder: "Search name or number",
+    all: "All", in: "In", out: "Out",
+    date: "Date", date_all: "All time", date_today: "Today", date_week: "Last 7 days", date_month: "This month",
+    today: "Today", yesterday: "Yesterday",
+    empty: "No transactions found",
+    received: "Money received", spent: "Money spent",
+    counterparty: "From / To", notAvailable: "Not available",
+    category: "Category", uncategorized: "Uncategorized", autoTag: "Auto", pickCategory: "Choose a category",
+    note: "Note", addNote: "Add a note",
+    type: "Type", provider: "Provider", balanceAfter: "Balance after", charge: "Service charge",
+    dateTime: "Date & time", reference: "Reference",
+    changeCategory: "Category", editNote: "Note", delete: "Delete",
+    deleteConfirmTitle: "Delete transaction?",
+    deleteConfirmBody: "It will be hidden from your activity. This won't change your balances.",
+    cancel: "Cancel", save: "Save",
+    offlineAction: "Connect to the internet to do this.",
+
+    colTransaction: "Transaction", colCategory: "Category", colAmount: "Amount", colBalance: "Balance",
+    net: "net", allSims: "All SIMs", sims: "SIMs", filterSim: "Filter by SIM",
+    pickDates: "Or pick exact dates", apply: "Apply",
+  },
 };
 
 // export default {

@@ -1,20 +1,16 @@
-// readCategories always reads local (so screens work offline), refreshCategories pulls from the API and upserts inside a transaction (all-or-nothing). Every later entity (transactions, etc.) follows this exact shape.
+// // readCategories always reads local (so screens work offline), refreshCategories pulls from the API and upserts inside a transaction (all-or-nothing). Every later entity (transactions, etc.) follows this exact shape.
 
 import { getDb } from "../db";
 import { api } from "../api/client";
 
 export type Category = { id: string; name: string; icon: string | null; color: string | null; is_system: boolean };
 
-// Always reads from the local DB → works offline.
 export async function readCategories(): Promise<Category[]> {
   const db = await getDb();
-  const rows = await db.getAllAsync<any>(
-    "SELECT id, name, icon, color, is_system FROM categories ORDER BY is_system DESC, name ASC"
-  );
+  const rows = await db.getAllAsync<any>("SELECT id, name, icon, color, is_system FROM categories ORDER BY is_system DESC, name ASC");
   return rows.map((r) => ({ id: r.id, name: r.name, icon: r.icon, color: r.color, is_system: !!r.is_system }));
 }
 
-// Online: fetch from the API and replace the local copy.
 export async function refreshCategories(): Promise<void> {
   const fresh = await api.get<Category[]>("/api/v1/categories");
   const db = await getDb();
