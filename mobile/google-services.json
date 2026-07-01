@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "585254722400",
+    "project_id": "tlt1-96c70",
+    "storage_bucket": "tlt1-96c70.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:585254722400:android:a345704aa7ade4218a9c05",
+        "android_client_info": {
+          "package_name": "com.salah.tlt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABul5e70CRMcH0bDgQwsp_OcDB-dmblws"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
