@@ -2,8 +2,8 @@
 
 
 import "./src/i18n";
-import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { ActivityIndicator, AppState, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -12,15 +12,37 @@ import { OfflineBanner } from "./src/components/OfflineBanner";
 import { useSession } from "./src/store/useSession";
 import { useNetwork } from "./src/store/useNetwork";
 import { colors } from "./src/theme";
+import { syncAll } from "./src/data/sync";
+
+import { navRef } from "./src/navigation/navRef";
+import { registerPush, initPushListeners } from "./src/services/push";
+
 
 export default function App() {
   const hydrated = useSession((s) => s.hydrated);
   const hydrate = useSession((s) => s.hydrate);
 
+  const accessToken = useSession((s) => s.accessToken);
+  useEffect(() => { const unsub = initPushListeners(); return unsub; }, []);
+  useEffect(() => { if (accessToken) registerPush(); }, [accessToken]);
+
   useEffect(() => { hydrate(); }, [hydrate]);
   useEffect(() => {
     const unsub = useNetwork.getState().init();
     return unsub;
+  }, []);
+
+  const lastResume = useRef(0);
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+      if (!useSession.getState().accessToken) return;
+      const now = Date.now();
+      if (now - lastResume.current < 30000) return; // debounce: skip if synced <30s ago
+      lastResume.current = now;
+      syncAll().catch(() => {});
+    });
+    return () => sub.remove();
   }, []);
 
   if (!hydrated) {
@@ -32,7 +54,7 @@ export default function App() {
   }
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
+      <NavigationContainer ref={navRef}>
         <StatusBar style="dark" />
         <View style={{ flex: 1 }}>
           <OfflineBanner />

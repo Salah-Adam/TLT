@@ -18,6 +18,10 @@ import { fetchTransactionsPage, queryCache, type Tx, type TxFilters } from "../d
 import { readSims, simLabel, type Sim } from "../data/phoneNumbers";
 import { readCategories } from "../data/categories";
 import { MiniCalendar } from "../components/MiniCalendar";
+import { syncAll } from "../data/sync";
+
+import { useSync } from "../store/useSync";
+import { TxSentence } from "../components/TxSentence";
 
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -101,7 +105,13 @@ export default function TransactionsScreen() {
     busyRef.current = false; setLoadingMore(false);
   }, [online, appliedQ, buildFilters]);
 
-  const doRefresh = useCallback(async () => { setRefreshing(true); await firstLoad(); setRefreshing(false); }, [firstLoad]);
+  // const doRefresh = useCallback(async () => { setRefreshing(true); await firstLoad(); setRefreshing(false); }, [firstLoad]);
+  const doRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await syncAll(); } catch {}
+    await firstLoad();
+    setRefreshing(false);
+  }, [firstLoad]);
 
   const didMount = useRef(false);
   useEffect(() => {
@@ -112,6 +122,9 @@ export default function TransactionsScreen() {
 
   const firstLoadRef = useRef(firstLoad); firstLoadRef.current = firstLoad;
   useFocusEffect(useCallback(() => { firstLoadRef.current(); }, []));
+
+  const syncTick = useSync((s) => s.tick);
+  useEffect(() => { if (syncTick > 0) firstLoad(); }, [syncTick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleSim = (id: string) => setSelectedSims((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
@@ -186,12 +199,12 @@ export default function TransactionsScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      <View style={styles.colHead}>
+      {/* <View style={styles.colHead}>
         <Text style={[styles.colHeadTxt, { flex: 1 }]}>{t("tx.colTransaction")}</Text>
         <Text style={[styles.colHeadTxt, styles.cCat]}>{t("tx.colCategory")}</Text>
         <Text style={[styles.colHeadTxt, styles.cAmt, { textAlign: "right" }]}>{t("tx.colAmount")}</Text>
         <Text style={[styles.colHeadTxt, styles.cBal, { textAlign: "right" }]}>{t("tx.colBalance")}</Text>
-      </View>
+      </View> */}
 
       {loading ? (
         <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>
@@ -266,51 +279,37 @@ export default function TransactionsScreen() {
   );
 }
 
+
 function Row({ tx, colors2, onPress }: { tx: Tx; colors2: Record<string, string | null>; onPress: () => void }) {
   const isIn = tx.direction === "in";
-
-  // const title = tx.counterparty_name || tx.counterparty_number || "—";
-  const title = tx.counterparty_name || localNum(tx.counterparty_number) || "—";
-
-  const time = new Date(tx.transacted_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  const showNumber = !!(tx.counterparty_name && tx.counterparty_number);
+  const time = new Date(tx.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   const hex = tx.category ? colors2[tx.category.id] ?? null : null;
   return (
     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.cTxn}>
-        <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={16} color={isIn ? colors.moneyIn : colors.moneyOut} />
-        <View style={{ flex: 1, minWidth: 0, marginLeft: 7 }}>
-          <Text style={styles.name} numberOfLines={1}>{title}</Text>
-          <View style={styles.metaRow}>
-            {showNumber ? (
-              <>
-                <Ionicons name="call-outline" size={11} color={colors.textSecondary} />
-                {/* <Text style={styles.metaNum} numberOfLines={1}> {tx.counterparty_number}</Text> */}
-                <Text style={styles.metaNum} numberOfLines={1}> {localNum(tx.counterparty_number)}</Text>
-              </>
-            ) : null}
-            <Ionicons name="time-outline" size={11} color={colors.textSecondary} style={{ marginLeft: showNumber ? 8 : 0 }} />
-            <Text style={styles.sub}> {time}</Text>
-          </View>
+      <View style={[styles.arrow, { backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
+        <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={17} color={isIn ? "#16A34A" : "#DC2626"} />
+      </View>
+      <View style={{ flex: 1, marginLeft: 11 }}>
+        <TxSentence tx={tx} style={styles.sentence} />
+        <View style={styles.meta}>
+          <Text style={styles.time}>{time}</Text>
+          {tx.category
+            ? <Text style={[styles.tag, { backgroundColor: hex ? hex + "22" : "#EEF2F6", color: hex ?? colors.textSecondary }]}>{tx.category.name}</Text>
+            : null}
         </View>
       </View>
-      <View style={styles.cCat}>
-        {tx.category
-          ? <Text style={[styles.pill, { backgroundColor: hex ? hex + "22" : "#EEF2F6", color: hex ?? colors.textSecondary }]} numberOfLines={1}>{tx.category.name}</Text>
-          : <Text style={styles.dash}>—</Text>}
-      </View>
-      <Text style={[styles.amt, styles.cAmt, { color: isIn ? colors.moneyIn : colors.moneyOut }]}>{isIn ? "+" : "−"}{money(tx.amount)}</Text>
-      <Text style={[styles.bal, styles.cBal]}>{tx.balance_after != null ? money(tx.balance_after) : "—"}</Text>
     </TouchableOpacity>
   );
 }
 
-
 // function Row({ tx, colors2, onPress }: { tx: Tx; colors2: Record<string, string | null>; onPress: () => void }) {
 //   const isIn = tx.direction === "in";
-//   const title = tx.counterparty_name || tx.counterparty_number || "—";
+
+//   // const title = tx.counterparty_name || tx.counterparty_number || "—";
+//   const title = tx.counterparty_name || localNum(tx.counterparty_number) || "—";
+
 //   const time = new Date(tx.transacted_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-//   const sub = (tx.counterparty_name && tx.counterparty_number ? tx.counterparty_number + " · " : "") + time;
+//   const showNumber = !!(tx.counterparty_name && tx.counterparty_number);
 //   const hex = tx.category ? colors2[tx.category.id] ?? null : null;
 //   return (
 //     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
@@ -318,7 +317,17 @@ function Row({ tx, colors2, onPress }: { tx: Tx; colors2: Record<string, string 
 //         <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={16} color={isIn ? colors.moneyIn : colors.moneyOut} />
 //         <View style={{ flex: 1, minWidth: 0, marginLeft: 7 }}>
 //           <Text style={styles.name} numberOfLines={1}>{title}</Text>
-//           <Text style={styles.sub} numberOfLines={1}>{sub}</Text>
+//           <View style={styles.metaRow}>
+//             {showNumber ? (
+//               <>
+//                 <Ionicons name="call-outline" size={11} color={colors.textSecondary} />
+//                 {/* <Text style={styles.metaNum} numberOfLines={1}> {tx.counterparty_number}</Text> */}
+//                 <Text style={styles.metaNum} numberOfLines={1}> {localNum(tx.counterparty_number)}</Text>
+//               </>
+//             ) : null}
+//             <Ionicons name="time-outline" size={11} color={colors.textSecondary} style={{ marginLeft: showNumber ? 8 : 0 }} />
+//             <Text style={styles.sub}> {time}</Text>
+//           </View>
 //         </View>
 //       </View>
 //       <View style={styles.cCat}>
@@ -331,6 +340,7 @@ function Row({ tx, colors2, onPress }: { tx: Tx; colors2: Record<string, string 
 //     </TouchableOpacity>
 //   );
 // }
+
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
@@ -346,11 +356,11 @@ const styles = StyleSheet.create({
   segActive: { backgroundColor: colors.primary },
   segTxt: { fontSize: 13, color: colors.textSecondary },
   segTxtActive: { color: "#fff", fontWeight: "600" },
-  colHead: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 7, marginTop: 6, backgroundColor: "#F1F5F9", borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border },
-  colHeadTxt: { fontSize: 11, color: colors.textSecondary, fontWeight: "600" },
-  cCat: { width: 64, paddingHorizontal: 4 },
-  cAmt: { width: 60 },
-  cBal: { width: 62 },
+  // colHead: { flexDirection: "row", alignItems: "center" , paddingHorizontal: 16, paddingVertical: 7, marginTop: 6, backgroundColor: "#F1F5F9", borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border },
+  colHeadTxt: { fontSize: 11, color: colors.text, fontWeight: "600" },
+  // cCat: { width: 64, paddingHorizontal: 4 },
+  // cAmt: { width: 60 },
+  // cBal: { width: 62 },
   secHead: { paddingHorizontal: 16, paddingVertical: 7, backgroundColor: colors.background },
   secTitle: { fontSize: 12, fontWeight: "600", color: colors.textSecondary },
 
@@ -358,10 +368,17 @@ const styles = StyleSheet.create({
   // secTitle: { fontSize: 12, fontWeight: "600", color: colors.textSecondary },
   // secNet: { fontSize: 12, fontWeight: "600" },
 
-  row: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+
+  row: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 12, paddingHorizontal: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  arrow: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", marginTop: 1 },
+  sentence: { fontSize: 14, lineHeight: 20, color: colors.text },
+  meta: { flexDirection: "row", alignItems: "center", marginTop: 5 },
+  time: { fontSize: 11, color: colors.textSecondary },
+  tag: { fontSize: 10, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, overflow: "hidden", marginLeft: 8 },
+  // row: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
   cTxn: { flex: 1, flexDirection: "row", alignItems: "center", minWidth: 0 },
-  name: { fontSize: 14, fontWeight: "500", color: colors.text },
-  sub: { fontSize: 11, color: colors.textSecondary, marginTop: 1 },
+  // name: { fontSize: 14, fontWeight: "500", color: colors.text },
+  // sub: { fontSize: 11, color: colors.textSecondary, marginTop: 1 },
 
   metaRow: { flexDirection: "row", alignItems: "center", marginTop: 2 },
   metaNum: { fontSize: 11, color: colors.text, fontWeight: "600", flexShrink: 1 },
@@ -369,10 +386,10 @@ const styles = StyleSheet.create({
 
 
 
-  pill: { fontSize: 10, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, overflow: "hidden", alignSelf: "flex-start" },
-  dash: { fontSize: 12, color: colors.textSecondary },
-  amt: { fontSize: 13, fontWeight: "600", textAlign: "right" },
-  bal: { fontSize: 12, color: colors.textSecondary, textAlign: "right" },
+  // pill: { fontSize: 10, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, overflow: "hidden", alignSelf: "flex-start" },
+  // dash: { fontSize: 12, color: colors.textSecondary },
+  // amt: { fontSize: 13, fontWeight: "600", textAlign: "right" },
+  // bal: { fontSize: 12, color: colors.textSecondary, textAlign: "right" },
   empty: { textAlign: "center", color: colors.textSecondary, marginTop: 40, fontSize: 14 },
   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 18, borderTopRightRadius: 18, padding: 18, paddingBottom: 28 },

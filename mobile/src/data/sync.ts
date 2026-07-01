@@ -5,17 +5,48 @@ import { refreshCategories } from "./categories";
 import { refreshHome } from "./home";
 import { refreshTransactions } from "./transactions";
 import { refreshSims } from "./phoneNumbers";
+import { flushPendingReads, refreshNotifications } from "./notifications";
+import { useNotifications } from "../store/useNotifications";
 import { setMeta, getMeta } from "./cache";
+import { useSync } from "../store/useSync";
 
 const LAST_SYNCED = "last_synced_at";
 
+let inFlight: Promise<void> | null = null;
+
 export async function syncAll(): Promise<void> {
-  await refreshCategories();
-  await refreshHome();
-  await refreshTransactions();
-  await refreshSims();
-  await setMeta(LAST_SYNCED, new Date().toISOString());
+  if (inFlight) return inFlight;
+  inFlight = (async () => {
+    try {
+      await refreshCategories();
+      await refreshHome();
+      await refreshTransactions();
+      await refreshSims();
+      await flushPendingReads();
+      await refreshNotifications();
+      await useNotifications.getState().refresh();
+      await setMeta(LAST_SYNCED, new Date().toISOString());
+      // await setMeta(LAST_SYNCED, new Date().toISOString());
+      useSync.getState().bump();
+    } finally {
+      inFlight = null;
+    }
+  })();
+  return inFlight;
 }
+
+// export async function syncAll(): Promise<void> {
+//   await refreshCategories();
+//   await refreshHome();
+//   await refreshTransactions();
+//   await refreshSims();
+//   await flushPendingReads();
+//   await refreshNotifications();
+//   await useNotifications.getState().refresh();
+//   await setMeta(LAST_SYNCED, new Date().toISOString());
+// }
+
+
 export async function getLastSynced(): Promise<string | null> {
   return getMeta(LAST_SYNCED);
 }
@@ -23,6 +54,7 @@ export async function getLastSynced(): Promise<string | null> {
 // import { refreshCategories } from "./categories";
 // import { refreshHome } from "./home";
 // import { refreshTransactions } from "./transactions";
+// import { refreshSims } from "./phoneNumbers";
 // import { setMeta, getMeta } from "./cache";
 
 // const LAST_SYNCED = "last_synced_at";
@@ -31,6 +63,7 @@ export async function getLastSynced(): Promise<string | null> {
 //   await refreshCategories();
 //   await refreshHome();
 //   await refreshTransactions();
+//   await refreshSims();
 //   await setMeta(LAST_SYNCED, new Date().toISOString());
 // }
 // export async function getLastSynced(): Promise<string | null> {

@@ -66,6 +66,23 @@ export default {
     colTransaction: "Transaction", colCategory: "Category", colAmount: "Amount", colBalance: "Balance",
     net: "net", allSims: "All SIMs", sims: "SIMs", filterSim: "Filter by SIM",
     pickDates: "Or pick exact dates", apply: "Apply",
+
+    unknownParty: "unknown",
+    msgIn: "You received {amount} from {who}, balance {balance}",
+    msgInNoBal: "You received {amount} from {who}",
+    msgOut: "You sent {amount} to {who}, balance {balance}",
+    msgOutNoBal: "You sent {amount} to {who}",
+  },
+
+
+  notif: {
+    all: "All", unread: "Unread", markAll: "Mark all read",
+    empty: "No notifications yet", emptyUnread: "No unread notifications",
+    delete: "Delete", deleteTitle: "Delete notification?", deleteBody: "This removes it from your list.",
+    offlineDelete: "Connect to the internet to delete.",
+
+    group_transactions: "Transactions", group_alerts: "Alerts", group_summaries: "Summaries", group_reports: "Reports", group_account: "Account",
+
   },
 };
 

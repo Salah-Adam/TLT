@@ -25,7 +25,9 @@ type Options = { method?: "GET" | "POST" | "PATCH" | "DELETE"; body?: unknown; a
 
 async function requestEnvelope<T>(path: string, opts: Options = {}, isRetry = false): Promise<{ data: T; meta: any }> {
   const { method = "GET", body, auth = true } = opts;
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  // const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const headers: Record<string, string> = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
 
   const { accessToken } = useSession.getState();
   if (auth && accessToken) headers.Authorization = `Bearer ${accessToken}`;

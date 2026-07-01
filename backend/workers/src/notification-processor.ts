@@ -4,8 +4,17 @@ import { sendPush } from "./services/fcm";
 import type { TransactionNotification } from "./services/notifications";
 
 // Phase 6 wires this to the device tokens the mobile app registers.
-async function getDeviceToken(_userId: string): Promise<string | null> {
-  return null;
+// async function getDeviceToken(_userId: string): Promise<string | null> {
+//   return null;
+// }
+async function getDeviceToken(userId: string): Promise<string | null> {
+  const r = await pool.query(
+    `SELECT token FROM device_tokens
+     WHERE user_id = $1 AND is_active = TRUE
+     ORDER BY last_used_at DESC LIMIT 1`,
+    [userId]
+  );
+  return r.rows[0]?.token ?? null;
 }
 
 export async function processNotificationJob(job: TransactionNotification): Promise<void> {
@@ -28,7 +37,8 @@ export async function processNotificationJob(job: TransactionNotification): Prom
 
   // 3. Look up the device token (none until Phase 6) and send.
   const token = await getDeviceToken(job.userId);
-  const messageId = await sendPush({ token, title, body, data: rendered.data });
+  // const messageId = await sendPush({ token, title, body, data: rendered.data });
+  const messageId = await sendPush({ token, title, body, data: { ...rendered.data, notificationId } });
 
   // 4. Record the FCM id if a push actually went out.
   if (messageId) {

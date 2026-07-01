@@ -14,7 +14,13 @@ import TransactionsScreen from "../screens/TransactionsScreen";
 import HomeScreen from "../screens/HomeScreen";
 import TransactionsStack from "./TransactionsStack";
 import AnalyticsScreen from "../screens/AnalyticsScreen";
-import NotificationsScreen from "../screens/NotificationsScreen";
+
+// import NotificationsScreen from "../screens/NotificationsScreen";
+
+import { useEffect } from "react";
+import { useNotifications } from "../store/useNotifications";
+
+import NotificationsStack from "./NotificationsStack";
 
 
 const Tab = createBottomTabNavigator();
@@ -28,6 +34,8 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 
 export default function TabNavigator() {
   const { t } = useTranslation();
+  const unread = useNotifications((s) => s.unread);
+  useEffect(() => { useNotifications.getState().refresh(); }, []);
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -49,7 +57,9 @@ export default function TabNavigator() {
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: t("tabs.home"), headerShown: false }} />
       <Tab.Screen name="Transactions" component={TransactionsStack} options={{ title: t("tabs.transactions"), headerShown: false }} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} options={{ title: t("tabs.analytics") }} />
-      <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ title: t("tabs.notifications") }} />
+      {/* <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ title: t("tabs.notifications") }} /> */}
+      {/* <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ title: t("tabs.notifications"), tabBarBadge: unread > 0 ? unread : undefined }} /> */}
+      <Tab.Screen name="Notifications" component={NotificationsStack} options={{ title: t("tabs.notifications"), headerShown: false, tabBarBadge: unread > 0 ? unread : undefined }} />
 
 
 

@@ -95,12 +95,17 @@ services:
       AWS_KMS_KEY_ID: ${AWS_KMS_KEY_ID}
       KEK_VERSION: ${KEK_VERSION}
       HMAC_SECRET: ${HMAC_SECRET}
+      PARSER_URL: http://parser:8000
+      FCM_CREDENTIALS_PATH: /secrets/fcm-service-account.json
+    volumes:
+      - ../backend/workers/fcm-service-account.json:/secrets/fcm-service-account.json:ro
     ports:
       - "3003:3003"
     restart: unless-stopped
     depends_on:
       - postgres
       - redis
+      - parser
 
   parser:
     build: ../parser

@@ -12,11 +12,19 @@ type Dashboard = {
 };
 
 type Monthly = { by_category: { category_id: string | null; name: string; amount: number }[] };
+// export type TxRow = {
+//   id: string; amount: number; currency: string; direction: "in" | "out";
+//   counterparty_name: string | null; counterparty_number: string | null;
+//   category: { id: string | null; name: string } | null; transacted_at: string;
+// };
+
 export type TxRow = {
   id: string; amount: number; currency: string; direction: "in" | "out";
   counterparty_name: string | null; counterparty_number: string | null;
   category: { id: string | null; name: string } | null; transacted_at: string;
+  balance_after: number | null;
 };
+
 type TxList = TxRow[];
 export type HomeData = {
   balance: number;

@@ -10,8 +10,19 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.salah.tlt"
     },
+    // "android": {
+    //   "package": "com.salah.tlt",
+    //   "adaptiveIcon": {
+    //     "backgroundColor": "#E6F4FE",
+    //     "foregroundImage": "./assets/android-icon-foreground.png",
+    //     "backgroundImage": "./assets/android-icon-background.png",
+    //     "monochromeImage": "./assets/android-icon-monochrome.png"
+    //   },
+    //   "predictiveBackGestureEnabled": false
+    // },
     "android": {
       "package": "com.salah.tlt",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -20,6 +31,7 @@
       },
       "predictiveBackGestureEnabled": false
     },
+
     "web": {
       "favicon": "./assets/favicon.png"
     },
@@ -27,8 +39,8 @@
       "expo-secure-store",
       "expo-localization",
       "expo-dev-client",
-      ["expo-sqlite", { "useSQLCipher": true }]
-      // "expo-sqlite"
+      ["expo-sqlite", { "useSQLCipher": true }],
+      ["expo-notifications", { "color": "#10B981" }]
     ],
     "extra": {
       "eas": {

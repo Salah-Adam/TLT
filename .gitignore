@@ -12,6 +12,9 @@ venv/
 
 *.env
 
+# mobile/google-services.json
+backend/workers/fcm-service-account.json
+
 backend/workers/deleted_env
 backend/webhook-server/deleted_env
 

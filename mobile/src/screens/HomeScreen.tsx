@@ -11,7 +11,11 @@ import { colors } from "../theme";
 import { useSession } from "../store/useSession";
 import { useNetwork } from "../store/useNetwork";
 import { readHome, refreshHome, type HomeData, type TxRow } from "../data/home";
-import { getLastSynced } from "../data/sync";
+// import { getLastSynced } from "../data/sync";
+import { useSync } from "../store/useSync";
+
+import { getLastSynced, syncAll } from "../data/sync";
+import { TxSentence } from "../components/TxSentence";
 
 const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const pctW = (v: number, max: number): `${number}%` => `${max > 0 ? Math.round((v / max) * 100) : 0}%`;
@@ -36,10 +40,17 @@ export default function HomeScreen() {
 
   const doRefresh = useCallback(async () => {
     setRefreshing(true);
-    try { await refreshHome(); } catch {}
+    try { await syncAll(); } catch {}
     await loadCache();
     setRefreshing(false);
   }, [loadCache]);
+
+  // const doRefresh = useCallback(async () => {
+  //   setRefreshing(true);
+  //   try { await refreshHome(); } catch {}
+  //   await loadCache();
+  //   setRefreshing(false);
+  // }, [loadCache]);
 
   useEffect(() => {
     (async () => {
@@ -47,6 +58,9 @@ export default function HomeScreen() {
       if (useNetwork.getState().online) { try { await refreshHome(); await loadCache(); } catch {} }
     })();
   }, [loadCache]);
+
+  const syncTick = useSync((s) => s.tick);
+  useEffect(() => { if (syncTick > 0) loadCache(); }, [syncTick, loadCache]);
 
   const balance = data?.balance ?? 0;
   const today = data?.today ?? { in: 0, out: 0 };
@@ -154,35 +168,21 @@ function BarLine({ label, value, width, color }: { label: string; value: string;
 
 function TxItem({ tx, last }: { tx: TxRow; last: boolean }) {
   const isIn = tx.direction === "in";
-  const name = tx.counterparty_name;
   const cat = tx.category?.name ?? null;
-  const title = name || cat || "—";
   const time = new Date(tx.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  const showNumber = !!tx.counterparty_number;
-  const showCat = !showNumber && !!name && !!cat;
   return (
     <View>
       <View style={styles.txRow}>
-        <View style={[styles.iconCircle, { width: 36, height: 36, borderRadius: 18, backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
-          <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={18} color={isIn ? "#16A34A" : "#DC2626"} />
+        <View style={[styles.iconCircle, { width: 34, height: 34, borderRadius: 17, backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
+          <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={17} color={isIn ? "#16A34A" : "#DC2626"} />
         </View>
         <View style={{ flex: 1, marginLeft: 11 }}>
-          <Text style={styles.txTitle} numberOfLines={1}>{title}</Text>
+          <TxSentence tx={tx} style={styles.sentence} />
           <View style={styles.metaRow}>
-            {showNumber ? (
-              <>
-                <Ionicons name="call-outline" size={11} color={colors.textSecondary} />
-                {/* <Text style={styles.metaNum} numberOfLines={1}> {tx.counterparty_number}</Text> */}
-                <Text style={styles.metaNum} numberOfLines={1}> {localNum(tx.counterparty_number)}</Text>
-              </>
-            ) : showCat ? (
-              <Text style={styles.txSub} numberOfLines={1}>{cat}</Text>
-            ) : null}
-            <Ionicons name="time-outline" size={11} color={colors.textSecondary} style={{ marginLeft: showNumber || showCat ? 8 : 0 }} />
-            <Text style={styles.txSub}> {time}</Text>
+            <Text style={styles.txSub}>{time}</Text>
+            {cat ? <Text style={styles.homeTag}>{cat}</Text> : null}
           </View>
         </View>
-        <Text style={[styles.txAmt, { color: isIn ? colors.moneyIn : colors.moneyOut }]}>{isIn ? "+" : "−"}{money(tx.amount)}</Text>
       </View>
       {!last ? <View style={styles.sep} /> : null}
     </View>
@@ -195,11 +195,8 @@ function TxItem({ tx, last }: { tx: TxRow; last: boolean }) {
 //   const cat = tx.category?.name ?? null;
 //   const title = name || cat || "—";
 //   const time = new Date(tx.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-//   const subParts: string[] = [];
-//   if (tx.counterparty_number) subParts.push(tx.counterparty_number);
-//   else if (name && cat) subParts.push(cat);
-//   subParts.push(time);
-//   const sub = subParts.join(" · ");
+//   const showNumber = !!tx.counterparty_number;
+//   const showCat = !showNumber && !!name && !!cat;
 //   return (
 //     <View>
 //       <View style={styles.txRow}>
@@ -208,7 +205,19 @@ function TxItem({ tx, last }: { tx: TxRow; last: boolean }) {
 //         </View>
 //         <View style={{ flex: 1, marginLeft: 11 }}>
 //           <Text style={styles.txTitle} numberOfLines={1}>{title}</Text>
-//           <Text style={styles.txSub} numberOfLines={1}>{sub}</Text>
+//           <View style={styles.metaRow}>
+//             {showNumber ? (
+//               <>
+//                 <Ionicons name="call-outline" size={11} color={colors.textSecondary} />
+//                 {/* <Text style={styles.metaNum} numberOfLines={1}> {tx.counterparty_number}</Text> */}
+//                 <Text style={styles.metaNum} numberOfLines={1}> {localNum(tx.counterparty_number)}</Text>
+//               </>
+//             ) : showCat ? (
+//               <Text style={styles.txSub} numberOfLines={1}>{cat}</Text>
+//             ) : null}
+//             <Ionicons name="time-outline" size={11} color={colors.textSecondary} style={{ marginLeft: showNumber || showCat ? 8 : 0 }} />
+//             <Text style={styles.txSub}> {time}</Text>
+//           </View>
 //         </View>
 //         <Text style={[styles.txAmt, { color: isIn ? colors.moneyIn : colors.moneyOut }]}>{isIn ? "+" : "−"}{money(tx.amount)}</Text>
 //       </View>
@@ -216,6 +225,8 @@ function TxItem({ tx, last }: { tx: TxRow; last: boolean }) {
 //     </View>
 //   );
 // }
+
+
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
@@ -252,7 +263,13 @@ const styles = StyleSheet.create({
   catAmt: { fontSize: 13, fontWeight: "600", color: colors.text },
   recentHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   seeAll: { fontSize: 13, color: colors.primary },
-  txRow: { flexDirection: "row", alignItems: "center", paddingVertical: 9 },
+  
+  // txRow: { flexDirection: "row", alignItems: "center", paddingVertical: 9 },
+
+  txRow: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 10 },
+  sentence: { fontSize: 14, lineHeight: 20, color: colors.text },
+  homeTag: { fontSize: 10, color: colors.textSecondary, backgroundColor: "#EEF2F6", paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, overflow: "hidden", marginLeft: 8 },
+
   txTitle: { fontSize: 14, fontWeight: "500", color: colors.text },
   txSub: { fontSize: 12, color: colors.textSecondary, marginTop: 1 },
   txAmt: { fontSize: 14, fontWeight: "600" },

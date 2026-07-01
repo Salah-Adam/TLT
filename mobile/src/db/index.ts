@@ -7,6 +7,9 @@ import * as Crypto from "expo-crypto";
 const KEY_NAME = "tlt_db_key";
 let dbInstance: SQLite.SQLiteDatabase | null = null;
 
+// let dbInstance: SQLite.SQLiteDatabase | null = null;
+let opening: Promise<SQLite.SQLiteDatabase> | null = null;
+
 
 // const SCHEMA = `
 
@@ -61,6 +64,12 @@ const SCHEMA = `
   CREATE TABLE IF NOT EXISTS phone_numbers (
     id TEXT PRIMARY KEY, number TEXT, provider TEXT, provider_name TEXT, display_name TEXT, is_primary INTEGER
   );
+
+  CREATE TABLE IF NOT EXISTS notifications (
+    id TEXT PRIMARY KEY, type TEXT, title TEXT, body TEXT, data TEXT,
+    is_read INTEGER, read_pending INTEGER DEFAULT 0, sent_at TEXT, read_at TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_notif_time ON notifications (sent_at DESC, id DESC);
 `;
 
 async function getKey(): Promise<string> {
@@ -73,41 +82,71 @@ async function getKey(): Promise<string> {
   return key;
 }
 
+
+
 export async function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (dbInstance) return dbInstance;
-  const key = await getKey();
-  const db = await SQLite.openDatabaseAsync("tlt.db");
-  await db.execAsync(`PRAGMA key = '${key}'`);
+  if (opening) return opening;                 // a concurrent caller is already opening → await it
+  opening = (async () => {
+    const key = await getKey();
+    const db = await SQLite.openDatabaseAsync("tlt.db");
+    await db.execAsync(`PRAGMA key = '${key}'`);
 
-  const ver = await db.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
-  const v = ver?.user_version ?? 0;
-  if (v < 3) await db.execAsync("DROP TABLE IF EXISTS categories;");
-  if (v < 4) await db.execAsync("DROP TABLE IF EXISTS transactions;");
-  if (v < 4) await db.execAsync("PRAGMA user_version = 4;");
-  if (v < 4) await db.execAsync("DROP TABLE IF EXISTS phone_numbers;");
+    const ver = await db.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
+    const v = ver?.user_version ?? 0;
+    if (v < 3) await db.execAsync("DROP TABLE IF EXISTS categories;");
+    if (v < 4) await db.execAsync("DROP TABLE IF EXISTS transactions;");
+    if (v < 4) await db.execAsync("DROP TABLE IF EXISTS phone_numbers;");
+    if (v < 5) await db.execAsync("DROP TABLE IF EXISTS notifications;");
+    if (v < 5) await db.execAsync("PRAGMA user_version = 5;");
+
+    await db.execAsync(SCHEMA);
+    dbInstance = db;
+    return db;
+  })();
+  try { return await opening; } finally { opening = null; }
+}
+
+
+// export async function getDb(): Promise<SQLite.SQLiteDatabase> {
+//   if (dbInstance) return dbInstance;
+//   const key = await getKey();
+//   const db = await SQLite.openDatabaseAsync("tlt.db");
+//   await db.execAsync(`PRAGMA key = '${key}'`);
+
+//   const ver = await db.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
+//   const v = ver?.user_version ?? 0;
+//   if (v < 3) await db.execAsync("DROP TABLE IF EXISTS categories;");
+//   if (v < 4) await db.execAsync("DROP TABLE IF EXISTS transactions;");
+//   if (v < 4) await db.execAsync("PRAGMA user_version = 4;");
+//   if (v < 4) await db.execAsync("DROP TABLE IF EXISTS phone_numbers;");
+//   if (v < 5) await db.execAsync("DROP TABLE IF EXISTS notifications;");
+//   if (v < 5) await db.execAsync("PRAGMA user_version = 5;");
   
 
-  // const ver = await db.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
-  // if ((ver?.user_version ?? 0) < 3) {
-  //   await db.execAsync("DROP TABLE IF EXISTS categories;");
-  //   await db.execAsync("PRAGMA user_version = 3;");
-  // }
+//   // const ver = await db.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
+//   // if ((ver?.user_version ?? 0) < 3) {
+//   //   await db.execAsync("DROP TABLE IF EXISTS categories;");
+//   //   await db.execAsync("PRAGMA user_version = 3;");
+//   // }
 
 
-  await db.execAsync(SCHEMA);
-  dbInstance = db;
-  return db;
-}
+//   await db.execAsync(SCHEMA);
+//   dbInstance = db;
+//   return db;
+// }
+
 
 // export async function wipeDb(): Promise<void> {
 //   const db = await getDb();
-//   await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta;");
+//   await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta; DELETE FROM transactions;");
+
+//   await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta; DELETE FROM transactions; DELETE FROM phone_numbers;");
 // }
+
 export async function wipeDb(): Promise<void> {
   const db = await getDb();
-  await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta; DELETE FROM transactions;");
-
-  await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta; DELETE FROM transactions; DELETE FROM phone_numbers;");
+  await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta; DELETE FROM transactions; DELETE FROM phone_numbers; DELETE FROM notifications;");
 }
 
 export function closeDb(): void {

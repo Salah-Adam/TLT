@@ -67,6 +67,22 @@ export default {
     colTransaction: "Dhaqdhaqaaq", colCategory: "Nooca", colAmount: "Qiimaha", colBalance: "Haraaga",
     net: "saafi", allSims: "Dhammaan SIM-yada", sims: "SIM", filterSim: "Shaandhee SIM",
     pickDates: "Ama dooro taariikho gaar ah", apply: "Dabbaq",
+
+    unknownParty: "qof aan la aqoon",
+    msgIn: "{amount} ayaad ka heshay {who}, haraagaaga waa {balance}",
+    msgInNoBal: "{amount} ayaad ka heshay {who}",
+    msgOut: "{amount} ayaad wareejisay {who}, haraagaaga waa {balance}",
+    msgOutNoBal: "{amount} ayaad wareejisay {who}",
+  },
+
+
+  notif: {
+    all: "Dhammaan", unread: "Aan la akhrin", markAll: "Calaamadee dhammaan",
+    empty: "Weli ogeysiis ma jiro", emptyUnread: "Ma jiro mid aan la akhrin",
+    delete: "Tirtir", deleteTitle: "Tirtir ogeysiiska?", deleteBody: "Tan waxay ka saartaa liiskaaga.",
+    offlineDelete: "Ku xidh internetka si aad u tirtirto.",
+
+    group_transactions: "Dhaqdhaqaaq", group_alerts: "Digniino", group_summaries: "Soo koobid", group_reports: "Warbixino", group_account: "Akoonka",
   },
 };
 
