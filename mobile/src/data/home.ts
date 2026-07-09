@@ -5,8 +5,17 @@
 import { api } from "../api/client";
 import { setCache, getCache } from "./cache";
 
+import { readTransactions } from "./transactions";
+
+// type Dashboard = {
+//   today: { total_in: number; total_out: number };
+//   this_month: { total_in: number; total_out: number; net: number };
+//   estimated_balances: { estimated_balance: number }[];
+// };
+
 type Dashboard = {
   today: { total_in: number; total_out: number };
+  this_week: { total_out: number; vs_last_week: { out_change_percent: number | null } };
   this_month: { total_in: number; total_out: number; net: number };
   estimated_balances: { estimated_balance: number }[];
 };
@@ -29,6 +38,7 @@ type TxList = TxRow[];
 export type HomeData = {
   balance: number;
   today: { in: number; out: number };
+  week: { out: number; changePercent: number | null };
   month: { in: number; out: number; net: number };
   topCategories: { id: string | null; name: string; amount: number }[];
   recent: TxRow[];
@@ -53,30 +63,47 @@ export type HomeData = {
 
 const K_DASH = "home_dashboard";
 const K_MONTH = "home_monthly";
-const K_RECENT = "home_recent";
+// const K_RECENT = "home_recent";
 
 // Online: fetch the 3 sources in parallel and cache each snapshot.
+// export async function refreshHome(): Promise<void> {
+//   const [dash, month, recent] = await Promise.all([
+//     api.get<Dashboard>("/api/v1/analytics/dashboard"),
+//     api.get<Monthly>("/api/v1/analytics/monthly"),
+//     api.get<TxList>("/api/v1/transactions?limit=10"),
+//   ]);
+//   await setCache(K_DASH, dash);
+//   await setCache(K_MONTH, month);
+//   await setCache(K_RECENT, recent);
+// }
 export async function refreshHome(): Promise<void> {
-  const [dash, month, recent] = await Promise.all([
+  const [dash, month] = await Promise.all([
     api.get<Dashboard>("/api/v1/analytics/dashboard"),
     api.get<Monthly>("/api/v1/analytics/monthly"),
-    api.get<TxList>("/api/v1/transactions?limit=10"),
   ]);
   await setCache(K_DASH, dash);
   await setCache(K_MONTH, month);
-  await setCache(K_RECENT, recent);
 }
 
 // Always reads from cache → works offline.
 export async function readHome(): Promise<HomeData | null> {
   const dash = await getCache<Dashboard>(K_DASH);
   if (!dash) return null;
+  // const month = await getCache<Monthly>(K_MONTH);
+  // const recent = (await getCache<TxList>(K_RECENT)) ?? [];
   const month = await getCache<Monthly>(K_MONTH);
-  const recent = (await getCache<TxList>(K_RECENT)) ?? [];
+  const recentTx = await readTransactions(5);
+  const recent: TxRow[] = recentTx.map((tx) => ({
+    id: tx.id, amount: tx.amount, currency: tx.currency, direction: tx.direction,
+    counterparty_name: tx.counterparty_name, counterparty_number: tx.counterparty_number,
+    category: tx.category, transacted_at: tx.transacted_at, balance_after: tx.balance_after,
+  }));
+
   const balance = (dash.estimated_balances ?? []).reduce((s, b) => s + (b.estimated_balance ?? 0), 0);
   return {
     balance,
     today: { in: dash.today?.total_in ?? 0, out: dash.today?.total_out ?? 0 },
+    week: { out: dash.this_week?.total_out ?? 0, changePercent: dash.this_week?.vs_last_week?.out_change_percent ?? null },
     month: { in: dash.this_month?.total_in ?? 0, out: dash.this_month?.total_out ?? 0, net: dash.this_month?.net ?? 0 },
     // topCategories: (month?.by_category ?? []).slice(0, 3).map((c) => ({ name: c.name, amount: c.amount })),
     topCategories: (month?.by_category ?? []).slice(0, 3).map((c) => ({ id: c.category_id, name: c.name, amount: c.amount })),

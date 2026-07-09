@@ -90,7 +90,11 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
   opening = (async () => {
     const key = await getKey();
     const db = await SQLite.openDatabaseAsync("tlt.db");
+    // await db.execAsync(`PRAGMA key = '${key}'`);
+
     await db.execAsync(`PRAGMA key = '${key}'`);
+    // await db.execAsync("PRAGMA journal_mode = WAL;");
+    await db.execAsync("PRAGMA busy_timeout = 3000;");
 
     const ver = await db.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
     const v = ver?.user_version ?? 0;
@@ -105,6 +109,16 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
     return db;
   })();
   try { return await opening; } finally { opening = null; }
+}
+
+// -- new 
+
+// Serialize DB write-transactions so two never overlap on the one connection ("database is locked").
+let dbQueue: Promise<unknown> = Promise.resolve();
+export function withDbLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = dbQueue.then(fn, fn);          // run after the previous settles (ok or fail)
+  dbQueue = run.then(() => {}, () => {});    // keep the chain alive regardless
+  return run;
 }
 
 

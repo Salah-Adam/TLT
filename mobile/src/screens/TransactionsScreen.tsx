@@ -81,12 +81,32 @@ export default function TransactionsScreen() {
     ...selRange(dateSel),
   }), [selectedSims, direction, dateSel]);
 
+  // const firstLoad = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     if (online) {
+  //       const page = await fetchTransactionsPage({ cursor: null, filters: buildFilters(), q: appliedQ });
+  //       setItems(page.items); cursorRef.current = page.cursor; hasMoreRef.current = page.hasMore;
+  //     } else {
+  //       const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 500 });
+  //       setItems(rows); cursorRef.current = null; hasMoreRef.current = false;
+  //     }
+  //   } catch {}
+  //   setLoading(false);
+  // }, [online, appliedQ, buildFilters]);
+
   const firstLoad = useCallback(async () => {
     setLoading(true);
     try {
       if (online) {
-        const page = await fetchTransactionsPage({ cursor: null, filters: buildFilters(), q: appliedQ });
-        setItems(page.items); cursorRef.current = page.cursor; hasMoreRef.current = page.hasMore;
+        try {
+          const page = await fetchTransactionsPage({ cursor: null, filters: buildFilters(), q: appliedQ });
+          setItems(page.items); cursorRef.current = page.cursor; hasMoreRef.current = page.hasMore;
+        } catch (e) {
+          console.warn("tx: online fetch failed, falling back to cache:", e); // remove later
+          const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 500 });
+          setItems(rows); cursorRef.current = null; hasMoreRef.current = false;
+        }
       } else {
         const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 500 });
         setItems(rows); cursorRef.current = null; hasMoreRef.current = false;

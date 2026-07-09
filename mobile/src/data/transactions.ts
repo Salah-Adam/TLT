@@ -3,7 +3,8 @@
 // and every online page we fetch is upserted, so the cache grows as you browse.
 // Online: full server-backed list/search/pagination + category/note/delete writes.
 
-import { getDb } from "../db";
+// import { getDb } from "../db";
+import { getDb, withDbLock } from "../db";
 import { api } from "../api/client";
 
 export type Tx = {
@@ -87,12 +88,20 @@ async function upsertOne(db: any, t: Tx): Promise<void> {
   );
 }
 
+// async function upsertMany(items: Tx[]): Promise<void> {
+//   if (!items.length) return;
+//   const db = await getDb();
+//   await db.withTransactionAsync(async () => {
+//     for (const t of items) await upsertOne(db, t);
+//   });
+// }
+
 async function upsertMany(items: Tx[]): Promise<void> {
   if (!items.length) return;
   const db = await getDb();
-  await db.withTransactionAsync(async () => {
+  await withDbLock(() => db.withTransactionAsync(async () => {
     for (const t of items) await upsertOne(db, t);
-  });
+  }));
 }
 
 // ── query-string builder ─────────────────────────────────────────
@@ -122,21 +131,38 @@ export async function fetchTransactionsPage(opts: {
     cursor: cursor ?? undefined,
     limit: WINDOW,
   });
+  // const { data, meta } = await api.getWithMeta<Tx[]>(`${base}${query}`);
+  // const items = data ?? [];
+  // await upsertMany(items); // cache grows as you scroll/search online
+  // return { items, cursor: meta?.cursor ?? null, hasMore: !!meta?.has_more };
+
   const { data, meta } = await api.getWithMeta<Tx[]>(`${base}${query}`);
   const items = data ?? [];
-  await upsertMany(items); // cache grows as you scroll/search online
+  upsertMany(items).catch(() => {}); // cache in the background — don't block the list on a locked write
   return { items, cursor: meta?.cursor ?? null, hasMore: !!meta?.has_more };
+
+
 }
 
 // ── sync: refresh the cached window (called by syncAll) ──────────
+// export async function refreshTransactions(): Promise<void> {
+//   const { data } = await api.getWithMeta<Tx[]>(`/api/v1/transactions?limit=${WINDOW}`);
+//   const items = data ?? [];
+//   const db = await getDb();
+//   await db.withTransactionAsync(async () => {
+//     await db.execAsync("DELETE FROM transactions");
+//     for (const t of items) await upsertOne(db, t);
+//   });
+// }
+
 export async function refreshTransactions(): Promise<void> {
   const { data } = await api.getWithMeta<Tx[]>(`/api/v1/transactions?limit=${WINDOW}`);
   const items = data ?? [];
   const db = await getDb();
-  await db.withTransactionAsync(async () => {
+  await withDbLock(() => db.withTransactionAsync(async () => {
     await db.execAsync("DELETE FROM transactions");
     for (const t of items) await upsertOne(db, t);
-  });
+  }));
 }
 
 // ── offline-safe reads (local table, with optional filter/search) ─

@@ -11,6 +11,8 @@ import { useNotifications } from "../store/useNotifications";
 import { readByFamily, markFamilyRead, refreshNotifications, flushPendingReads, deleteNotification, type Notif, type Family } from "../data/notifications";
 import { syncAll } from "../data/sync";
 
+import { reportParamsFromData } from "../navigation/navRef";
+
 function iconFor(type: string) {
   switch (type) {
     case "transaction_received": return { name: "arrow-down", bg: "#DCFCE7", fg: "#16A34A" };
@@ -60,9 +62,20 @@ export default function NotificationGroupScreen() {
     setRefreshing(false);
   }, [load]);
 
+  // const onTap = (n: Notif) => {
+  //   if ((n.type === "transaction_received" || n.type === "transaction_sent") && n.data?.transactionId) {
+  //     nav.navigate("Transactions", { screen: "TxDetail", params: { id: String(n.data.transactionId) } });
+  //   }
+  // };
+
   const onTap = (n: Notif) => {
-    if ((n.type === "transaction_received" || n.type === "transaction_sent") && n.data?.transactionId) {
-      nav.navigate("Transactions", { screen: "TxDetail", params: { id: String(n.data.transactionId) } });
+    const d = (n.data ?? {}) as Record<string, any>;
+    if ((n.type === "transaction_received" || n.type === "transaction_sent") && d.transactionId) {
+      nav.navigate("Transactions", { screen: "TxDetail", params: { id: String(d.transactionId) } });
+      return;
+    }
+    if (d.screen === "report" && d.period) {
+      nav.navigate("Analytics", { screen: "Report", params: reportParamsFromData(d) });
     }
   };
 

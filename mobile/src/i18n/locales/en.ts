@@ -40,8 +40,13 @@ export default {
     greeting: "Hello", balance: "Your estimated balance",
     todayReceived: "Received today", todaySpent: "Spent today",
     monthTitle: "This month", kept: "You kept", moneyIn: "Money in", moneyOut: "Money out",
-    question: "The question", questionSub: "Where most of your money went",
+    // question: "The question", questionSub: "Where most of your money went this month",
+    question: "Where most of your money went this month",
+
     recent: "Recent activity", seeAll: "See all", empty: "No transactions yet", lastSynced: "Last synced",
+
+    weekTitle: "This week", weekSpent: "You spent {{amount}} this week",
+    weekUp: "{{pct}}% more than last week", weekDown: "{{pct}}% less than last week", weekSame: "About the same as last week",
   },
 
   tx: {
@@ -84,6 +89,54 @@ export default {
     group_transactions: "Transactions", group_alerts: "Alerts", group_summaries: "Summaries", group_reports: "Reports", group_account: "Account",
 
   },
+
+  analytics: {
+    daily: "Daily", monthly: "Monthly",
+    received: "Received", spent: "Spent", kept: "You kept", overspent: "You overspent",
+    txns: "transactions",
+    whereTitle: "Where your money went", noSpending: "No spending this period",
+    trendTitle: "Daily spending", highlights: "Highlights",
+    largestIn: "Largest received: {{amount}}", largestOut: "Largest spent: {{amount}}",
+    busiestDay: "Busiest day: {{date}}", busiestHour: "Busiest hour: {{hour}}:00",
+    empty: "No activity this period",
+    spendDiary: "On {day} {month}, you spent {amount}",
+    viewReport: "View full report",
+
+    weekly: "Weekly"
+  },
+
+  report: {
+    title: "Report",
+    daily: "Daily report", weekly: "Weekly report", monthly: "Monthly report",
+    kept: "You kept", overspent: "You overspent", received: "Received", spent: "Spent",
+    insightsTitle: "What happened", whereTitle: "Where your money went",
+    txns: "transactions", empty: "No data for this period",
+
+    whatHappened: "What happened",
+    grpCategory: "Where your money went", grpSenders: "Who sent you money", grpRecipients: "Who you sent money to",
+    grpBiggestIn: "Biggest money in", grpBiggestOut: "Biggest money out", grpDaily: "Daily spending",
+    catLine: "You spent {amount} on {category} ({pct}%)",
+    senderLine: "{who} sent you {amount} ({count}×)",
+    recipientLine: "You sent {who} {amount} ({count}×)",
+    biggestIn: "{amount} from {who}",
+    biggestOut: "{amount} to {who}",
+
+    highlights: "Highlights",
+    hlAhead: "You came out ahead by {{amount}}",
+    hlBehind: "You went behind by {{amount}}",
+    // hlSpendUp: "You spent {{pct}}% more than last period",
+    // hlSpendDown: "You spent {{pct}}% less than last period",
+    hlBusiest: "Your busiest day was {{date}} with {{count}} transactions",
+    hlBusiestNoCount: "Your busiest day was {{date}}",
+    hlBusiestHour: "Your busiest hour was {{hour}}:00",
+
+    trend_daily: "Spending — last 6 days", trend_weekly: "Spending — last 4 weeks", trend_monthly: "Spending — last 6 months",
+    prev_daily: "yesterday", prev_weekly: "last week", prev_monthly: "last month",
+    hlSpendUp: "You spent {{pct}}% more than {{prev}}",
+    hlSpendDown: "You spent {{pct}}% less than {{prev}}",
+
+  },
+
 };
 
 // export default {

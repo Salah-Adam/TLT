@@ -137,6 +137,64 @@ export async function getDaily(userId: string, lang: Lang, date?: string, scope:
   };
 }
 
+
+// --- Weekly ---
+
+export async function getWeekly(userId: string, lang: Lang, start?: string, scope: Scope = {}) {
+  // default = the Saturday of the current week (Sat–Fri); client normally passes the Saturday.
+  const s = start ?? (await pool.query(
+    `SELECT ((now() AT TIME ZONE 'Africa/Mogadishu')::date
+             - ((EXTRACT(DOW FROM (now() AT TIME ZONE 'Africa/Mogadishu')::date)::int + 1) % 7))::text AS d`
+  )).rows[0].d;
+
+  const params: any[] = [userId, s];
+  const f = scopeFilters(scope, params);
+  const weekWhere = `t.user_id=$1 AND t.transacted_date BETWEEN $2::date AND ($2::date + 6) ${f}`;
+
+  const tt = (await pool.query(
+    `SELECT COALESCE(SUM(amount) FILTER (WHERE direction='in'),0)::float  AS total_in,
+            COALESCE(SUM(amount) FILTER (WHERE direction='out'),0)::float AS total_out,
+            COUNT(*)::int AS transaction_count
+     FROM transactions t WHERE ${weekWhere}`, params)).rows[0];
+
+  const cats = await pool.query(
+    `SELECT t.category_id, c.name_en, c.name_so, SUM(t.amount)::float AS amount, COUNT(*)::int AS count
+     FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
+     WHERE ${weekWhere} AND t.direction='out'
+     GROUP BY t.category_id, c.name_en, c.name_so ORDER BY amount DESC`, params);
+
+  const byDay = await pool.query(
+    `SELECT t.transacted_date::text AS date,
+            COALESCE(SUM(amount) FILTER (WHERE direction='in'),0)::float  AS total_in,
+            COALESCE(SUM(amount) FILTER (WHERE direction='out'),0)::float AS total_out,
+            COUNT(*)::int AS count
+     FROM transactions t WHERE ${weekWhere} GROUP BY t.transacted_date ORDER BY date`, params);
+
+  const busiestHour = (await pool.query(
+    `SELECT t.transacted_hour AS hour, COUNT(*)::int AS count
+     FROM transactions t WHERE ${weekWhere} GROUP BY t.transacted_hour ORDER BY count DESC, hour ASC LIMIT 1`, params)).rows[0];
+
+  const busiestDay = byDay.rows.reduce((m, d) => (d.count > (m?.count ?? -1) ? d : m), null as null | { date: string; count: number });
+  const end = (() => { const d = new Date(s + "T00:00:00"); d.setDate(d.getDate() + 6);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
+
+  return {
+    start: s, end,
+    total_in: tt.total_in, total_out: tt.total_out, net: tt.total_in - tt.total_out,
+    transaction_count: tt.transaction_count,
+    busiest_day: busiestDay ? busiestDay.date : null,
+    busiest_hour: busiestHour?.hour ?? null,
+    by_category: cats.rows.map((c) => ({
+      category_id: c.category_id,
+      name: c.category_id ? (lang === "so" ? c.name_so : c.name_en) : t("UNCATEGORIZED", lang),
+      amount: c.amount, count: c.count,
+    })),
+    by_day: byDay.rows.map((d) => ({ date: d.date, total_in: d.total_in, total_out: d.total_out, count: d.count })),
+  };
+}
+
+
+
 // ── Monthly ──
 
 export async function getMonthly(userId: string, lang: Lang, year?: number, month?: number, scope: Scope = {}) {

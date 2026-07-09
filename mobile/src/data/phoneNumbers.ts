@@ -2,7 +2,9 @@
 // Same offline pattern as categories: read local, refresh from API. We cache only what the
 // filter needs (id, number, provider, display_name) — never the webhook_token.
 
-import { getDb } from "../db";
+// import { getDb } from "../db";
+import { getDb, withDbLock } from "../db";
+
 import { api } from "../api/client";
 
 export type Sim = {
@@ -34,7 +36,17 @@ export async function refreshSims(): Promise<void> {
   const list = await api.get<ApiPhone[]>("/api/v1/phone-numbers");
   const active = (list ?? []).filter((p) => p.is_active);
   const db = await getDb();
-  await db.withTransactionAsync(async () => {
+  // await db.withTransactionAsync(async () => {
+  //   await db.execAsync("DELETE FROM phone_numbers");
+  //   for (const p of active) {
+  //     await db.runAsync(
+  //       "INSERT OR REPLACE INTO phone_numbers (id, number, provider, provider_name, display_name, is_primary) VALUES (?,?,?,?,?,?)",
+  //       [p.id, p.number, p.provider ?? null, p.provider_name ?? null, p.display_name ?? null, p.is_primary ? 1 : 0]
+  //     );
+  //   }
+  // });
+  
+  await withDbLock(() => db.withTransactionAsync(async () => {
     await db.execAsync("DELETE FROM phone_numbers");
     for (const p of active) {
       await db.runAsync(
@@ -42,7 +54,7 @@ export async function refreshSims(): Promise<void> {
         [p.id, p.number, p.provider ?? null, p.provider_name ?? null, p.display_name ?? null, p.is_primary ? 1 : 0]
       );
     }
-  });
+  }));
 }
 
 // Chip label: display_name if set, else the local number ("252" stripped → "61XXXXXXX").

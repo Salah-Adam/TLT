@@ -21,7 +21,7 @@ import { useEffect } from "react";
 import { useNotifications } from "../store/useNotifications";
 
 import NotificationsStack from "./NotificationsStack";
-
+import AnalyticsStack from "./AnalyticsStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -56,10 +56,14 @@ export default function TabNavigator() {
 
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: t("tabs.home"), headerShown: false }} />
       <Tab.Screen name="Transactions" component={TransactionsStack} options={{ title: t("tabs.transactions"), headerShown: false }} />
-      <Tab.Screen name="Analytics" component={AnalyticsScreen} options={{ title: t("tabs.analytics") }} />
+      
+      {/* <Tab.Screen name="Analytics" component={AnalyticsScreen} options={{ title: t("tabs.analytics") }} /> */}
+      <Tab.Screen name="Analytics" component={AnalyticsStack} options={{ title: t("tabs.analytics"), headerShown: false }} />
+
       {/* <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ title: t("tabs.notifications") }} /> */}
       {/* <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ title: t("tabs.notifications"), tabBarBadge: unread > 0 ? unread : undefined }} /> */}
       <Tab.Screen name="Notifications" component={NotificationsStack} options={{ title: t("tabs.notifications"), headerShown: false, tabBarBadge: unread > 0 ? unread : undefined }} />
+
 
 
 

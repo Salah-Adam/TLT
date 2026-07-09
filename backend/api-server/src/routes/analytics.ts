@@ -40,6 +40,15 @@ async function analyticsRoutes(app: FastifyInstance): Promise<void> {
     return ok(reply, data);
   });
 
+  app.get("/api/v1/analytics/weekly", {
+    preHandler: app.authenticate,
+    schema: { querystring: { type: "object", properties: { start: { type: "string" }, ...scopeProps } } },
+  }, async (request, reply) => {
+    const q = request.query as any;
+    const data = await analytics.getWeekly(request.user.sub, resolveLang(request), q.start, buildScope(q));
+    return ok(reply, data);
+  });
+
   app.get("/api/v1/analytics/monthly", {
     preHandler: app.authenticate,
     schema: {

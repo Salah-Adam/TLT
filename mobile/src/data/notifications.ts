@@ -1,6 +1,9 @@
 // Notifications repository. Read = local cache (offline-safe). Mark-read = optimistic + queue
 // (read_pending flag, flushed on sync). Delete = online-only.
-import { getDb } from "../db";
+
+// import { getDb } from "../db";
+import { getDb, withDbLock } from "../db";
+
 import { api } from "../api/client";
 
 export type Notif = {
@@ -32,19 +35,33 @@ export async function refreshNotifications(): Promise<void> {
   );
   const localById = new Map(localRows.map((r) => [r.id, r]));
 
-  await db.withTransactionAsync(async () => {
+  // await db.withTransactionAsync(async () => {
+  //   await db.execAsync("DELETE FROM notifications");
+  //   for (const n of items) {
+  //     const local = localById.get(n.id);
+  //     const isRead = (n.is_read || local?.is_read === 1) ? 1 : 0;   // read is sticky
+  //     const readPending = local?.read_pending === 1 ? 1 : 0;         // keep queued reads
+  //     await db.runAsync(
+  //       `INSERT OR REPLACE INTO notifications (id, type, title, body, data, is_read, read_pending, sent_at, read_at)
+  //        VALUES (?,?,?,?,?,?,?,?,?)`,
+  //       [n.id, n.type, n.title, n.body, n.data ? JSON.stringify(n.data) : null, isRead, readPending, n.sent_at, n.read_at ?? null]
+  //     );
+  //   }
+  // });
+
+  await withDbLock(() => db.withTransactionAsync(async () => {
     await db.execAsync("DELETE FROM notifications");
     for (const n of items) {
       const local = localById.get(n.id);
-      const isRead = (n.is_read || local?.is_read === 1) ? 1 : 0;   // read is sticky
-      const readPending = local?.read_pending === 1 ? 1 : 0;         // keep queued reads
+      const isRead = (n.is_read || local?.is_read === 1) ? 1 : 0;
+      const readPending = local?.read_pending === 1 ? 1 : 0;
       await db.runAsync(
         `INSERT OR REPLACE INTO notifications (id, type, title, body, data, is_read, read_pending, sent_at, read_at)
          VALUES (?,?,?,?,?,?,?,?,?)`,
         [n.id, n.type, n.title, n.body, n.data ? JSON.stringify(n.data) : null, isRead, readPending, n.sent_at, n.read_at ?? null]
       );
     }
-  });
+  }));
 }
 
 // export async function refreshNotifications(): Promise<void> {

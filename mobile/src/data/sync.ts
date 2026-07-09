@@ -9,6 +9,7 @@ import { flushPendingReads, refreshNotifications } from "./notifications";
 import { useNotifications } from "../store/useNotifications";
 import { setMeta, getMeta } from "./cache";
 import { useSync } from "../store/useSync";
+import { refreshAnalytics } from "./analytics";
 
 const LAST_SYNCED = "last_synced_at";
 
@@ -22,6 +23,8 @@ export async function syncAll(): Promise<void> {
       await refreshHome();
       await refreshTransactions();
       await refreshSims();
+      await refreshAnalytics();
+      await flushPendingReads();
       await flushPendingReads();
       await refreshNotifications();
       await useNotifications.getState().refresh();

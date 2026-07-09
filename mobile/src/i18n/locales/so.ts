@@ -40,7 +40,9 @@ export default {
     greeting: "Salaan", balance: "Haraagaaga la qiyaasay waa",
     todayReceived: "Maanta la helay", todaySpent: "Maanta la bixiyay",
     monthTitle: "Bishaan", kept: "Waxaa kuu hartay", moneyIn: "Lacagta ku soo gashey", moneyOut: "Lacagta baxday",
-    question: "Su'aasha", questionSub: "Meesha ugu badan lacagtaada ku baxday",
+    // question: "Su'aasha", questionSub: "Meesha ugu badan lacagtaada ku baxday",
+    question: "Meesha ugu badan lacagtaada ku baxday bishan",
+
     recent: "Dhaqdhaqaaqii ugu dambeeyey", seeAll: "Arag Dhammaan", empty: "Wax dhaqdhaqaaq ah weli ma jiraan", lastSynced: "La cusbooneysiiyay",
   },
 
@@ -84,6 +86,54 @@ export default {
 
     group_transactions: "Dhaqdhaqaaq", group_alerts: "Digniino", group_summaries: "Soo koobid", group_reports: "Warbixino", group_account: "Akoonka",
   },
+
+  analytics: {
+    daily: "Maalinle", monthly: "Bille",
+    received: "La helay", spent: "La bixiyay", kept: "Waxaa kuu hartay", overspent: "Waxaad dhaaftay",
+    txns: "dhaqdhaqaaq",
+    whereTitle: "Meesha lacagtaadu ku baxday", noSpending: "Kharash lama hayo muddadan",
+    trendTitle: "Kharashka maalinlaha ah", highlights: "Waxyaabaha muhiimka ah",
+    largestIn: "Lacagta ugu badan ee la helay: {{amount}}", largestOut: "Lacagta ugu badan ee la bixiyay: {{amount}}",
+    busiestDay: "Maalinta ugu firfircoon: {{date}}", busiestHour: "Saacadda ugu firfircoon: {{hour}}:00",
+    empty: "Dhaqdhaqaaq lama hayo muddadan",
+    spendDiary: "{month} {day}, waxaad bixisey {amount}",
+    viewReport: "Arag warbixinta buuxda",
+
+    weekly: "Usbuucle"
+  },
+
+  report: {
+    title: "Warbixin",
+    daily: "Warbixinta maalinlaha", weekly: "Warbixinta usbuuca", monthly: "Warbixinta bisha",
+    kept: "Waxaa kuu hartay", overspent: "Waxaad dhaaftay", received: "La helay", spent: "La bixiyay",
+    insightsTitle: "Waxa dhacay", whereTitle: "Meesha lacagtaadu ku baxday",
+    txns: "dhaqdhaqaaq", empty: "Xog lama hayo muddadan",
+
+    whatHappened: "Waxa dhacay",
+    grpCategory: "Meesha lacagtaadu ku baxday", grpSenders: "Cidda lacagta kuu soo dirtay", grpRecipients: "Cidda aad lacagta u dirtay",
+    grpBiggestIn: "Lacagta ugu badan ee soo gashay", grpBiggestOut: "Lacagta ugu badan ee baxday", grpDaily: "Kharashka maalinlaha",
+    catLine: "Waxaad ku bixisay {amount} {category} ({pct}%)",
+    senderLine: "{who} wuxuu kuu soo diray {amount} ({count} jeer)",
+    recipientLine: "Waxaad u dirtay {who} {amount} ({count} jeer)",
+    biggestIn: "{amount} laga helay {who}",
+    biggestOut: "{amount} loo diray {who}",
+
+
+    highlights: "Waxyaabaha muhiimka ah",
+    hlAhead: "Waxaad kaydsatay {{amount}}",
+    hlBehind: "Waxaad dhaaftay {{amount}}",
+    // hlSpendUp: "Waxaad bixisay {{pct}}% ka badan xilligii hore",
+    // hlSpendDown: "Waxaad bixisay {{pct}}% ka yar xilligii hore",
+    hlBusiest: "Maalinta ugu firfircoon waxay ahayd {{date}} oo leh {{count}} dhaqdhaqaaq",
+    hlBusiestNoCount: "Maalinta ugu firfircoon waxay ahayd {{date}}",
+    hlBusiestHour: "Saacadda ugu firfircoon waxay ahayd {{hour}}:00",
+
+    trend_daily: "Kharashka — 6-dii maalmood ee la soo dhaafay", trend_weekly: "Kharashka — 4-tii usbuuc ee la soo dhaafay", trend_monthly: "Kharashka — 6-dii bilood ee la soo dhaafay",
+    prev_daily: "shalay", prev_weekly: "usbuucii hore", prev_monthly: "bishii hore",
+    hlSpendUp: "Waxaad bixisay {{pct}}% ka badan {{prev}}",
+    hlSpendDown: "Waxaad bixisay {{pct}}% ka yar {{prev}}",
+  },
+
 };
 
 

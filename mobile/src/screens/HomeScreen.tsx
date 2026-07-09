@@ -64,6 +64,7 @@ export default function HomeScreen() {
 
   const balance = data?.balance ?? 0;
   const today = data?.today ?? { in: 0, out: 0 };
+  const week = data?.week ?? { out: 0, changePercent: null };
   const month = data?.month ?? { in: 0, out: 0, net: 0 };
   const cats = data?.topCategories ?? [];
   const recent = data?.recent ?? [];
@@ -113,6 +114,19 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.card}>
+        <Text style={styles.cardTitle}>{t("home.weekTitle")}</Text>
+        <Text style={styles.keptTxt}>{t("home.weekSpent", { amount: money(week.out) })}</Text>
+        {week.changePercent != null ? (
+          <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4 }}>
+            {week.changePercent > 0 ? t("home.weekUp", { pct: Math.abs(week.changePercent) })
+              : week.changePercent < 0 ? t("home.weekDown", { pct: Math.abs(week.changePercent) })
+              : t("home.weekSame")}
+          </Text>
+        ) : null}
+      </View>
+
+
+      <View style={styles.card}>
         <Text style={styles.cardTitle}>{t("home.monthTitle")}</Text>
         <View style={styles.keptRow}>
           <Ionicons name="checkmark-circle" size={18} color={month.net >= 0 ? colors.success : colors.error} />
@@ -123,8 +137,10 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.card}>
+        {/* <Text style={styles.cardTitle}>{t("home.question")}</Text>
+        <Text style={styles.cardSub}>{t("home.questionSub")}</Text> */}
+        
         <Text style={styles.cardTitle}>{t("home.question")}</Text>
-        <Text style={styles.cardSub}>{t("home.questionSub")}</Text>
         {cats.length === 0
           ? <Text style={styles.empty}>{t("home.empty")}</Text>
           : cats.map((c, i) => (
