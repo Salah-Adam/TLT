@@ -44,6 +44,8 @@ export default {
     question: "Meesha ugu badan lacagtaada ku baxday bishan",
 
     recent: "Dhaqdhaqaaqii ugu dambeeyey", seeAll: "Arag Dhammaan", empty: "Wax dhaqdhaqaaq ah weli ma jiraan", lastSynced: "La cusbooneysiiyay",
+
+    menuTitle: "Menu", menuAlerts: "Digniinaha kharashka",
   },
 
 
@@ -132,6 +134,45 @@ export default {
     prev_daily: "shalay", prev_weekly: "usbuucii hore", prev_monthly: "bishii hore",
     hlSpendUp: "Waxaad bixisay {{pct}}% ka badan {{prev}}",
     hlSpendDown: "Waxaad bixisay {{pct}}% ka yar {{prev}}",
+  },
+
+  contacts: {
+    title: "Dadka la raadraaco", detailTitle: "Qofka", addTitle: "Ku dar qof", editTitle: "Wax ka beddel",
+    empty: "Weli qofna ma raadraacaysid", emptyHint: "Raadraac qof si aad u aragto wadarta aad la leedahay.",
+    addContact: "Ku dar qof", edit: "Wax ka beddel",
+    label: "Magac / summad", labelPlaceholder: "tusaale: Hooyo, Iibiye Xasan",
+    direction: "Waxa la raadraacayo", dir_both: "Labada", dir_sent: "La diray", dir_received: "La helay",
+    numbers: "Lambarrada", addNumber: "Ku dar lambar", numberPlaceholder: "Lambar", removeNumber: "Ka saar", removeNumberTitle: "Ka saar lambarkan?",
+    net: "Saafi", txnShort: "Dhaqdhaqaaq", timeline: "Taariikh",
+    summary: "La diray {{sent}} · La helay {{received}} · {{count}} dhaqdhaqaaq",
+    lastActivity: "Dhaqdhaqaaqii u dambeeyay {{date}}", noActivity: "Weli wax dhaqdhaqaaq ah ma jiro",
+    save: "Keydi", cancel: "Jooji",
+    delete: "Tirtir qofka", deleteConfirmTitle: "Tirtir qofka?",
+    deleteConfirmBody: "Tani way joojinaysaa raadraaca. Dhaqdhaqaaqaaga wax dhib ah ma gaadho.",
+    offlineAction: "Ku xidh internetka si aad tan u samayso.",
+    invalidNumber: "Geli lambar Soomaali sax ah.", needNumber: "Ugu yaraan hal lambar ku dar.", needLabel: "Geli magac ama summad.",
+
+    allNumbers: "Dhammaan lambarrada",
+
+    filterNumber: "Shaandhee lambar", numbersWord: "lambar",
+  },
+
+
+  alerts: {
+    title: "Digniinaha kharashka", addTitle: "Digniin cusub", editTitle: "Wax ka beddel digniinta",
+    empty: "Weli digniin kharash ma jirto", emptyHint: "U dhig qadar nooc kasta, kahor intaadan xad-dhaafin.",
+    addAlert: "Digniin cusub",
+    category: "Nooca", pickCategory: "Dooro nooca",
+    limit: "Xadka qadarka", period: "Muddada", weekly: "Toddobaadle", monthly: "Bishii",
+    threshold: "Iga digo marka (%)", sim: "SIM (ikhtiyaari)", allSims: "Dhammaan SIM-yada",
+    progress: "{{spent}} oo ka mid ah {{limit}} {{period}}", periodWeek: "todobaadkan", periodMonth: "bishaan",
+    percentUsed: "{{percent}}% la isticmaalay", over: "Waxaad ka gudubtay {{amount}}",
+    save: "Keydi", create: "Abuur digniin", cancel: "Jooji",
+    delete: "Tirtir digniinta", deleteTitle: "Tirtir digniinta?", deleteBody: "Waad joojin doontaa digniinaha qadarkan.",
+    offlineAction: "Ku xidh internetka si aad tan u samayso.",
+    needCategory: "Dooro nooca.", needLimit: "Geli xad ka weyn 0.", badThreshold: "Boqolkiiba waa inuu u dhexeeyaa 1 iyo 100.",
+    duplicate: "Horey ayaad u leedahay digniin noocan iyo muddadan.",
+    lockedHint: "Nooca, muddada iyo SIM lama beddeli karo. Tirtir oo abuur mid cusub si aad u beddesho.",
   },
 
 };

@@ -8,6 +8,8 @@ import { JwtSigner } from "../types/jwt";
 import { detectProvider } from "../utils/phone";
 import { issueChallenge, verifyChallenge } from "../otp";
 import { AppError } from "../lib/errors";
+import { enqueueStoredPush } from "../queue";
+
 
 // ── Refresh-token helpers ────────────────────────────────────────
 
@@ -51,7 +53,9 @@ async function issueTokens(
 async function transferNumberToUser(
   client: PoolClient,
   params: { number: string; newUserId: string; makePrimary: boolean }
-): Promise<{ phoneNumberId: string; webhookToken: string | null; previousOwnerId: string }> {
+  ): Promise<{ phoneNumberId: string; webhookToken: string | null; previousOwnerId: string; reclaimNotificationId: string }> {
+
+//  ): Promise<{ phoneNumberId: string; webhookToken: string | null; previousOwnerId: string }> {
   const { number, newUserId, makePrimary } = params;
 
   const provider = detectProvider(number);
@@ -127,9 +131,24 @@ async function transferNumberToUser(
     [newUserId, number, provider, makePrimary, carriedToken, previousOwnerId]
   );
 
-  await client.query(
+  // await client.query(
+  //   `INSERT INTO notifications (user_id, type, title_en, title_so, body_en, body_so, data)
+  //    VALUES ($1, 'number_reclaimed', $2, $3, $4, $5, $6)`,
+  //   [
+  //     previousOwnerId,
+  //     "Phone Number Reclaimed",
+  //     "Lambarka Taleefanka Ayaa La Qaatay",
+  //     `The number ${number} has been reclaimed by its owner. You keep your past transactions but will no longer receive new ones for this number.`,
+  //     `Lambarka ${number} ayaa dib loo qaatay. Waxaad heysataa wax-ku-dhaqaaqyadii hore, laakiin mar dambe ma heli doontid kuwa cusub ee lambarkan.`,
+  //     JSON.stringify({ number }),
+  //   ]
+  // );
+
+  // return { phoneNumberId: inserted.rows[0].id, webhookToken: carriedToken, previousOwnerId };
+
+  const notif = await client.query(
     `INSERT INTO notifications (user_id, type, title_en, title_so, body_en, body_so, data)
-     VALUES ($1, 'number_reclaimed', $2, $3, $4, $5, $6)`,
+     VALUES ($1, 'number_reclaimed', $2, $3, $4, $5, $6) RETURNING id`,
     [
       previousOwnerId,
       "Phone Number Reclaimed",
@@ -140,7 +159,8 @@ async function transferNumberToUser(
     ]
   );
 
-  return { phoneNumberId: inserted.rows[0].id, webhookToken: carriedToken, previousOwnerId };
+  return { phoneNumberId: inserted.rows[0].id, webhookToken: carriedToken, previousOwnerId, reclaimNotificationId: notif.rows[0].id };
+
 }
 
 // ── Register ─────────────────────────────────────────────────────
@@ -421,9 +441,10 @@ export async function reclaimVerify(
   }
 
   const client2 = await pool.connect();
+  let transfer: Awaited<ReturnType<typeof transferNumberToUser>> | undefined;
   try {
     await client2.query("BEGIN");
-    await transferNumberToUser(client2, { number: phoneNumber, newUserId: newUserId!, makePrimary: true });
+    transfer = await transferNumberToUser(client2, { number: phoneNumber, newUserId: newUserId!, makePrimary: true });
     await client2.query("COMMIT");
   } catch (e) {
     await client2.query("ROLLBACK");
@@ -431,8 +452,24 @@ export async function reclaimVerify(
   } finally {
     client2.release();
   }
+  if (transfer) await enqueueStoredPush(transfer.reclaimNotificationId, transfer.previousOwnerId);
 
   return issueTokens(newUserId!, signJwt, deviceInfo, ipAddress);
+
+
+  // const client2 = await pool.connect();
+  // try {
+  //   await client2.query("BEGIN");
+  //   await transferNumberToUser(client2, { number: phoneNumber, newUserId: newUserId!, makePrimary: true });
+  //   await client2.query("COMMIT");
+  // } catch (e) {
+  //   await client2.query("ROLLBACK");
+  //   throw e;
+  // } finally {
+  //   client2.release();
+  // }
+
+  // return issueTokens(newUserId!, signJwt, deviceInfo, ipAddress);
 }
 
 // ── Reclaim — existing user adds someone else's number (no password) ──
@@ -469,6 +506,14 @@ export async function reclaimNumberVerify(input: {
 
     const { webhookToken } = await transferNumberToUser(client, { number, newUserId: userId, makePrimary: false });
     await client.query("COMMIT");
+
+    const transfer = await transferNumberToUser(client, { number, newUserId: userId, makePrimary: false });
+    await client.query("COMMIT");
+    await enqueueStoredPush(transfer.reclaimNotificationId, transfer.previousOwnerId);
+    return { webhookToken: transfer.webhookToken };
+
+
+
     return { webhookToken };
   } catch (e) {
     await client.query("ROLLBACK");

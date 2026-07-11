@@ -48,6 +48,35 @@ export async function processNotificationJob(job: TransactionNotification): Prom
   }
 }
 
+// Push an ALREADY-STORED notification (spending alerts, reclaim, summaries) by id.
+export async function pushStoredNotification(notificationId: string, userId: string): Promise<void> {
+  const n = (await pool.query(
+    `SELECT type, title_en, title_so, body_en, body_so, data FROM notifications WHERE id=$1 AND user_id=$2`,
+    [notificationId, userId]
+  )).rows[0];
+  if (!n) { console.log(`  stored notification ${notificationId} not found — skip`); return; }
+
+  const u = await pool.query(`SELECT language FROM users WHERE id=$1`, [userId]);
+  const lang = u.rows[0]?.language === "en" ? "en" : "so";
+  const title = lang === "so" ? n.title_so : n.title_en;
+  const body  = lang === "so" ? n.body_so  : n.body_en;
+
+  let d: any = n.data;
+  if (typeof d === "string") { try { d = JSON.parse(d); } catch { d = {}; } }
+  const data = { ...(d ?? {}), notificationId };
+
+  const token = await getDeviceToken(userId);
+  const messageId = await sendPush({ token, title, body, data });
+  if (messageId) {
+    await pool.query(`UPDATE notifications SET fcm_message_id=$1 WHERE id=$2`, [messageId, notificationId]);
+    console.log(`  fcm sent for ${n.type} (${notificationId})`);
+  } else {
+    console.log(`  no push for ${n.type} (${notificationId}) — no device token`);
+  }
+}
+
+
+
 
 
 // import { pool } from "./db";

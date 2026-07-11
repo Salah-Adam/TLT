@@ -2,7 +2,8 @@
 // It reads from cache instantly (offline-safe), refreshes when online, and supports pull-to-refresh. 
 // The ⋮ and tx rows are display-only for now (Settings → Step 9, tx detail → Step 5); "Dhammaan" jumps to the Transactions tab.
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+// import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -31,12 +32,14 @@ export default function HomeScreen() {
   const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [menu, setMenu] = useState(false);
 
   const loadCache = useCallback(async () => {
     setData(await readHome());
     setLastSynced(await getLastSynced());
     setLoading(false);
   }, []);
+
 
   const doRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -62,6 +65,7 @@ export default function HomeScreen() {
   const syncTick = useSync((s) => s.tick);
   useEffect(() => { if (syncTick > 0) loadCache(); }, [syncTick, loadCache]);
 
+
   const balance = data?.balance ?? 0;
   const today = data?.today ?? { in: 0, out: 0 };
   const week = data?.week ?? { out: 0, changePercent: null };
@@ -82,10 +86,59 @@ export default function HomeScreen() {
     >
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Text style={styles.hello} numberOfLines={1}>{`${t("home.greeting")}, ${user?.full_name ?? ""}`}</Text>
-        <TouchableOpacity hitSlop={10} onPress={() => Alert.alert(t("common.comingSoon"))}>
+        {/* <TouchableOpacity hitSlop={10} onPress={() => Alert.alert(t("common.comingSoon"))}>
+          <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
+        </TouchableOpacity> */}
+
+        <TouchableOpacity hitSlop={10} onPress={() => setMenu(true)}>
           <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
         </TouchableOpacity>
-      </View>
+
+        <Modal transparent visible={menu} animationType="fade" onRequestClose={() => setMenu(false)}>
+          <Pressable style={mstyles.overlay} onPress={() => setMenu(false)}>
+            <View style={[mstyles.menu, { top: insets.top + 44, right: 12 }]}>
+              <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("TrackedContacts"); }}>
+                <Ionicons name="people-outline" size={19} color={colors.text} />
+                <Text style={mstyles.itemTxt}>{t("contacts.title")}</Text>
+              </TouchableOpacity>
+              <View style={mstyles.divider} />
+
+              {/* <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); Alert.alert(t("common.comingSoon")); }}>
+                <Ionicons name="alert-circle-outline" size={19} color={colors.text} />
+                <Text style={mstyles.itemTxt}>{t("home.menuAlerts")}</Text>
+              </TouchableOpacity> */}
+
+              <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("SpendingAlerts"); }}>
+                <Ionicons name="alert-circle-outline" size={19} color={colors.text} />
+                <Text style={mstyles.itemTxt}>{t("home.menuAlerts")}</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Modal>
+
+        {/* <TouchableOpacity hitSlop={10} onPress={() => setMenu(true)}>
+          <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
+        </TouchableOpacity>
+
+        {/* <Modal transparent visible={menu} animationType="fade" onRequestClose={() => setMenu(false)}>
+          <Pressable style={mstyles.backdrop} onPress={() => setMenu(false)}>
+            <Pressable style={mstyles.sheet}>
+              <Text style={mstyles.title}>{t("home.menuTitle")}</Text>
+              <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("TrackedContacts"); }}>
+                <Ionicons name="people-outline" size={20} color={colors.primary} />
+                <Text style={mstyles.itemTxt}>{t("contacts.title")}</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} style={{ marginLeft: "auto" }} />
+              </TouchableOpacity>
+              <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); Alert.alert(t("common.comingSoon")); }}>
+                <Ionicons name="alert-circle-outline" size={20} color={colors.primary} />
+                <Text style={mstyles.itemTxt}>{t("home.menuAlerts")}</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} style={{ marginLeft: "auto" }} />
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal> */}
+      </View> 
+
 
       <View style={styles.hero}>
         <Text style={styles.heroLabel}>{t("home.balance")}</Text>
@@ -291,6 +344,23 @@ const styles = StyleSheet.create({
   txAmt: { fontSize: 14, fontWeight: "600" },
   sep: { height: 1, backgroundColor: "#F1F5F9" },
   empty: { fontSize: 13, color: colors.textSecondary, marginTop: 10, textAlign: "center" },
+
+});
+
+// const mstyles = StyleSheet.create({
+//   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
+//   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 18, borderTopRightRadius: 18, padding: 16, paddingBottom: 28 },
+//   title: { fontSize: 13, fontWeight: "600", color: colors.textSecondary, marginBottom: 6, paddingHorizontal: 4 },
+//   item: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 15, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+//   itemTxt: { fontSize: 16, color: colors.text },
+// });
+
+const mstyles = StyleSheet.create({
+  overlay: { flex: 1 },
+  menu: { position: "absolute", minWidth: 210, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 6, borderWidth: 1, borderColor: colors.border, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 },
+  item: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, paddingHorizontal: 16 },
+  itemTxt: { fontSize: 15, color: colors.text },
+  divider: { height: 1, backgroundColor: "#F1F5F9", marginHorizontal: 8 },
 });
 
 // ------------------

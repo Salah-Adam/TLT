@@ -34,6 +34,11 @@ export const config = {
     kekVersion: process.env.KEK_VERSION ?? "v1",
   },
   hmacSecret: required("HMAC_SECRET"),
+
+  redis: {
+    host: process.env.REDIS_HOST ?? "redis",
+    port: Number(process.env.REDIS_PORT ?? 6379),
+  },
 };
 
 

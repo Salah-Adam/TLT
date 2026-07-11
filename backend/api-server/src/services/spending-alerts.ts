@@ -1,6 +1,8 @@
 import { pool } from "../db";
 import { AppError } from "../lib/errors";
 import { Lang } from "../lib/messages";
+import { enqueueStoredPush } from "../queue";
+
 
 const money = (n: number) => `$${n.toFixed(2)}`;
 
@@ -188,9 +190,9 @@ export async function evaluateSpendingAlerts(userId: string, transactionId: stri
     const periodEn = a.period === "weekly" ? "weekly" : "monthly";
     const periodSo = a.period === "weekly" ? "todobaadlaha" : "bishii";
 
-    await pool.query(
+    const notif = await pool.query(
       `INSERT INTO notifications (user_id, type, title_en, title_so, body_en, body_so, data)
-       VALUES ($1,'spending_alert',$2,$3,$4,$5,$6)`,
+       VALUES ($1,'spending_alert',$2,$3,$4,$5,$6) RETURNING id`,
       [
         userId,
         "Budget alert", "Digniin Mizaaniyad",
@@ -200,5 +202,20 @@ export async function evaluateSpendingAlerts(userId: string, transactionId: stri
       ]
     );
     await pool.query(`UPDATE spending_alerts SET last_alerted_at=NOW(), updated_at=NOW() WHERE id=$1`, [a.id]);
+    await enqueueStoredPush(notif.rows[0].id, userId);
+
+
+    // await pool.query(
+    //   `INSERT INTO notifications (user_id, type, title_en, title_so, body_en, body_so, data)
+    //    VALUES ($1,'spending_alert',$2,$3,$4,$5,$6)`,
+    //   [
+    //     userId,
+    //     "Budget alert", "Digniin Mizaaniyad",
+    //     `You've used ${pct}% of your ${periodEn} ${a.cat_en} budget (${money(w.spent)} of ${money(a.limit_amount)}).`,
+    //     `Waxaad isticmaashay ${pct}% mizaaniyaddaada ${periodSo} ee ${a.cat_so} (${money(w.spent)} oo ka mid ah ${money(a.limit_amount)}).`,
+    //     JSON.stringify({ screen: "spending_alert", alert_id: a.id, category_id: tx.category_id, period: a.period }),
+    //   ]
+    // );
+    // await pool.query(`UPDATE spending_alerts SET last_alerted_at=NOW(), updated_at=NOW() WHERE id=$1`, [a.id]);
   }
 }

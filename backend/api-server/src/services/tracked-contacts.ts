@@ -211,26 +211,148 @@ export async function removeNumber(userId: string, contactId: string, numberId: 
 
 // ── Timeline: every transaction with this contact's numbers ──
 
-export async function getContactTransactions(userId: string, lang: Lang, contactId: string, cursor?: string, limit?: number) {
+// export async function getContactTransactions(
+//   userId: string, lang: Lang, contactId: string,
+//   cursor?: string, limit?: number,
+//   // filters?: { numberId?: string; dateFrom?: string; dateTo?: string }
+//   filters?: { numberIds?: string[]; dateFrom?: string; dateTo?: string }
+// ) {
+//   const c = (await pool.query(
+//     `SELECT tracking_direction FROM tracked_contacts WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL`,
+//     [contactId, userId]
+//   )).rows[0];
+//   if (!c) throw new AppError("CONTACT_NOT_FOUND", 404);
+
+//   const numRows = (await pool.query(
+//     `SELECT id, tracked_number_hash FROM tracked_contact_numbers WHERE contact_id=$1 AND user_id=$2 AND is_active=TRUE`,
+//     [contactId, userId]
+//   )).rows;
+
+//   // let hashes = numRows.map((r) => r.tracked_number_hash);
+//   // if (filters?.numberId) {
+//   //   const sel = numRows.find((r) => r.id === filters.numberId);
+//   //   hashes = sel ? [sel.tracked_number_hash] : [];
+//   // }
+//   // if (hashes.length === 0) return { transactions: [], cursor: null, has_more: false };
+//   let hashes = numRows.map((r) => r.tracked_number_hash);
+//   if (filters?.numberIds?.length) {
+//     const set = new Set(filters.numberIds);
+//     hashes = numRows.filter((r) => set.has(r.id)).map((r) => r.tracked_number_hash);
+//   }
+//   if (hashes.length === 0) return { transactions: [], cursor: null, has_more: false };
+
+//   const lim = Math.min(Math.max(limit ?? 50, 10), 100);
+//   const params: any[] = [userId, hashes];
+//   const where: string[] = [`t.user_id=$1`, `t.counterparty_phone_hash = ANY($2::varchar[])`];
+//   if (c.tracking_direction === "sent") where.push(`t.direction='out'`);
+//   else if (c.tracking_direction === "received") where.push(`t.direction='in'`);
+
+//   if (filters?.dateFrom) { params.push(filters.dateFrom); where.push(`t.transacted_date >= $${params.length}`); }
+//   if (filters?.dateTo)   { params.push(filters.dateTo);   where.push(`t.transacted_date <= $${params.length}`); }
+
+//   if (cursor) {
+//     const cur = decodeCursor(cursor);
+//     if (cur) {
+//       params.push(cur.transactedAt); const a = params.length;
+//       params.push(cur.id);           const b = params.length;
+//       where.push(`(t.transacted_at, t.id) < ($${a}::timestamptz, $${b}::uuid)`);
+//     }
+//   }
+//   params.push(lim + 1);
+
+//   const res = await pool.query(
+//     `SELECT t.id, t.amount::float AS amount, t.currency, t.direction, t.type,
+//             t.counterparty_name_enc, t.counterparty_phone_enc, t.note, t.transacted_at, t.transacted_date,
+//             t.category_id, c.name_en AS category_name_en, c.name_so AS category_name_so
+//      FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
+//      WHERE ${where.join(" AND ")}
+//      ORDER BY t.transacted_at DESC, t.id DESC LIMIT $${params.length}`,
+//     params
+//   );
+
+//   const dek = await loadDek(userId);
+//   let rows = res.rows;
+//   const hasMore = rows.length > lim;
+//   if (hasMore) rows = rows.slice(0, lim);
+
+//   const decode = (row: any) => {
+//     let name: string | null = null, number: string | null = null, available = true;
+//     const hasCipher = !!(row.counterparty_name_enc || row.counterparty_phone_enc);
+//     if (hasCipher && !dek) available = false;
+//     else if (hasCipher) {
+//       try {
+//         if (row.counterparty_name_enc)  name = decryptField(row.counterparty_name_enc, dek!);
+//         if (row.counterparty_phone_enc) number = decryptField(row.counterparty_phone_enc, dek!);
+//       } catch { name = null; number = null; available = false; }
+//     }
+//     return { name, number, available };
+//   };
+
+//   const transactions = rows.map((r) => {
+//     const cp = decode(r);
+//     return {
+//       id: r.id, amount: r.amount, currency: r.currency, direction: r.direction, type: r.type,
+//       counterparty_name: cp.name, counterparty_number: cp.number, counterparty_available: cp.available,
+//       category: r.category_id ? { id: r.category_id, name: lang === "so" ? r.category_name_so : r.category_name_en } : null,
+//       note: r.note ?? null, transacted_at: r.transacted_at, transacted_date: r.transacted_date,
+//     };
+//   });
+
+//   const last = rows[rows.length - 1];
+//   const next = hasMore && last ? encodeCursor(new Date(last.transacted_at).toISOString(), last.id) : null;
+//   return { transactions, cursor: next, has_more: hasMore };
+// }
+
+export async function getContactTransactions(
+  userId: string, lang: Lang, contactId: string,
+  cursor?: string, limit?: number,
+  filters?: { numberIds?: string[]; dateFrom?: string; dateTo?: string }
+) {
   const c = (await pool.query(
     `SELECT tracking_direction FROM tracked_contacts WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL`,
     [contactId, userId]
   )).rows[0];
   if (!c) throw new AppError("CONTACT_NOT_FOUND", 404);
 
-  const hashes = (await pool.query(
-    `SELECT tracked_number_hash FROM tracked_contact_numbers WHERE contact_id=$1 AND user_id=$2 AND is_active=TRUE`,
+  const numRows = (await pool.query(
+    `SELECT id, tracked_number_hash FROM tracked_contact_numbers WHERE contact_id=$1 AND user_id=$2 AND is_active=TRUE`,
     [contactId, userId]
-  )).rows.map((r) => r.tracked_number_hash);
+  )).rows;
 
-  if (hashes.length === 0) return { transactions: [], cursor: null, has_more: false };
+  let hashes = numRows.map((r) => r.tracked_number_hash);
+  if (filters?.numberIds?.length) {
+    const set = new Set(filters.numberIds);
+    hashes = numRows.filter((r) => set.has(r.id)).map((r) => r.tracked_number_hash);
+  }
+  const emptySummary = { total_sent: 0, total_received: 0, net: 0, transaction_count: 0 };
+  if (hashes.length === 0) return { transactions: [], cursor: null, has_more: false, summary: emptySummary };
 
+  // base filter (shared by the summary and the page) — everything except cursor/limit
+  const baseParams: any[] = [userId, hashes];
+  const baseWhere: string[] = [`t.user_id=$1`, `t.counterparty_phone_hash = ANY($2::varchar[])`];
+  if (c.tracking_direction === "sent") baseWhere.push(`t.direction='out'`);
+  else if (c.tracking_direction === "received") baseWhere.push(`t.direction='in'`);
+  if (filters?.dateFrom) { baseParams.push(filters.dateFrom); baseWhere.push(`t.transacted_date >= $${baseParams.length}`); }
+  if (filters?.dateTo)   { baseParams.push(filters.dateTo);   baseWhere.push(`t.transacted_date <= $${baseParams.length}`); }
+
+  // totals over the whole filtered set (only needed on the first page)
+  let summary = emptySummary;
+  if (!cursor) {
+    const s = (await pool.query(
+      `SELECT COALESCE(SUM(t.amount) FILTER (WHERE t.direction='out'),0)::float AS total_sent,
+              COALESCE(SUM(t.amount) FILTER (WHERE t.direction='in'),0)::float  AS total_received,
+              COUNT(*)::int AS transaction_count
+       FROM transactions t
+       WHERE ${baseWhere.join(" AND ")}`,
+      baseParams
+    )).rows[0];
+    summary = { total_sent: s.total_sent, total_received: s.total_received, net: s.total_received - s.total_sent, transaction_count: s.transaction_count };
+  }
+
+  // the page itself
   const lim = Math.min(Math.max(limit ?? 50, 10), 100);
-  const params: any[] = [userId, hashes];
-  const where: string[] = [`t.user_id=$1`, `t.counterparty_phone_hash = ANY($2::varchar[])`];
-  if (c.tracking_direction === "sent") where.push(`t.direction='out'`);
-  else if (c.tracking_direction === "received") where.push(`t.direction='in'`);
-
+  const params = [...baseParams];
+  const where = [...baseWhere];
   if (cursor) {
     const cur = decodeCursor(cursor);
     if (cur) {
@@ -281,5 +403,5 @@ export async function getContactTransactions(userId: string, lang: Lang, contact
 
   const last = rows[rows.length - 1];
   const next = hasMore && last ? encodeCursor(new Date(last.transacted_at).toISOString(), last.id) : null;
-  return { transactions, cursor: next, has_more: hasMore };
+  return { transactions, cursor: next, has_more: hasMore, summary };
 }

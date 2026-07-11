@@ -185,8 +185,18 @@ export async function queryCache(opts: { filters?: TxFilters; q?: string; limit?
   const db = await getDb();
   const sql = `SELECT * FROM transactions ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY transacted_at DESC, id DESC LIMIT ?`;
   args.push(limit);
+
   const rows = await db.getAllAsync<any>(sql, args);
   return rows.map(rowToTx);
+
+  // const rows = await db.getAllAsync<any>(sql, args);
+  // const seen = new Set<string>();
+  // return rows.map(rowToTx).filter((tx) => (seen.has(tx.id) ? false : (seen.add(tx.id), true)));
+  // const rows = await db.getAllAsync<any>(sql, args);
+  // const ids = rows.map((r: any) => r.id);
+  // const dup = ids.filter((v, i) => ids.indexOf(v) !== i);
+  // if (dup.length) console.warn("DIAG[queryCache] SELECT returned dup:", dup, "| all:", ids);
+  // return rows.map(rowToTx);
 }
 
 export async function readTransactions(limit = WINDOW): Promise<Tx[]> {

@@ -47,6 +47,8 @@ export default {
 
     weekTitle: "This week", weekSpent: "You spent {{amount}} this week",
     weekUp: "{{pct}}% more than last week", weekDown: "{{pct}}% less than last week", weekSame: "About the same as last week",
+
+    menuTitle: "Menu", menuAlerts: "Spending alerts",
   },
 
   tx: {
@@ -135,6 +137,45 @@ export default {
     hlSpendUp: "You spent {{pct}}% more than {{prev}}",
     hlSpendDown: "You spent {{pct}}% less than {{prev}}",
 
+  },
+
+  contacts: {
+    title: "Tracked people", detailTitle: "Contact", addTitle: "Add contact", editTitle: "Edit contact",
+    empty: "You're not tracking anyone yet", emptyHint: "Track a person to see your all-time totals with them.",
+    addContact: "Add contact", edit: "Edit",
+    label: "Name / label", labelPlaceholder: "e.g. Hooyo, Supplier Xasan",
+    direction: "What to track", dir_both: "Both", dir_sent: "Sent", dir_received: "Received",
+    numbers: "Phone numbers", addNumber: "Add number", numberPlaceholder: "Number", removeNumber: "Remove", removeNumberTitle: "Remove this number?",
+    net: "Net", txnShort: "Txns", timeline: "History",
+    summary: "Sent {{sent}} · Received {{received}} · {{count}} transactions",
+    lastActivity: "Last activity {{date}}", noActivity: "No activity yet",
+    save: "Save", cancel: "Cancel",
+    delete: "Delete contact", deleteConfirmTitle: "Delete contact?",
+    deleteConfirmBody: "This stops tracking them. Your transactions are not affected.",
+    offlineAction: "Connect to the internet to do this.",
+    invalidNumber: "Enter a valid Somali number.", needNumber: "Add at least one number.", needLabel: "Enter a name or label.",
+
+    allNumbers: "All numbers",
+
+    filterNumber: "Filter by number", numbersWord: "numbers",
+  },
+
+
+  alerts: {
+    title: "Spending alerts", addTitle: "New alert", editTitle: "Edit alert",
+    empty: "No spending alerts yet", emptyHint: "Set a budget for a category and get warned before you overspend.",
+    addAlert: "New alert",
+    category: "Category", pickCategory: "Choose a category",
+    limit: "Limit amount", period: "Period", weekly: "Weekly", monthly: "Monthly",
+    threshold: "Warn me at (%)", sim: "SIM (optional)", allSims: "All SIMs",
+    progress: "{{spent}} of {{limit}} {{period}}", periodWeek: "this week", periodMonth: "this month",
+    percentUsed: "{{percent}}% used", over: "Over by {{amount}}",
+    save: "Save", create: "Create alert", cancel: "Cancel",
+    delete: "Delete alert", deleteTitle: "Delete alert?", deleteBody: "You'll stop getting warnings for this budget.",
+    offlineAction: "Connect to the internet to do this.",
+    needCategory: "Choose a category.", needLimit: "Enter a limit greater than 0.", badThreshold: "Warn % must be between 1 and 100.",
+    duplicate: "You already have an alert for this category and period.",
+    lockedHint: "Category, period and SIM can't be changed. Delete and create a new alert to change them.",
   },
 
 };

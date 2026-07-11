@@ -92,12 +92,34 @@ export async function readHome(): Promise<HomeData | null> {
   // const month = await getCache<Monthly>(K_MONTH);
   // const recent = (await getCache<TxList>(K_RECENT)) ?? [];
   const month = await getCache<Monthly>(K_MONTH);
+
+  // const recentTx = await readTransactions(5);
+  // const seen = new Set<string>();
+  // const recent: TxRow[] = recentTx
+  //   .filter((tx) => (seen.has(tx.id) ? false : (seen.add(tx.id), true)))
+  //   .map((tx) => ({
+  //     id: tx.id, amount: tx.amount, currency: tx.currency, direction: tx.direction,
+  //     counterparty_name: tx.counterparty_name, counterparty_number: tx.counterparty_number,
+  //     category: tx.category, transacted_at: tx.transacted_at, balance_after: tx.balance_after,
+  //   }));
+
   const recentTx = await readTransactions(5);
-  const recent: TxRow[] = recentTx.map((tx) => ({
-    id: tx.id, amount: tx.amount, currency: tx.currency, direction: tx.direction,
-    counterparty_name: tx.counterparty_name, counterparty_number: tx.counterparty_number,
-    category: tx.category, transacted_at: tx.transacted_at, balance_after: tx.balance_after,
-  }));
+  const seen = new Set<string>();
+  const recent: TxRow[] = recentTx
+    .filter((tx) => (seen.has(tx.id) ? false : (seen.add(tx.id), true)))
+    .map((tx) => ({
+      id: tx.id, amount: tx.amount, currency: tx.currency, direction: tx.direction,
+      counterparty_name: tx.counterparty_name, counterparty_number: tx.counterparty_number,
+      category: tx.category, transacted_at: tx.transacted_at, balance_after: tx.balance_after,
+    }));
+
+
+  // const recentTx = await readTransactions(5);
+  // const recent: TxRow[] = recentTx.map((tx) => ({
+  //   id: tx.id, amount: tx.amount, currency: tx.currency, direction: tx.direction,
+  //   counterparty_name: tx.counterparty_name, counterparty_number: tx.counterparty_number,
+  //   category: tx.category, transacted_at: tx.transacted_at, balance_after: tx.balance_after,
+  // }));
 
   const balance = (dash.estimated_balances ?? []).reduce((s, b) => s + (b.estimated_balance ?? 0), 0);
   return {
