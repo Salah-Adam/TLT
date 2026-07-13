@@ -110,6 +110,10 @@ export const MESSAGES: Record<string, Entry> = {
   PASSWORD_UNCHANGED:     { en: "New password must be different from the current one.", so: "Furaha cusub waa inuu ka duwanaadaa kan hadda." },
   PASSWORD_CHANGED:       { en: "Password changed successfully.", so: "Furaha si guul leh ayaa loo beddelay." },
   DEVICE_REGISTERED:      { en: "Device registered for notifications.", so: "Aaladda waa loo diiwaan geliyay ogeysiisyada." },
+
+
+  NO_RECOVERABLE_ACCOUNT: { en: "No recoverable account for this number. You can register a new one.", so: "Ma jiro akoon dib loo soo celin karo lambarkan. Waxaad diiwaangelin kartaa mid cusub." },
+  RECOVER_UNAVAILABLE:    { en: "This account can no longer be recovered.", so: "Akoonkan mar dambe dib looma soo celin karo." },
 };
 
 /** Pick one language for a code, interpolating {name}-style params. */

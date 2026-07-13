@@ -116,6 +116,31 @@ async function authRoutes(app: FastifyInstance): Promise<void> {
     const result = await authService.reclaimVerify(b.phoneNumber, b.otp, app.jwt.sign.bind(app.jwt), b.deviceInfo, request.ip);
     return ok(reply, result);
   });
+
+
+  app.post("/api/v1/auth/recover", {
+    schema: { body: { type: "object", required: ["phoneNumber"], properties: { phoneNumber: { type: "string", minLength: 6, maxLength: 12 } } } },
+  }, async (request, reply) => {
+    const { phoneNumber } = request.body as { phoneNumber: string };
+    const result = await authService.recoverRequest(phoneNumber);
+    return ok(reply, result);
+  });
+
+  app.post("/api/v1/auth/recover/verify", {
+    schema: { body: {
+      type: "object", required: ["phoneNumber", "otp", "newPassword"],
+      properties: {
+        phoneNumber: { type: "string", minLength: 6, maxLength: 12 },
+        otp:         { type: "string", minLength: 6, maxLength: 6 },
+        newPassword: { type: "string", minLength: 4 },
+        deviceInfo:  { type: "string" },
+      },
+    } },
+  }, async (request, reply) => {
+    const b = request.body as { phoneNumber: string; otp: string; newPassword: string; deviceInfo?: string };
+    const result = await authService.recoverVerify(b.phoneNumber, b.otp, b.newPassword, app.jwt.sign.bind(app.jwt), b.deviceInfo, request.ip);
+    return ok(reply, result);
+  });
 }
 
 export default fp(authRoutes);

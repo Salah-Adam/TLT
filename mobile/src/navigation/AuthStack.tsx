@@ -9,14 +9,26 @@ import OtpScreen from "../screens/auth/OtpScreen";
 import ForgotPasswordScreen from "../screens/auth/ForgotPasswordScreen";
 import ResetPasswordScreen from "../screens/auth/ResetPasswordScreen";
 
+import RecoverScreen from "../screens/auth/RecoverScreen";
+
+// export type AuthStackParamList = {
+//   Welcome: undefined;
+//   Login: undefined;
+//   Register: undefined;
+//   // Otp: { phoneNumber: string };
+//   Otp: { phoneNumber: string; purpose?: "register" | "reclaim" };
+//   Forgot: undefined;
+//   Reset: { phoneNumber: string };
+// };
+
 export type AuthStackParamList = {
   Welcome: undefined;
   Login: undefined;
   Register: undefined;
-  // Otp: { phoneNumber: string };
   Otp: { phoneNumber: string; purpose?: "register" | "reclaim" };
   Forgot: undefined;
   Reset: { phoneNumber: string };
+  Recover: { phoneNumber?: string } | undefined;
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -30,7 +42,11 @@ export default function AuthStack() {
       <Stack.Screen name="Otp" component={OtpScreen} />
       <Stack.Screen name="Forgot" component={ForgotPasswordScreen} />
       <Stack.Screen name="Reset" component={ResetPasswordScreen} />
+
+      <Stack.Screen name="Recover" component={RecoverScreen} />
     </Stack.Navigator>
+
+
   );
 }
 

@@ -8,6 +8,11 @@ import TrackedContactDetailScreen from "../screens/TrackedContactDetailScreen";
 import ContactFormScreen from "../screens/ContactFormScreen";
 import SpendingAlertsScreen from "../screens/SpendingAlertsScreen";
 import AlertFormScreen from "../screens/AlertFormScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import ProfileScreen from "../screens/ProfileScreen";
+import ChangePasswordScreen from "../screens/ChangePasswordScreen";
+import PhoneNumbersScreen from "../screens/PhoneNumbersScreen";
+import AddPhoneNumberScreen from "../screens/AddPhoneNumberScreen";
 
 export type AppStackParamList = {
   Tabs: undefined;
@@ -15,7 +20,12 @@ export type AppStackParamList = {
   TrackedContactDetail: { id: string; label?: string };
   ContactForm: { id?: string } | undefined;
   SpendingAlerts: undefined;
-  AlertForm: { alert?: any } | undefined; // alert present = edit
+  AlertForm: { alert?: any } | undefined;
+  Settings: undefined;
+  Profile: undefined;
+  ChangePassword: undefined;
+  PhoneNumbers: undefined;
+  AddPhoneNumber: undefined;
 };
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -33,14 +43,16 @@ export default function AppStack() {
       <Stack.Screen name="SpendingAlerts" component={SpendingAlertsScreen} options={{ title: t("alerts.title") }} />
       <Stack.Screen name="AlertForm" component={AlertFormScreen}
         options={({ route }) => ({ title: (route.params as any)?.alert ? t("alerts.editTitle") : t("alerts.addTitle") })} />
+      <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t("settings.title") }} />
+      <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: t("settings.profile") }} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: t("settings.changePassword") }} />
+      <Stack.Screen name="PhoneNumbers" component={PhoneNumbersScreen} options={{ title: t("phones.title") }} />
+      <Stack.Screen name="AddPhoneNumber" component={AddPhoneNumberScreen} options={{ title: t("phones.addTitle") }} />
     </Stack.Navigator>
   );
 }
 
 
-
-// // The authed root: the tab bar, plus the ⋮-menu destinations pushed OVER the tabs.
-// // (8B adds SpendingAlerts + AlertForm to this same stack.)
 // import { createNativeStackNavigator } from "@react-navigation/native-stack";
 // import { useTranslation } from "react-i18next";
 // import { colors } from "../theme";
@@ -48,12 +60,22 @@ export default function AppStack() {
 // import TrackedContactsScreen from "../screens/TrackedContactsScreen";
 // import TrackedContactDetailScreen from "../screens/TrackedContactDetailScreen";
 // import ContactFormScreen from "../screens/ContactFormScreen";
+// import SpendingAlertsScreen from "../screens/SpendingAlertsScreen";
+// import AlertFormScreen from "../screens/AlertFormScreen";
+// import SettingsScreen from "../screens/SettingsScreen";
+// import ProfileScreen from "../screens/ProfileScreen";
+// import ChangePasswordScreen from "../screens/ChangePasswordScreen";
 
 // export type AppStackParamList = {
 //   Tabs: undefined;
 //   TrackedContacts: undefined;
 //   TrackedContactDetail: { id: string; label?: string };
-//   ContactForm: { id?: string } | undefined; // id present = edit label/direction
+//   ContactForm: { id?: string } | undefined;
+//   SpendingAlerts: undefined;
+//   AlertForm: { alert?: any } | undefined;
+//   Settings: undefined;
+//   Profile: undefined;
+//   ChangePassword: undefined;
 // };
 
 // const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -68,6 +90,12 @@ export default function AppStack() {
 //         options={({ route }) => ({ title: (route.params as any)?.label ?? t("contacts.detailTitle") })} />
 //       <Stack.Screen name="ContactForm" component={ContactFormScreen}
 //         options={({ route }) => ({ title: (route.params as any)?.id ? t("contacts.editTitle") : t("contacts.addTitle") })} />
+//       <Stack.Screen name="SpendingAlerts" component={SpendingAlertsScreen} options={{ title: t("alerts.title") }} />
+//       <Stack.Screen name="AlertForm" component={AlertFormScreen}
+//         options={({ route }) => ({ title: (route.params as any)?.alert ? t("alerts.editTitle") : t("alerts.addTitle") })} />
+//       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t("settings.title") }} />
+//       <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: t("settings.profile") }} />
+//       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: t("settings.changePassword") }} />
 //     </Stack.Navigator>
 //   );
 // }

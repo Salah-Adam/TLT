@@ -1,6 +1,7 @@
 // A ref so a tapped push can navigate even from outside React (cold start / background).
 
 import { createNavigationContainerRef } from "@react-navigation/native";
+import { useSession } from "../store/useSession";
 
 export const navRef = createNavigationContainerRef<any>();
 
@@ -23,6 +24,16 @@ export function reportParamsFromData(data: Record<string, any>) {
 
 export function navigateFromPush(data: Record<string, any>, attempt = 0): void {
   if (!navRef.isReady()) { if (attempt < 20) setTimeout(() => navigateFromPush(data, attempt + 1), 150); return; }
+
+  if (data?.screen === "recover") {
+    const local = data?.number ? String(data.number).replace(/^252/, "") : undefined;
+    const go = () => navRef.navigate("Recover", local ? { phoneNumber: local } : undefined);
+    const s = useSession.getState();
+    if (s.accessToken) { s.signOut().then(() => setTimeout(go, 350)); } // stale session on a dead account → drop to auth first
+    else { go(); }
+    return;
+  }
+
   const txId = data?.transactionId;
   if (txId) { navRef.navigate("Tabs", { screen: "Transactions", params: { screen: "TxDetail", params: { id: String(txId) } } }); return; }
   if (data?.screen === "report" && data?.period) { navRef.navigate("Tabs", { screen: "Analytics", params: { screen: "Report", params: reportParamsFromData(data) } }); return; }

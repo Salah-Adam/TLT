@@ -45,6 +45,10 @@ export default {
 
     recent: "Dhaqdhaqaaqii ugu dambeeyey", seeAll: "Arag Dhammaan", empty: "Wax dhaqdhaqaaq ah weli ma jiraan", lastSynced: "La cusbooneysiiyay",
 
+    weekTitle: "Isbuucan", weekSpent: "Isbuucaan waxaad bixisey {{amount}} ",
+    weekUp: "{{pct}}% In kabadan isbuucii hore", weekDown: "{{pct}}% in ka yar isbuucii hore", weekSame: "in la mid ah isbuucii hore",
+
+
     menuTitle: "Menu", menuAlerts: "Digniinaha kharashka",
   },
 
@@ -173,6 +177,53 @@ export default {
     needCategory: "Dooro nooca.", needLimit: "Geli xad ka weyn 0.", badThreshold: "Boqolkiiba waa inuu u dhexeeyaa 1 iyo 100.",
     duplicate: "Horey ayaad u leedahay digniin noocan iyo muddadan.",
     lockedHint: "Nooca, muddada iyo SIM lama beddeli karo. Tirtir oo abuur mid cusub si aad u beddesho.",
+  },
+
+
+  settings: {
+    title: "Mawduuca", account: "Akoonka", preferences: "Doorbidyada", about: "Ku saabsan",
+    profile: "Astaanta", changePassword: "Beddel furaha", language: "Luqadda",
+    fullName: "Magaca oo dhan", email: "Iimaylka", emailOptional: "Iimaylka (ikhtiyaari)",
+    age: "Da'da", city: "Magaalada", cityOptional: "Magaalada (ikhtiyaari)",
+    sex: "Jinsiga", male: "Lab", female: "Dhedig", sexNone: "—",
+    phone: "Lambarka taleefanka", memberSince: "Xubin ilaa", save: "Keydi",
+    nameShort: "Magacu waa inuu ugu yaraan 2 xaraf yahay.", ageBad: "Da'du waa inay u dhaxaysaa 10 iyo 100.", emailTaken: "Iimaylkaas horey ayaa loo isticmaalay.",
+    currentPassword: "Furaha hadda", newPassword: "Furaha cusub", confirmPassword: "Xaqiiji furaha cusub",
+    pwShort: "Furuhu waa inuu ugu yaraan 4 xaraf yahay.", pwMismatch: "Furayaasha cusub isma laha.",
+    pwSame: "Furaha cusub waa inuu ka duwan yahay.", pwWrong: "Furahaaga hadda waa qalad.",
+    pwChangedTitle: "Furaha waa la beddelay", pwChangedBody: "Furahaaga waa la cusboonaysiiyay.",
+    logout: "Ka bax", logoutTitle: "Ka bax?", logoutBody: "Waxaad u baahan doontaa inaad mar kale gasho si aad u isticmaasho.", cancel: "Jooji",
+  },
+
+
+  phones: {
+    title: "Lambarrada", manage: "Maamul", empty: "Weli lambar ma jiro", primary: "Aasaasi", addedOn: "La abuurey {{date}}",
+    addTitle: "Ku dar lambar",
+    displayName: "Magac (ikhtiyaari)", classification: "Nooca", individual: "Shakhsi", business: "Ganacsi",
+    sendCode: "Dir koodka", verify: "Xaqiiji", code: "Koodka xaqiijinta", codeSentTo: "Waxaan kood 6-god ah u dirnay", changeNumber: "Beddel lambarka",
+    delete: "Ka saar", deleteTitle: "Ka saar lambarkan?", deleteBody: "Waad joojin doontaa ogeysiisyada lambarkan.",
+    deleteLastTitle: "Ka saar lambarkaaga kaliya?", deleteLastBody: "Kani waa lambarkaaga u dambeeya — ka saariddiisu waxay tirtiraysaa akoonkaaga iyo dhammaan xogtiisa. Dib looma soo celin karo.",
+    accountDeletedTitle: "Akoonka waa la tirtiray", accountDeletedBody: "Akoonkaaga waa la tirtiray.",
+    ownedTitle: "Lambar la isticmaalayo", ownedBody: "Lambarkan waxaa leh akoon kale. Ma dooneysaa inaad ku soo celiso kaaga?", reclaim: "Dib u qaado",
+    alreadyAdded: "Horey ayaad u dartay lambarkan.", unsupported: "Horgalaha lambarkaas lama taageero.",
+    offlineAction: "Ku xidh internetka si aad tan u samayso.", needNumber: "Geli lambar Soomaali sax ah.", needCode: "Geli koodka 6-god ah.",
+
+    continue: "Sii wad",
+    deleteAccountTitle: "Tirtir akoonkaaga?",
+    deleteAccountBody: "Ma hubtaa? Akoonkaaga iyo dhammaan xogtaada si joogto ah ayaa loo tirtiri doonaa, dib looma soo celin karo.",
+    deleteAccount: "Tirtir akoonka",
+  },
+
+  recover: {
+    link: "Soo celi akoonkaaga", title: "Soo celi akoonkaaga",
+    subtitle: "Geli lambarkaaga, waxaan kuu soo diri doonaa kood si aad u soo celiso akoonkaaga iyo xogtiisa.",
+    number: "Lambarka taleefanka", sendCode: "Dir koodka",
+    code: "Koodka xaqiijinta", newPassword: "Furaha cusub", confirmPassword: "Xaqiiji furaha cusub",
+    recoverBtn: "Soo celi akoonka", changeNumber: "Beddel lambarka",
+    codeSentTo: "Waxaan kood 6-god ah u dirnay",
+    noAccount: "Ma jiro akoon dib loo soo celin karo lambarkan. Waxaad diiwaangelin kartaa.",
+    pwShort: "Furuhu waa inuu ugu yaraan 4 xaraf yahay.", pwMismatch: "Furayaashu isma laha.",
+    needNumber: "Geli lambar Soomaali sax ah.", needCode: "Geli koodka 6-god ah.",
   },
 
 };

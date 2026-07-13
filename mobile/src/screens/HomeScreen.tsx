@@ -97,6 +97,13 @@ export default function HomeScreen() {
         <Modal transparent visible={menu} animationType="fade" onRequestClose={() => setMenu(false)}>
           <Pressable style={mstyles.overlay} onPress={() => setMenu(false)}>
             <View style={[mstyles.menu, { top: insets.top + 44, right: 12 }]}>
+
+              {/* <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("Settings"); }}>
+                <Ionicons name="settings-outline" size={19} color={colors.text} />
+                <Text style={mstyles.itemTxt}>{t("settings.title")}</Text>
+              </TouchableOpacity>
+              <View style={mstyles.divider} /> */}
+
               <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("TrackedContacts"); }}>
                 <Ionicons name="people-outline" size={19} color={colors.text} />
                 <Text style={mstyles.itemTxt}>{t("contacts.title")}</Text>
@@ -112,6 +119,16 @@ export default function HomeScreen() {
                 <Ionicons name="alert-circle-outline" size={19} color={colors.text} />
                 <Text style={mstyles.itemTxt}>{t("home.menuAlerts")}</Text>
               </TouchableOpacity>
+              <View style={mstyles.divider} />
+
+
+              <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("Settings"); }}>
+                <Ionicons name="settings-outline" size={19} color={colors.text} />
+                <Text style={mstyles.itemTxt}>{t("settings.title")}</Text>
+              </TouchableOpacity>
+              {/* <View style={mstyles.divider} /> */}
+
+
             </View>
           </Pressable>
         </Modal>

@@ -61,3 +61,66 @@ export async function refreshSims(): Promise<void> {
 export function simLabel(s: Sim): string {
   return s.displayName || s.number.replace(/^252/, "");
 }
+
+
+// ── Settings: full phone-number management (network, not the SIM cache above) ──
+// GET /phone-numbers also returns webhook_token (a secret) — we deliberately drop it here.
+
+export type PhoneNumber = {
+  id: string;
+  number: string;
+  provider: string | null;
+  provider_name: string | null;
+  display_name: string | null;
+  classification: "individual" | "business" | null;
+  is_primary: boolean;
+  is_active: boolean;
+  created_at: string;
+};
+
+type ApiPhoneFull = ApiPhone & {
+  classification: "individual" | "business" | null;
+  created_at: string;
+  webhook_token?: string; // present in the response — intentionally ignored
+};
+
+export async function listPhoneNumbers(): Promise<PhoneNumber[]> {
+  const list = await api.get<ApiPhoneFull[]>("/api/v1/phone-numbers");
+  return (list ?? []).map((p) => ({
+    id: p.id, number: p.number, provider: p.provider, provider_name: p.provider_name,
+    display_name: p.display_name, classification: p.classification ?? null,
+    is_primary: p.is_primary, is_active: p.is_active, created_at: p.created_at,
+  }));
+}
+
+// Add flow — step 1 (sends an OTP to the number).
+export async function addPhoneNumber(input: { number: string; displayName?: string; classification?: "individual" | "business" }): Promise<void> {
+  await api.post("/api/v1/phone-numbers", {
+    number: input.number,
+    ...(input.displayName ? { displayName: input.displayName } : {}),
+    ...(input.classification ? { classification: input.classification } : {}),
+  });
+}
+
+// Add flow — step 2 (verifies the OTP and registers the number).
+export async function verifyPhoneNumber(input: { number: string; otp: string; displayName?: string; classification?: "individual" | "business" }): Promise<void> {
+  await api.post("/api/v1/phone-numbers/verify", {
+    number: input.number, otp: input.otp,
+    ...(input.displayName ? { displayName: input.displayName } : {}),
+    ...(input.classification ? { classification: input.classification } : {}),
+  });
+}
+
+// Reclaim (number belongs to another account) — request + verify.
+export async function reclaimNumber(number: string): Promise<void> {
+  await api.post("/api/v1/phone-numbers/reclaim", { number });
+}
+export async function reclaimNumberVerify(number: string, otp: string): Promise<void> {
+  await api.post("/api/v1/phone-numbers/reclaim/verify", { number, otp });
+}
+
+// Delete — the backend deletes the whole account when it's your LAST active number.
+export async function deletePhoneNumber(id: string): Promise<{ accountDeleted: boolean }> {
+  const r = await api.del<{ message: string; accountDeleted?: boolean }>(`/api/v1/phone-numbers/${id}`);
+  return { accountDeleted: !!r?.accountDeleted };
+}

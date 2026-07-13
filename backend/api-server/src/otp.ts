@@ -3,7 +3,8 @@ import { pool } from "./db";
 import { hashValue } from "./encryption";
 import { AppError } from "./lib/errors";
 
-export type OtpPurpose = "registration" | "reclaim" | "add_phone" | "password_reset";
+// export type OtpPurpose = "registration" | "reclaim" | "add_phone" | "password_reset";
+export type OtpPurpose = "registration" | "reclaim" | "add_phone" | "password_reset" | "recover";
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const MAX_ATTEMPTS = 5;

@@ -5,7 +5,7 @@
 import { create } from "zustand";
 import { tokenStore } from "../api/tokens";
 import { wipeDb } from "../api/../db"; // i.e. "../db"
-
+import { useLanguage } from "./useLanguage";
 
 export type User = { id: string; full_name: string; language: "en" | "so" } | null;
 
@@ -29,12 +29,13 @@ export const useSession = create<SessionState>((set) => ({
 
   // hydrate: async () => {
   //   const { access, refresh } = await tokenStore.load();
-  //   set({ accessToken: access, refreshToken: refresh, hydrated: true });
+  //   const user = await tokenStore.loadUser<User>();
+  //   set({ accessToken: access, refreshToken: refresh, user, hydrated: true });
   // },
-
   hydrate: async () => {
     const { access, refresh } = await tokenStore.load();
     const user = await tokenStore.loadUser<User>();
+    if (user?.language) useLanguage.getState().setLanguage(user.language); // restore account language on reload
     set({ accessToken: access, refreshToken: refresh, user, hydrated: true });
   },
   setUser: (user) => { tokenStore.saveUser(user); set({ user }); },

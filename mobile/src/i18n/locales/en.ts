@@ -178,6 +178,53 @@ export default {
     lockedHint: "Category, period and SIM can't be changed. Delete and create a new alert to change them.",
   },
 
+  settings: {
+    title: "Settings", account: "Account", preferences: "Preferences", about: "About",
+    profile: "Profile", changePassword: "Change password", language: "Language",
+    fullName: "Full name", email: "Email", emailOptional: "Email (optional)",
+    age: "Age", city: "City", cityOptional: "City (optional)",
+    sex: "Sex", male: "Male", female: "Female", sexNone: "—",
+    phone: "Phone number", memberSince: "Member since", save: "Save",
+    nameShort: "Name must be at least 2 characters.", ageBad: "Age must be between 10 and 100.", emailTaken: "That email is already in use.",
+    currentPassword: "Current password", newPassword: "New password", confirmPassword: "Confirm new password",
+    pwShort: "Password must be at least 4 characters.", pwMismatch: "The new passwords don't match.",
+    pwSame: "New password must be different.", pwWrong: "Your current password is incorrect.",
+    pwChangedTitle: "Password changed", pwChangedBody: "Your password has been updated.",
+    logout: "Log out", logoutTitle: "Log out?", logoutBody: "You'll need to sign in again to use the app.", cancel: "Cancel",
+  },
+
+  phones: {
+    title: "Phone numbers", manage: "Manage", empty: "No numbers yet", primary: "Primary", addedOn: "Added {{date}}",
+    addTitle: "Add a number",
+    displayName: "Name (optional)", classification: "Type", individual: "Individual", business: "Business",
+    sendCode: "Send code", verify: "Verify", code: "Verification code", codeSentTo: "We sent a 6-digit code to", changeNumber: "Change number",
+    delete: "Remove", deleteTitle: "Remove this number?", deleteBody: "You'll stop receiving notifications for this number.",
+    deleteLastTitle: "Remove your only number?", deleteLastBody: "This is your last number — removing it deletes your account and all its data. This can't be undone.",
+    accountDeletedTitle: "Account deleted", accountDeletedBody: "Your account has been deleted.",
+    ownedTitle: "Number in use", ownedBody: "This number is registered to another account. Reclaim it into yours?", reclaim: "Reclaim",
+    alreadyAdded: "You've already added this number.", unsupported: "That number's prefix isn't supported.",
+    offlineAction: "Connect to the internet to do this.", needNumber: "Enter a valid Somali number.", needCode: "Enter the 6-digit code.",
+
+    continue: "Continue",
+    deleteAccountTitle: "Delete your account?",
+    deleteAccountBody: "Are you really sure? Your account and all your data will be permanently deleted and can't be recovered.",
+    deleteAccount: "Delete account",
+  },
+
+  recover: {
+    link: "Recover your account", title: "Recover your account",
+    subtitle: "Enter your number and we'll send a code to restore your account and its data.",
+    number: "Phone number", sendCode: "Send code",
+    code: "Verification code", newPassword: "New password", confirmPassword: "Confirm new password",
+    recoverBtn: "Recover account", changeNumber: "Change number",
+    codeSentTo: "We sent a 6-digit code to",
+    noAccount: "No recoverable account for this number. You can register instead.",
+    pwShort: "Password must be at least 4 characters.", pwMismatch: "The passwords don't match.",
+    needNumber: "Enter a valid Somali number.", needCode: "Enter the 6-digit code.",
+  },
+
+
+
 };
 
 // export default {

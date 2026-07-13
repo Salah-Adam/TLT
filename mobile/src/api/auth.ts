@@ -29,6 +29,12 @@ export const authApi = {
       "/api/v1/auth/reset-password", { phoneNumber, otp, newPassword, deviceInfo: "TLT Android" }, false), 
   getMe: () => api.get<Me>("/api/v1/users/me"),
   logout: (refreshToken: string) => api.post("/api/v1/auth/logout", { refreshToken }, false),
+
+  recover: (phoneNumber: string) =>
+    api.post<{ message: string }>("/api/v1/auth/recover", { phoneNumber }, false),
+  recoverVerify: (phoneNumber: string, otp: string, newPassword: string) =>
+    api.post<{ accessToken: string; refreshToken: string }>(
+      "/api/v1/auth/recover/verify", { phoneNumber, otp, newPassword, deviceInfo: "TLT Android" }, false),
 };
 
 // export async function finishAuth(tokens: Tokens) {
