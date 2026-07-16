@@ -114,6 +114,11 @@ export const MESSAGES: Record<string, Entry> = {
 
   NO_RECOVERABLE_ACCOUNT: { en: "No recoverable account for this number. You can register a new one.", so: "Ma jiro akoon dib loo soo celin karo lambarkan. Waxaad diiwaangelin kartaa mid cusub." },
   RECOVER_UNAVAILABLE:    { en: "This account can no longer be recovered.", so: "Akoonkan mar dambe dib looma soo celin karo." },
+
+
+  OTP_RESEND_COOLDOWN:  { en: "Please wait {seconds} seconds before requesting another code.", so: "Fadlan sug {seconds} ilbiriqsi ka hor intaadan mar kale codsan koodh." },
+  OTP_TOO_MANY_REQUESTS:{ en: "Too many code requests. Please try again in about {minutes} minutes.", so: "Codsiyo koodh oo badan. Fadlan isku day mar kale qiyaastii {minutes} daqiiqo gudahood." },
+  RATE_LIMITED:         { en: "Too many requests. Please slow down and try again shortly.", so: "Codsiyo aad u badan. Fadlan yara sug oo isku day mar kale." },
 };
 
 /** Pick one language for a code, interpolating {name}-style params. */

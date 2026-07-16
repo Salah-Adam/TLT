@@ -59,7 +59,23 @@ export async function refreshSims(): Promise<void> {
 
 // Chip label: display_name if set, else the local number ("252" stripped → "61XXXXXXX").
 export function simLabel(s: Sim): string {
-  return s.displayName || s.number.replace(/^252/, "");
+  return s.providerName + "  " + s.number.replace(/^252/, "");
+}
+
+
+// Per-SIM accent color, from a stable hash of the id so it never shifts when a SIM is
+// added/removed. Palette deliberately avoids money-in green / money-out red / emerald.
+const SIM_COLORS = ["#2563EB", "#7C3AED", "#D97706", "#0D9488", "#DB2777", "#4F46E5"];
+export function simColor(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return SIM_COLORS[h % SIM_COLORS.length];
+}
+
+// Top-left eyebrow for a transaction row: "Hormuud · 61XXXXXXX" (or the SIM's display name).
+export function simEyebrow(sim: Sim): string {
+  const name = sim.displayName || sim.providerName || sim.provider || "SIM";
+  return `${name} · ${sim.number.replace(/^252/, "")}`;
 }
 
 

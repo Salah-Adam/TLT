@@ -9,15 +9,23 @@ import { validateOtp } from "../../utils/validate";
 import { authApi, finishAuth } from "../../api/auth";
 import { ApiError } from "../../api/client";
 import type { AuthStackParamList } from "../../navigation/AuthStack";
+import { ResendCode } from "../../components/ResendCode";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Otp">;
 
 export default function OtpScreen({ route }: Props) {
   const { t } = useTranslation();
-  const { phoneNumber, purpose = "register" } = route.params;
+  // const { phoneNumber, purpose = "register" } = route.params;
+  const { phoneNumber, purpose = "register", fullName = "", password = "", language = "so" } = route.params;
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const resend = async () => {
+    const payload = { fullName, phoneNumber, password, language: language as "en" | "so" };
+    if (purpose === "reclaim") await authApi.reclaim(payload);
+    else await authApi.register(payload);
+  };
 
   const submit = async () => {
     const v = validateOtp(otp);
@@ -43,7 +51,9 @@ export default function OtpScreen({ route }: Props) {
         <Text style={styles.sub}>{t("auth.otpSent")} {phoneNumber}</Text>
         <TextField label={t("auth.otp")} value={otp} onChangeText={(v) => setOtp(v.replace(/[^0-9]/g, ""))} keyboardType="number-pad" maxLength={6} style={{ textAlign: "center", fontSize: 24, letterSpacing: 8 }} />
         {error ? <Text style={styles.error}>{error}</Text> : null}
+        {/* <Button title={t("auth.verifyBtn")} onPress={submit} loading={loading} /> */}
         <Button title={t("auth.verifyBtn")} onPress={submit} loading={loading} />
+        <ResendCode onResend={resend} />
       </ScrollView>
     </KeyboardAvoidingView>
   );

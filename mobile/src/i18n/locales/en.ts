@@ -3,7 +3,9 @@
 
 export default {
   tabs: { home: "Home", transactions: "Transactions", analytics: "Analytics", notifications: "Notifications" },
-  common: { comingSoon: "Coming soon" },
+  common: { comingSoon: "Coming soon",
+    loadFailed: "Couldn't load", retry: "Retry",
+   },
   auth: {
     loginTitle: "Welcome back", tagline: "Track every shilling, in your language.",
     createAccount: "Create account", haveAccount: "I already have an account",
@@ -13,6 +15,10 @@ export default {
     loginBtn: "Log in", errorTitle: "Error", logout: "Log out",
     invalidCredentials: "Phone number or password is incorrect.",
     genericError: "Something went wrong. Please try again.",
+
+    resendCode: "Resend code",
+    resendIn: "Resend code in {{time}}",
+    codeResent: "A new code was sent.",
 
     forgotLink: "Forgot password?",
     forgotTitle: "Reset your password",
@@ -79,6 +85,10 @@ export default {
     msgInNoBal: "You received {amount} from {who}",
     msgOut: "You sent {amount} to {who}, balance {balance}",
     msgOutNoBal: "You sent {amount} to {who}",
+
+    yourNumber: "Your number",
+
+    emptyHint: "Your transactions will show up here once your SMS are synced.",
   },
 
 
@@ -90,6 +100,7 @@ export default {
 
     group_transactions: "Transactions", group_alerts: "Alerts", group_summaries: "Summaries", group_reports: "Reports", group_account: "Account",
 
+    emptyHint: "You'll see alerts, summaries, and reports here.",
   },
 
   analytics: {
@@ -223,7 +234,18 @@ export default {
     needNumber: "Enter a valid Somali number.", needCode: "Enter the 6-digit code.",
   },
 
-
+  onboarding: {
+    skip: "Skip", next: "Next", start: "Get started", gotIt: "Got it",
+    s1Title: "Your ledger, automatically",
+    s1Body: "Every payment you send or receive becomes a clear record here — no typing, no receipts.",
+    s2Title: "Understand your money",
+    s2Body: "See where your money goes with simple summaries, categories, and reports.",
+    s3Title: "Stay in control",
+    s3Body: "Set spending alerts and keep an eye on the people you pay most — in Somali or English.",
+    tipHome: "Tap here for Settings, Spending alerts, and Tracked contacts.",
+    tipTx: "Tap any transaction to categorize it or add a note.",
+    tipAnalytics: "Switch between daily, weekly, and monthly here — then open a full report for the details.",
+  },
 
 };
 

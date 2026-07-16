@@ -4,6 +4,8 @@
 
 // Transactions ledger: single filter bar (SIM dropdown · In/Out · Date), 4 aligned columns
 // (Transaction · Category · Amount · Balance), date groups with daily net. Online → server; offline → cache.
+
+import React from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator, Modal, Pressable, RefreshControl, ScrollView, SectionList,
@@ -15,13 +17,25 @@ import { useTranslation } from "react-i18next";
 import { colors } from "../theme";
 import { useNetwork } from "../store/useNetwork";
 import { fetchTransactionsPage, queryCache, type Tx, type TxFilters } from "../data/transactions";
-import { readSims, simLabel, type Sim } from "../data/phoneNumbers";
+
+// import { readSims, simLabel, type Sim } from "../data/phoneNumbers";
+
+import { readSims, simLabel, simColor, simEyebrow, type Sim } from "../data/phoneNumbers";
+
+// import { readSims, simLabel, simColor, type Sim } from "../data/phoneNumbers";
+
 import { readCategories } from "../data/categories";
 import { MiniCalendar } from "../components/MiniCalendar";
 import { syncAll } from "../data/sync";
 
 import { useSync } from "../store/useSync";
 import { TxSentence } from "../components/TxSentence";
+
+import { EmptyState } from "../components/EmptyState";
+import { ErrorState } from "../components/ErrorState";
+
+import { CoachTip } from "../components/CoachTip";
+import { hasSeen, markSeen } from "../onboarding";
 
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -67,6 +81,18 @@ export default function TransactionsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  const [loadError, setLoadError] = useState(false);
+
+  const [tipTx, setTipTx] = useState(false);
+  const tipChecked = useRef(false);
+  useEffect(() => {
+    if (tipChecked.current || loading || items.length === 0) return;
+    tipChecked.current = true;
+    (async () => { if (await hasSeen("intro") && !(await hasSeen("tipTx"))) setTipTx(true); })();
+  }, [loading, items.length]);
+  const dismissTipTx = () => { markSeen("tipTx"); setTipTx(false); };
+
+
   const cursorRef = useRef<string | null>(null);
   const hasMoreRef = useRef(false);
   const busyRef = useRef(false);
@@ -81,12 +107,23 @@ export default function TransactionsScreen() {
     ...selRange(dateSel),
   }), [selectedSims, direction, dateSel]);
 
+  const openTx = useCallback((id: string) => nav.navigate("TxDetail", { id }), [nav]);
+
+  const simMap = useMemo(() => { const m: Record<string, Sim> = {}; sims.forEach((s) => (m[s.id] = s)); return m; }, [sims]);
+  const showSim = sims.length >= 2;
+
   // const firstLoad = useCallback(async () => {
   //   setLoading(true);
   //   try {
   //     if (online) {
-  //       const page = await fetchTransactionsPage({ cursor: null, filters: buildFilters(), q: appliedQ });
-  //       setItems(page.items); cursorRef.current = page.cursor; hasMoreRef.current = page.hasMore;
+  //       try {
+  //         const page = await fetchTransactionsPage({ cursor: null, filters: buildFilters(), q: appliedQ });
+  //         setItems(page.items); cursorRef.current = page.cursor; hasMoreRef.current = page.hasMore;
+  //       } catch (e) {
+  //         console.warn("tx: online fetch failed, falling back to cache:", e); // remove later
+  //         const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 500 });
+  //         setItems(rows); cursorRef.current = null; hasMoreRef.current = false;
+  //       }
   //     } else {
   //       const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 500 });
   //       setItems(rows); cursorRef.current = null; hasMoreRef.current = false;
@@ -102,16 +139,18 @@ export default function TransactionsScreen() {
         try {
           const page = await fetchTransactionsPage({ cursor: null, filters: buildFilters(), q: appliedQ });
           setItems(page.items); cursorRef.current = page.cursor; hasMoreRef.current = page.hasMore;
+          setLoadError(false);
         } catch (e) {
-          console.warn("tx: online fetch failed, falling back to cache:", e); // remove later
-          const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 500 });
+          const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 200 });
           setItems(rows); cursorRef.current = null; hasMoreRef.current = false;
+          setLoadError(rows.length === 0); // only an error if there's nothing cached to show
         }
       } else {
-        const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 500 });
+        const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 200 });
         setItems(rows); cursorRef.current = null; hasMoreRef.current = false;
+        setLoadError(false);
       }
-    } catch {}
+    } catch { setLoadError(true); }
     setLoading(false);
   }, [online, appliedQ, buildFilters]);
 
@@ -182,6 +221,12 @@ export default function TransactionsScreen() {
   //   });
   // }, [items, t]);
 
+
+  const renderRow = useCallback(
+    ({ item }: { item: Tx }) => <Row tx={item} colors2={catColors} simMap={simMap} showSim={showSim} onPress={openTx} />,
+    [catColors, simMap, showSim, openTx]
+  );
+
   const simLabelTxt = selectedSims.length === 0 ? t("tx.allSims") : `${selectedSims.length} ${t("tx.sims")}`;
   const dateLabelTxt = dateSel.kind === "all" ? t("tx.date")
     : dateSel.kind === "custom" ? (dateSel.to && dateSel.to !== dateSel.from ? `${fmtShort(dateSel.from!)} – ${fmtShort(dateSel.to)}` : fmtShort(dateSel.from!))
@@ -225,9 +270,15 @@ export default function TransactionsScreen() {
         <Text style={[styles.colHeadTxt, styles.cAmt, { textAlign: "right" }]}>{t("tx.colAmount")}</Text>
         <Text style={[styles.colHeadTxt, styles.cBal, { textAlign: "right" }]}>{t("tx.colBalance")}</Text>
       </View> */}
-
+{/* 
       {loading ? (
         <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>
+      ) : ( */}
+      
+      {loading ? (
+        <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>
+      ) : loadError && items.length === 0 ? (
+        <ErrorState onRetry={firstLoad} />
       ) : (
         <SectionList
           sections={sections}
@@ -247,11 +298,18 @@ export default function TransactionsScreen() {
           //     </Text>
           //   </View>
           // )}
-          renderItem={({ item }) => <Row tx={item} colors2={catColors} onPress={() => nav.navigate("TxDetail", { id: item.id })} />}
+
+          // renderItem={({ item }) => <Row tx={item} colors2={catColors} onPress={() => nav.navigate("TxDetail", { id: item.id })} />}
+
+          // renderItem={({ item }) => <Row tx={item} colors2={catColors} simMap={simMap} showSim={showSim} onPress={() => nav.navigate("TxDetail", { id: item.id })} />}
+         
+          renderItem={renderRow}
+
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={doRefresh} tintColor={colors.primary} />}
           onEndReachedThreshold={0.4}
           onEndReached={loadMore}
-          ListEmptyComponent={<Text style={styles.empty}>{t("tx.empty")}</Text>}
+          // ListEmptyComponent={<Text style={styles.empty}>{t("tx.empty")}</Text>}
+          ListEmptyComponent={<EmptyState icon="swap-horizontal-outline" title={t("tx.empty")} subtitle={t("tx.emptyHint")} />}
           ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 16 }} color={colors.primary} /> : null}
         />
       )}
@@ -295,17 +353,56 @@ export default function TransactionsScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+      {tipTx ? <CoachTip text={t("onboarding.tipTx")} onDismiss={dismissTipTx} arrow="bottom-left" style={{ top: 118, left: 16, right: 16 }} /> : null}
     </View>
   );
 }
 
 
-function Row({ tx, colors2, onPress }: { tx: Tx; colors2: Record<string, string | null>; onPress: () => void }) {
+// function Row({ tx, colors2, simMap, showSim, onPress }: { tx: Tx; colors2: Record<string, string | null>; simMap: Record<string, Sim>; showSim: boolean; onPress: () => void }) {
+//   const isIn = tx.direction === "in";
+//   const time = new Date(tx.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+//   const hex = tx.category ? colors2[tx.category.id] ?? null : null;
+//   const sim = showSim && tx.phone_number_id ? simMap[tx.phone_number_id] : undefined;
+//   const accent = sim ? simColor(sim.id) : undefined;
+//   return (
+//     <TouchableOpacity
+//       style={[styles.row, showSim && { borderLeftWidth: 3, borderLeftColor: accent ?? "transparent" }]}
+//       onPress={onPress}
+//       activeOpacity={0.7}
+//     >
+
+//       <View style={[styles.arrow, { backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
+//         <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={17} color={isIn ? "#16A34A" : "#DC2626"} />
+//       </View>
+
+
+//       <View style={{ flex: 1 , marginLeft: 11}}>
+
+//         {sim ? <Text style={[styles.simEyebrow, { color: accent }]} numberOfLines={1}>{simEyebrow(sim)}</Text> : null}
+
+//         <TxSentence tx={tx} style={styles.sentence} />
+//         <View style={styles.meta}>
+
+//           <Text style={styles.time}>{time}</Text>
+//           {tx.category
+//             ? <Text style={[styles.tag, { backgroundColor: hex ? hex + "22" : "#EEF2F6", color: hex ?? colors.textSecondary }]}>{tx.category.name}</Text>
+//             : null}
+//         </View>
+//       </View>
+
+//     </TouchableOpacity>
+//   );
+// }
+
+const Row = React.memo(function Row({ tx, colors2, simMap, showSim, onPress }: { tx: Tx; colors2: Record<string, string | null>; simMap: Record<string, Sim>; showSim: boolean; onPress: (id: string) => void }) {
   const isIn = tx.direction === "in";
   const time = new Date(tx.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   const hex = tx.category ? colors2[tx.category.id] ?? null : null;
+  const sim = showSim && tx.phone_number_id ? simMap[tx.phone_number_id] : undefined;
+  const accent = sim ? simColor(sim.id) : undefined;
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity style={styles.row} onPress={() => onPress(tx.id)} activeOpacity={0.7}>
       <View style={[styles.arrow, { backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
         <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={17} color={isIn ? "#16A34A" : "#DC2626"} />
       </View>
@@ -313,54 +410,24 @@ function Row({ tx, colors2, onPress }: { tx: Tx; colors2: Record<string, string 
         <TxSentence tx={tx} style={styles.sentence} />
         <View style={styles.meta}>
           <Text style={styles.time}>{time}</Text>
-          {tx.category
-            ? <Text style={[styles.tag, { backgroundColor: hex ? hex + "22" : "#EEF2F6", color: hex ?? colors.textSecondary }]}>{tx.category.name}</Text>
-            : null}
+          <View style={styles.provNum}>
+            {sim ? (
+              <View style={[styles.simChip, { backgroundColor: accent! + "22" }]}>
+                <View style={[styles.simDot, { backgroundColor: accent }]} />
+                <Text style={[styles.simChipTxt, { color: accent }]} numberOfLines={1}>{simEyebrow(sim)}</Text>
+              </View>
+            ) : null}
+          </View>
+          <View style={styles.categ}>
+            {tx.category
+              ? <Text style={[styles.tag, { backgroundColor: hex ? hex + "22" : "#EEF2F6", color: hex ?? colors.textSecondary }]}>{tx.category.name}</Text>
+              : null}
+          </View>
         </View>
       </View>
     </TouchableOpacity>
   );
-}
-
-// function Row({ tx, colors2, onPress }: { tx: Tx; colors2: Record<string, string | null>; onPress: () => void }) {
-//   const isIn = tx.direction === "in";
-
-//   // const title = tx.counterparty_name || tx.counterparty_number || "—";
-//   const title = tx.counterparty_name || localNum(tx.counterparty_number) || "—";
-
-//   const time = new Date(tx.transacted_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-//   const showNumber = !!(tx.counterparty_name && tx.counterparty_number);
-//   const hex = tx.category ? colors2[tx.category.id] ?? null : null;
-//   return (
-//     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
-//       <View style={styles.cTxn}>
-//         <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={16} color={isIn ? colors.moneyIn : colors.moneyOut} />
-//         <View style={{ flex: 1, minWidth: 0, marginLeft: 7 }}>
-//           <Text style={styles.name} numberOfLines={1}>{title}</Text>
-//           <View style={styles.metaRow}>
-//             {showNumber ? (
-//               <>
-//                 <Ionicons name="call-outline" size={11} color={colors.textSecondary} />
-//                 {/* <Text style={styles.metaNum} numberOfLines={1}> {tx.counterparty_number}</Text> */}
-//                 <Text style={styles.metaNum} numberOfLines={1}> {localNum(tx.counterparty_number)}</Text>
-//               </>
-//             ) : null}
-//             <Ionicons name="time-outline" size={11} color={colors.textSecondary} style={{ marginLeft: showNumber ? 8 : 0 }} />
-//             <Text style={styles.sub}> {time}</Text>
-//           </View>
-//         </View>
-//       </View>
-//       <View style={styles.cCat}>
-//         {tx.category
-//           ? <Text style={[styles.pill, { backgroundColor: hex ? hex + "22" : "#EEF2F6", color: hex ?? colors.textSecondary }]} numberOfLines={1}>{tx.category.name}</Text>
-//           : <Text style={styles.dash}>—</Text>}
-//       </View>
-//       <Text style={[styles.amt, styles.cAmt, { color: isIn ? colors.moneyIn : colors.moneyOut }]}>{isIn ? "+" : "−"}{money(tx.amount)}</Text>
-//       <Text style={[styles.bal, styles.cBal]}>{tx.balance_after != null ? money(tx.balance_after) : "—"}</Text>
-//     </TouchableOpacity>
-//   );
-// }
-
+});
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
@@ -392,6 +459,20 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 12, paddingHorizontal: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
   arrow: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", marginTop: 1 },
   sentence: { fontSize: 14, lineHeight: 20, color: colors.text },
+
+  // simEyebrow: { fontSize: 11, fontWeight: "600", marginBottom: 3, alignSelf: "auto"},
+
+  
+
+  provNum: { marginTop: 4, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999 },
+  simChip: { flexDirection: "row", alignItems: "center", paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, flexShrink: 1 },
+  simDot: { width: 4, height: 4, borderRadius: 3, marginRight: 4 },
+  simChipTxt: { fontSize: 9, fontWeight: "600", flexShrink: 1 },
+  categ: { marginTop: 4 },
+
+
+  // simEyebrow: { fontSize: 11, fontWeight: "600", marginBottom: 3, alignSelf: "flex-end" },
+
   meta: { flexDirection: "row", alignItems: "center", marginTop: 5 },
   time: { fontSize: 11, color: colors.textSecondary },
   tag: { fontSize: 10, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, overflow: "hidden", marginLeft: 8 },

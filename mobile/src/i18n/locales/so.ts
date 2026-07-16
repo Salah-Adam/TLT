@@ -3,7 +3,11 @@
 
 export default {
   tabs: { home: "Guriga", transactions: "Dhaqdhaqaaq", analytics: "Falanqayn", notifications: "Ogeysiis" },
-  common: { comingSoon: "Dhowaan" },
+  common: { comingSoon: "Dhowaan",
+
+     loadFailed: "Lama soo rari karin", retry: "Isku day mar kale",
+
+   },
   auth: {
     loginTitle: "Ku soo dhowow", tagline: "La soco shilin kasta, luqaddaada.",
     createAccount: "Samee akoon", haveAccount: "Akoon ayaan hore u leeyahay",
@@ -13,6 +17,10 @@ export default {
     loginBtn: "Gal", errorTitle: "Khalad", logout: "Ka bax",
     invalidCredentials: "Lambarka ama furaha sirta ah waa khalad.",
     genericError: "Wax baa qaldamay. Fadlan isku day mar kale.",
+
+    resendCode: "Dib u dir koodhka",
+    resendIn: "Dib u dir koodhka {{time}} gudahood",
+    codeResent: "Koodh cusub ayaa la diray.",
 
     forgotLink: "Furaha sirta ma illowday?",
     forgotTitle: "Dib u deji furahaaga",
@@ -81,6 +89,12 @@ export default {
     msgInNoBal: "{amount} ayaad ka heshay {who}",
     msgOut: "{amount} ayaad wareejisay {who}, haraagaaga waa {balance}",
     msgOutNoBal: "{amount} ayaad wareejisay {who}",
+
+    yourNumber: "Nambarkaaga",
+
+    emptyHint: "Dhaqdhaqaaqaagu halkan ayuu ka muuqan doonaa marka fariimaha la soo cusboonaysiiyo.",
+
+
   },
 
 
@@ -91,6 +105,9 @@ export default {
     offlineDelete: "Ku xidh internetka si aad u tirtirto.",
 
     group_transactions: "Dhaqdhaqaaq", group_alerts: "Digniino", group_summaries: "Soo koobid", group_reports: "Warbixino", group_account: "Akoonka",
+
+    emptyHint: "Halkan waxaad ku arki doontaa digniino, kooban, iyo warbixino.",
+    
   },
 
   analytics: {
@@ -224,6 +241,19 @@ export default {
     noAccount: "Ma jiro akoon dib loo soo celin karo lambarkan. Waxaad diiwaangelin kartaa.",
     pwShort: "Furuhu waa inuu ugu yaraan 4 xaraf yahay.", pwMismatch: "Furayaashu isma laha.",
     needNumber: "Geli lambar Soomaali sax ah.", needCode: "Geli koodka 6-god ah.",
+  },
+
+  onboarding: {
+    skip: "Ka bood", next: "Xigta", start: "Bilow", gotIt: "Waan fahmay",
+    s1Title: "Diiwaankaaga, si toos ah",
+    s1Body: "Lacag kasta oo aad dirto ama hesho waxay halkan noqonaysaa diiwaan cad — wax qorid ama rasiid ma jiro.",
+    s2Title: "Fahan lacagtaada",
+    s2Body: "Arag halka lacagtaadu tagto adigoo adeegsanaya kooban, qaybo, iyo warbixino fudud.",
+    s3Title: "Xakameeyso lacagtaada",
+    s3Body: "Deji digniino kharash oo la soco dadka aad badanaa wax u dirto — Af-Soomaali ama Ingiriisi.",
+    tipHome: "Halkan riix Dejinta, Digniinaha kharashka, iyo Xiriiriyeyaasha la raacayo.",
+    tipTx: "Riix dhaqdhaqaaq kasta si aad u kala saarto ama qoraal ugu darto.",
+    tipAnalytics: "Halkan ka beddel maalinle, toddobaadle, iyo bille — kadibna fur warbixin buuxda oo faahfaahsan.",
   },
 
 };

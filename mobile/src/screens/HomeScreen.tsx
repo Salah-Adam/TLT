@@ -18,6 +18,11 @@ import { useSync } from "../store/useSync";
 import { getLastSynced, syncAll } from "../data/sync";
 import { TxSentence } from "../components/TxSentence";
 
+import { readSims, simColor, simEyebrow, type Sim } from "../data/phoneNumbers";
+
+import { CoachTip } from "../components/CoachTip";
+import { hasSeen, markSeen } from "../onboarding";
+
 const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const pctW = (v: number, max: number): `${number}%` => `${max > 0 ? Math.round((v / max) * 100) : 0}%`;
 
@@ -33,6 +38,12 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [menu, setMenu] = useState(false);
+
+  const [sims, setSims] = useState<Sim[]>([]);
+
+  const [tipHome, setTipHome] = useState(false);
+  useEffect(() => { (async () => { if (await hasSeen("intro") && !(await hasSeen("tipHome"))) setTipHome(true); })(); }, []);
+  const dismissTipHome = () => { markSeen("tipHome"); setTipHome(false); };
 
   const loadCache = useCallback(async () => {
     setData(await readHome());
@@ -55,6 +66,8 @@ export default function HomeScreen() {
   //   setRefreshing(false);
   // }, [loadCache]);
 
+  useEffect(() => { readSims().then(setSims); }, []);
+
   useEffect(() => {
     (async () => {
       await loadCache();
@@ -72,6 +85,9 @@ export default function HomeScreen() {
   const month = data?.month ?? { in: 0, out: 0, net: 0 };
   const cats = data?.topCategories ?? [];
   const recent = data?.recent ?? [];
+
+  const showSim = sims.length >= 2;
+
   const maxBar = Math.max(month.in, month.out, 1);
   const maxCat = Math.max(cats[0]?.amount ?? 0, 1);
   const syncedLabel = lastSynced ? new Date(lastSynced).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
@@ -79,163 +95,179 @@ export default function HomeScreen() {
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{ paddingBottom: 28 }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={doRefresh} tintColor={colors.primary} />}
-    >
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Text style={styles.hello} numberOfLines={1}>{`${t("home.greeting")}, ${user?.full_name ?? ""}`}</Text>
-        {/* <TouchableOpacity hitSlop={10} onPress={() => Alert.alert(t("common.comingSoon"))}>
-          <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
-        </TouchableOpacity> */}
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: colors.background }}
+        contentContainerStyle={{ paddingBottom: 28 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={doRefresh} tintColor={colors.primary} />}
+      >
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+          <Text style={styles.hello} numberOfLines={1}>{`${t("home.greeting")}, ${user?.full_name ?? ""}`}</Text>
+          {/* <TouchableOpacity hitSlop={10} onPress={() => Alert.alert(t("common.comingSoon"))}>
+            <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
+          </TouchableOpacity> */}
 
-        <TouchableOpacity hitSlop={10} onPress={() => setMenu(true)}>
-          <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
-        </TouchableOpacity>
-
-        <Modal transparent visible={menu} animationType="fade" onRequestClose={() => setMenu(false)}>
-          <Pressable style={mstyles.overlay} onPress={() => setMenu(false)}>
-            <View style={[mstyles.menu, { top: insets.top + 44, right: 12 }]}>
-
-              {/* <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("Settings"); }}>
-                <Ionicons name="settings-outline" size={19} color={colors.text} />
-                <Text style={mstyles.itemTxt}>{t("settings.title")}</Text>
-              </TouchableOpacity>
-              <View style={mstyles.divider} /> */}
-
-              <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("TrackedContacts"); }}>
-                <Ionicons name="people-outline" size={19} color={colors.text} />
-                <Text style={mstyles.itemTxt}>{t("contacts.title")}</Text>
-              </TouchableOpacity>
-              <View style={mstyles.divider} />
-
-              {/* <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); Alert.alert(t("common.comingSoon")); }}>
-                <Ionicons name="alert-circle-outline" size={19} color={colors.text} />
-                <Text style={mstyles.itemTxt}>{t("home.menuAlerts")}</Text>
-              </TouchableOpacity> */}
-
-              <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("SpendingAlerts"); }}>
-                <Ionicons name="alert-circle-outline" size={19} color={colors.text} />
-                <Text style={mstyles.itemTxt}>{t("home.menuAlerts")}</Text>
-              </TouchableOpacity>
-              <View style={mstyles.divider} />
-
-
-              <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("Settings"); }}>
-                <Ionicons name="settings-outline" size={19} color={colors.text} />
-                <Text style={mstyles.itemTxt}>{t("settings.title")}</Text>
-              </TouchableOpacity>
-              {/* <View style={mstyles.divider} /> */}
-
-
-            </View>
-          </Pressable>
-        </Modal>
-
-        {/* <TouchableOpacity hitSlop={10} onPress={() => setMenu(true)}>
-          <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
-        </TouchableOpacity>
-
-        {/* <Modal transparent visible={menu} animationType="fade" onRequestClose={() => setMenu(false)}>
-          <Pressable style={mstyles.backdrop} onPress={() => setMenu(false)}>
-            <Pressable style={mstyles.sheet}>
-              <Text style={mstyles.title}>{t("home.menuTitle")}</Text>
-              <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("TrackedContacts"); }}>
-                <Ionicons name="people-outline" size={20} color={colors.primary} />
-                <Text style={mstyles.itemTxt}>{t("contacts.title")}</Text>
-                <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} style={{ marginLeft: "auto" }} />
-              </TouchableOpacity>
-              <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); Alert.alert(t("common.comingSoon")); }}>
-                <Ionicons name="alert-circle-outline" size={20} color={colors.primary} />
-                <Text style={mstyles.itemTxt}>{t("home.menuAlerts")}</Text>
-                <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} style={{ marginLeft: "auto" }} />
-              </TouchableOpacity>
-            </Pressable>
-          </Pressable>
-        </Modal> */}
-      </View> 
-
-
-      <View style={styles.hero}>
-        <Text style={styles.heroLabel}>{t("home.balance")}</Text>
-        <Text style={styles.heroAmount}>{money(balance)}</Text>
-        <View style={styles.heroSync}>
-          <Ionicons name="refresh" size={13} color="#A7F3D0" />
-          <Text style={styles.heroSyncTxt}> {t("home.lastSynced")} {syncedLabel}</Text>
-        </View>
-      </View>
-
-      <View style={styles.row}>
-        <View style={[styles.miniCard, { marginRight: 6 }]}>
-          <View style={styles.miniHead}>
-            <View style={[styles.iconCircle, { backgroundColor: "#DCFCE7" }]}><Ionicons name="arrow-down" size={15} color="#16A34A" /></View>
-            <Text style={styles.miniLabel}>{t("home.todayReceived")}</Text>
-          </View>
-          <Text style={[styles.miniAmount, { color: colors.moneyIn }]}>+{money(today.in)}</Text>
-        </View>
-        <View style={[styles.miniCard, { marginLeft: 6 }]}>
-          <View style={styles.miniHead}>
-            <View style={[styles.iconCircle, { backgroundColor: "#FEE2E2" }]}><Ionicons name="arrow-up" size={15} color="#DC2626" /></View>
-            <Text style={styles.miniLabel}>{t("home.todaySpent")}</Text>
-          </View>
-          <Text style={[styles.miniAmount, { color: colors.moneyOut }]}>−{money(today.out)}</Text>
-        </View>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t("home.weekTitle")}</Text>
-        <Text style={styles.keptTxt}>{t("home.weekSpent", { amount: money(week.out) })}</Text>
-        {week.changePercent != null ? (
-          <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4 }}>
-            {week.changePercent > 0 ? t("home.weekUp", { pct: Math.abs(week.changePercent) })
-              : week.changePercent < 0 ? t("home.weekDown", { pct: Math.abs(week.changePercent) })
-              : t("home.weekSame")}
-          </Text>
-        ) : null}
-      </View>
-
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t("home.monthTitle")}</Text>
-        <View style={styles.keptRow}>
-          <Ionicons name="checkmark-circle" size={18} color={month.net >= 0 ? colors.success : colors.error} />
-          <Text style={styles.keptTxt}> {t("home.kept")} <Text style={{ fontWeight: "700", color: colors.primaryDark }}>{money(month.net)}</Text></Text>
-        </View>
-        <BarLine label={t("home.moneyIn")} value={money(month.in)} width={pctW(month.in, maxBar)} color={colors.moneyIn} />
-        <BarLine label={t("home.moneyOut")} value={money(month.out)} width={pctW(month.out, maxBar)} color={colors.moneyOut} />
-      </View>
-
-      <View style={styles.card}>
-        {/* <Text style={styles.cardTitle}>{t("home.question")}</Text>
-        <Text style={styles.cardSub}>{t("home.questionSub")}</Text> */}
-        
-        <Text style={styles.cardTitle}>{t("home.question")}</Text>
-        {cats.length === 0
-          ? <Text style={styles.empty}>{t("home.empty")}</Text>
-          : cats.map((c, i) => (
-            <View key={i} style={{ marginTop: 11 }}>
-              <View style={styles.lineTop}>
-                <Text style={styles.catName}>{c.name}</Text>
-                <Text style={styles.catAmt}>{money(c.amount)}</Text>
-              </View>
-              <View style={styles.barTrack}><View style={[styles.barFill, { width: pctW(c.amount, maxCat), backgroundColor: colors.primary }]} /></View>
-            </View>
-          ))}
-      </View>
-
-      <View style={styles.card}>
-        <View style={styles.recentHead}>
-          <Text style={styles.cardTitle}>{t("home.recent")}</Text>
-          <TouchableOpacity onPress={() => nav.navigate("Transactions")}>
-            <Text style={styles.seeAll}>{t("home.seeAll")} ›</Text>
+          <TouchableOpacity hitSlop={10} onPress={() => setMenu(true)}>
+            <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
           </TouchableOpacity>
+
+          <Modal transparent visible={menu} animationType="fade" onRequestClose={() => setMenu(false)}>
+            <Pressable style={mstyles.overlay} onPress={() => setMenu(false)}>
+              <View style={[mstyles.menu, { top: insets.top + 44, right: 12 }]}>
+
+                {/* <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("Settings"); }}>
+                  <Ionicons name="settings-outline" size={19} color={colors.text} />
+                  <Text style={mstyles.itemTxt}>{t("settings.title")}</Text>
+                </TouchableOpacity>
+                <View style={mstyles.divider} /> */}
+
+                <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("TrackedContacts"); }}>
+                  <Ionicons name="people-outline" size={19} color={colors.text} />
+                  <Text style={mstyles.itemTxt}>{t("contacts.title")}</Text>
+                </TouchableOpacity>
+                <View style={mstyles.divider} />
+
+                {/* <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); Alert.alert(t("common.comingSoon")); }}>
+                  <Ionicons name="alert-circle-outline" size={19} color={colors.text} />
+                  <Text style={mstyles.itemTxt}>{t("home.menuAlerts")}</Text>
+                </TouchableOpacity> */}
+
+                <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("SpendingAlerts"); }}>
+                  <Ionicons name="alert-circle-outline" size={19} color={colors.text} />
+                  <Text style={mstyles.itemTxt}>{t("home.menuAlerts")}</Text>
+                </TouchableOpacity>
+                <View style={mstyles.divider} />
+
+
+                <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("Settings"); }}>
+                  <Ionicons name="settings-outline" size={19} color={colors.text} />
+                  <Text style={mstyles.itemTxt}>{t("settings.title")}</Text>
+                </TouchableOpacity>
+                {/* <View style={mstyles.divider} /> */}
+
+
+              </View>
+            </Pressable>
+          </Modal>
+
+          {/* <TouchableOpacity hitSlop={10} onPress={() => setMenu(true)}>
+            <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
+          </TouchableOpacity>
+
+          {/* <Modal transparent visible={menu} animationType="fade" onRequestClose={() => setMenu(false)}>
+            <Pressable style={mstyles.backdrop} onPress={() => setMenu(false)}>
+              <Pressable style={mstyles.sheet}>
+                <Text style={mstyles.title}>{t("home.menuTitle")}</Text>
+                <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("TrackedContacts"); }}>
+                  <Ionicons name="people-outline" size={20} color={colors.primary} />
+                  <Text style={mstyles.itemTxt}>{t("contacts.title")}</Text>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} style={{ marginLeft: "auto" }} />
+                </TouchableOpacity>
+                <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); Alert.alert(t("common.comingSoon")); }}>
+                  <Ionicons name="alert-circle-outline" size={20} color={colors.primary} />
+                  <Text style={mstyles.itemTxt}>{t("home.menuAlerts")}</Text>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} style={{ marginLeft: "auto" }} />
+                </TouchableOpacity>
+              </Pressable>
+            </Pressable>
+          </Modal> */}
+        </View> 
+
+
+        <View style={styles.hero}>
+          <Text style={styles.heroLabel}>{t("home.balance")}</Text>
+          <Text style={styles.heroAmount}>{money(balance)}</Text>
+          <View style={styles.heroSync}>
+            <Ionicons name="refresh" size={13} color="#A7F3D0" />
+            <Text style={styles.heroSyncTxt}> {t("home.lastSynced")} {syncedLabel}</Text>
+          </View>
         </View>
-        {recent.length === 0
-          ? <Text style={styles.empty}>{t("home.empty")}</Text>
-          : recent.map((tx, i) => <TxItem key={tx.id ?? String(i)} tx={tx} last={i === recent.length - 1} />)}
-      </View>
-    </ScrollView>
+
+        <View style={styles.row}>
+          <View style={[styles.miniCard, { marginRight: 6 }]}>
+            <View style={styles.miniHead}>
+              <View style={[styles.iconCircle, { backgroundColor: "#DCFCE7" }]}><Ionicons name="arrow-down" size={15} color="#16A34A" /></View>
+              <Text style={styles.miniLabel}>{t("home.todayReceived")}</Text>
+            </View>
+            <Text style={[styles.miniAmount, { color: colors.moneyIn }]}>+{money(today.in)}</Text>
+          </View>
+          <View style={[styles.miniCard, { marginLeft: 6 }]}>
+            <View style={styles.miniHead}>
+              <View style={[styles.iconCircle, { backgroundColor: "#FEE2E2" }]}><Ionicons name="arrow-up" size={15} color="#DC2626" /></View>
+              <Text style={styles.miniLabel}>{t("home.todaySpent")}</Text>
+            </View>
+            <Text style={[styles.miniAmount, { color: colors.moneyOut }]}>−{money(today.out)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t("home.weekTitle")}</Text>
+          <Text style={styles.keptTxt}>{t("home.weekSpent", { amount: money(week.out) })}</Text>
+          {week.changePercent != null ? (
+            <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4 }}>
+              {week.changePercent > 0 ? t("home.weekUp", { pct: Math.abs(week.changePercent) })
+                : week.changePercent < 0 ? t("home.weekDown", { pct: Math.abs(week.changePercent) })
+                : t("home.weekSame")}
+            </Text>
+          ) : null}
+        </View>
+
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t("home.monthTitle")}</Text>
+          <View style={styles.keptRow}>
+            <Ionicons name="checkmark-circle" size={18} color={month.net >= 0 ? colors.success : colors.error} />
+            <Text style={styles.keptTxt}> {t("home.kept")} <Text style={{ fontWeight: "700", color: colors.primaryDark }}>{money(month.net)}</Text></Text>
+          </View>
+          <BarLine label={t("home.moneyIn")} value={money(month.in)} width={pctW(month.in, maxBar)} color={colors.moneyIn} />
+          <BarLine label={t("home.moneyOut")} value={money(month.out)} width={pctW(month.out, maxBar)} color={colors.moneyOut} />
+        </View>
+
+        <View style={styles.card}>
+          {/* <Text style={styles.cardTitle}>{t("home.question")}</Text>
+          <Text style={styles.cardSub}>{t("home.questionSub")}</Text> */}
+          
+          <Text style={styles.cardTitle}>{t("home.question")}</Text>
+          {cats.length === 0
+            ? <Text style={styles.empty}>{t("home.empty")}</Text>
+            : cats.map((c, i) => (
+              <View key={i} style={{ marginTop: 11 }}>
+                <View style={styles.lineTop}>
+                  <Text style={styles.catName}>{c.name}</Text>
+                  <Text style={styles.catAmt}>{money(c.amount)}</Text>
+                </View>
+                <View style={styles.barTrack}><View style={[styles.barFill, { width: pctW(c.amount, maxCat), backgroundColor: colors.primary }]} /></View>
+              </View>
+            ))}
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.recentHead}>
+            <Text style={styles.cardTitle}>{t("home.recent")}</Text>
+            <TouchableOpacity onPress={() => nav.navigate("Transactions")}>
+              <Text style={styles.seeAll}>{t("home.seeAll")} ›</Text>
+            </TouchableOpacity>
+          </View>
+          {recent.length === 0
+            ? <Text style={styles.empty}>{t("home.empty")}</Text>
+            // : recent.map((tx, i) => <TxItem key={tx.id ?? String(i)} tx={tx} last={i === recent.length - 1} />)}
+            
+            // : recent.map((tx, i) => <TxItem key={tx.id ?? String(i)} tx={tx} last={i === recent.length - 1} sims={sims} showSim={showSim} />)}
+
+            : recent.map((tx, i) => (
+                <TxItem
+                  key={tx.id ?? String(i)}
+                  tx={tx}
+                  last={i === recent.length - 1}
+                  sims={sims}
+                  showSim={showSim}
+                  onPress={() => nav.navigate("Transactions", { screen: "TxDetail", params: { id: tx.id } })}
+                />
+              ))}
+        </View>
+      </ScrollView>
+      {tipHome ? <CoachTip text={t("onboarding.tipHome")} onDismiss={dismissTipHome} arrow="top-right" style={{ top: insets.top + 48, right: 12, maxWidth: 260 }} /> : null}
+    </View>
   );
 }
 
@@ -251,68 +283,84 @@ function BarLine({ label, value, width, color }: { label: string; value: string;
   );
 }
 
-
-function TxItem({ tx, last }: { tx: TxRow; last: boolean }) {
+function TxItem({ tx, last, sims, showSim, onPress }: { tx: TxRow; last: boolean; sims: Sim[]; showSim: boolean; onPress: () => void }) {
   const isIn = tx.direction === "in";
   const cat = tx.category?.name ?? null;
   const time = new Date(tx.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  const sim = showSim && tx.phone_number_id ? sims.find((s) => s.id === tx.phone_number_id) : undefined;
+
+  const accent = sim ? simColor(sim.id) : undefined;
   return (
     <View>
-      <View style={styles.txRow}>
+      <TouchableOpacity style={styles.txRow} onPress={onPress} activeOpacity={0.7}>
         <View style={[styles.iconCircle, { width: 34, height: 34, borderRadius: 17, backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
           <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={17} color={isIn ? "#16A34A" : "#DC2626"} />
         </View>
         <View style={{ flex: 1, marginLeft: 11 }}>
+          {/* {sim ? <Text style={[styles.simEyebrow, { color: simColor(sim.id) }]} numberOfLines={1}>{simEyebrow(sim)}</Text> : null} */}
           <TxSentence tx={tx} style={styles.sentence} />
           <View style={styles.metaRow}>
             <Text style={styles.txSub}>{time}</Text>
-            {cat ? <Text style={styles.homeTag}>{cat}</Text> : null}
+
+            <View style={styles.provNum}>
+              {sim ? (
+                <View style={[styles.simEyebrow, { backgroundColor: accent! + "22" }]}>
+                  <View style={[styles.simDot, { backgroundColor: accent }]} />
+                  <Text style={[styles.simChipTxt, { color: accent }]} numberOfLines={1}>{simEyebrow(sim)}</Text>
+                </View>
+              ) : null}
+            </View>
+
+            <View style={styles.categ}>{cat ? <Text style={styles.homeTag}>{cat}</Text> : null}</View>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
       {!last ? <View style={styles.sep} /> : null}
     </View>
   );
 }
 
+
+  // <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={17} color={isIn ? "#16A34A" : "#DC2626"} />
+  //       </View>
+  //       <View style={{ flex: 1, marginLeft: 11 }}>
+  //         <TxSentence tx={tx} style={styles.sentence} />
+  //         <View style={styles.metaRow}>
+  //           <Text style={styles.txSub}>{time}</Text>
+  //           {sim ? (
+  //             <View style={[styles.simChip, { backgroundColor: accent! + "22" }]}>
+  //               <View style={[styles.simDot, { backgroundColor: accent }]} />
+  //               <Text style={[styles.simChipTxt, { color: accent }]} numberOfLines={1}>{simService(sim)} · {localNum(sim.number)}</Text>
+  //             </View>
+  //           ) : null}
+  //           {cat ? <Text style={styles.homeTag}>{cat}</Text> : null}
+  //         </View>
+  //       </View>
+  //     </TouchableOpacity>
+
+
 // function TxItem({ tx, last }: { tx: TxRow; last: boolean }) {
 //   const isIn = tx.direction === "in";
-//   const name = tx.counterparty_name;
 //   const cat = tx.category?.name ?? null;
-//   const title = name || cat || "—";
 //   const time = new Date(tx.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-//   const showNumber = !!tx.counterparty_number;
-//   const showCat = !showNumber && !!name && !!cat;
 //   return (
 //     <View>
 //       <View style={styles.txRow}>
-//         <View style={[styles.iconCircle, { width: 36, height: 36, borderRadius: 18, backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
-//           <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={18} color={isIn ? "#16A34A" : "#DC2626"} />
+//         <View style={[styles.iconCircle, { width: 34, height: 34, borderRadius: 17, backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
+//           <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={17} color={isIn ? "#16A34A" : "#DC2626"} />
 //         </View>
 //         <View style={{ flex: 1, marginLeft: 11 }}>
-//           <Text style={styles.txTitle} numberOfLines={1}>{title}</Text>
+//           <TxSentence tx={tx} style={styles.sentence} />
 //           <View style={styles.metaRow}>
-//             {showNumber ? (
-//               <>
-//                 <Ionicons name="call-outline" size={11} color={colors.textSecondary} />
-//                 {/* <Text style={styles.metaNum} numberOfLines={1}> {tx.counterparty_number}</Text> */}
-//                 <Text style={styles.metaNum} numberOfLines={1}> {localNum(tx.counterparty_number)}</Text>
-//               </>
-//             ) : showCat ? (
-//               <Text style={styles.txSub} numberOfLines={1}>{cat}</Text>
-//             ) : null}
-//             <Ionicons name="time-outline" size={11} color={colors.textSecondary} style={{ marginLeft: showNumber || showCat ? 8 : 0 }} />
-//             <Text style={styles.txSub}> {time}</Text>
+//             <Text style={styles.txSub}>{time}</Text>
+//             {cat ? <Text style={styles.homeTag}>{cat}</Text> : null}
 //           </View>
 //         </View>
-//         <Text style={[styles.txAmt, { color: isIn ? colors.moneyIn : colors.moneyOut }]}>{isIn ? "+" : "−"}{money(tx.amount)}</Text>
 //       </View>
 //       {!last ? <View style={styles.sep} /> : null}
 //     </View>
 //   );
 // }
-
-
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
@@ -354,10 +402,21 @@ const styles = StyleSheet.create({
 
   txRow: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 10 },
   sentence: { fontSize: 14, lineHeight: 20, color: colors.text },
-  homeTag: { fontSize: 10, color: colors.textSecondary, backgroundColor: "#EEF2F6", paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, overflow: "hidden", marginLeft: 8 },
+
+  // simEyebrow: { fontSize: 11, fontWeight: "600", marginBottom: 3 },
+
+  provNum: {marginTop: 4, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999},
+  simEyebrow: {fontSize: 9 , flexDirection: "row", alignItems: "center", paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999,  flexShrink: 1 },
+  simDot: { width: 4, height: 4, borderRadius: 3, marginRight: 4 },
+  simChipTxt: { fontSize: 9, fontWeight: "600", flexShrink: 1 },
+
+  // simEyebrow: { fontSize: 11, marginBottom: 3, paddingHorizontal: 7, paddingVertical: 10, borderRadius: 999, marginLeft: 8 },
+
+  categ:{marginTop: 4},
+  homeTag: { fontSize: 10, color: colors.textSecondary, paddingHorizontal: 7, backgroundColor: "#EEF2F6", paddingVertical: 2, borderRadius: 999, overflow: "hidden"},
 
   txTitle: { fontSize: 14, fontWeight: "500", color: colors.text },
-  txSub: { fontSize: 12, color: colors.textSecondary, marginTop: 1 },
+  txSub: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   txAmt: { fontSize: 14, fontWeight: "600" },
   sep: { height: 1, backgroundColor: "#F1F5F9" },
   empty: { fontSize: 13, color: colors.textSecondary, marginTop: 10, textAlign: "center" },

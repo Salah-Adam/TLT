@@ -15,6 +15,10 @@ import { MiniCalendar } from "../components/MiniCalendar";
 import { useNavigation } from "@react-navigation/native";
 
 import { readAnalytics, type DailyAnalytics, type WeeklyAnalytics, type MonthlyAnalytics, type AnalyticsSel } from "../data/analytics";
+import { EmptyState } from "../components/EmptyState";
+
+import { CoachTip } from "../components/CoachTip";
+import { hasSeen, markSeen } from "../onboarding";
 
 const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const pctW = (v: number, max: number): `${number}%` => `${max > 0 ? Math.round((v / max) * 100) : 0}%`;
@@ -52,6 +56,10 @@ export default function AnalyticsScreen() {
   const [lastSynced, setLastSynced] = useState<string | null>(null);
 
   useEffect(() => { readSims().then(setSims); }, []);
+
+  const [tipAnalytics, setTipAnalytics] = useState(false);
+  useEffect(() => { (async () => { if (await hasSeen("intro") && !(await hasSeen("tipAnalytics"))) setTipAnalytics(true); })(); }, []);
+  const dismissTipAnalytics = () => { markSeen("tipAnalytics"); setTipAnalytics(false); };
 
   // const load = useCallback(async () => {
   //   setLoading(true);
@@ -110,145 +118,149 @@ export default function AnalyticsScreen() {
   const syncedLabel = lastSynced ? new Date(lastSynced).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 28 }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={doRefresh} tintColor={colors.primary} />}>
+    <View style={{ flex: 1 }}>
+      <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 28 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={doRefresh} tintColor={colors.primary} />}>
 
-      <View style={styles.controls}>
-        <View style={styles.segment}>
-          {/* {(["daily", "monthly"] as Period[]).map((pd, i) => ( */}
-          {(["daily", "weekly", "monthly"] as Period[]).map((pd, i) => (
-            <TouchableOpacity key={pd} onPress={() => setPeriod(pd)} style={[styles.segBtn, i > 0 && styles.segDiv, period === pd && styles.segActive]}>
-              <Text style={[styles.segTxt, period === pd && styles.segTxtActive]}>{t(`analytics.${pd}`)}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        {/* {period === "daily"
-          ? <TouchableOpacity style={styles.pill} onPress={() => setDateModal(true)}><Ionicons name="calendar-outline" size={14} color={colors.textSecondary} /><Text style={styles.pillTxt}>{dateLabel}</Text></TouchableOpacity>
-          : <View style={styles.stepper}>
+        <View style={styles.controls}>
+          <View style={styles.segment}>
+            {/* {(["daily", "monthly"] as Period[]).map((pd, i) => ( */}
+            {(["daily", "weekly", "monthly"] as Period[]).map((pd, i) => (
+              <TouchableOpacity key={pd} onPress={() => setPeriod(pd)} style={[styles.segBtn, i > 0 && styles.segDiv, period === pd && styles.segActive]}>
+                <Text style={[styles.segTxt, period === pd && styles.segTxtActive]}>{t(`analytics.${pd}`)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {/* {period === "daily"
+            ? <TouchableOpacity style={styles.pill} onPress={() => setDateModal(true)}><Ionicons name="calendar-outline" size={14} color={colors.textSecondary} /><Text style={styles.pillTxt}>{dateLabel}</Text></TouchableOpacity>
+            : <View style={styles.stepper}>
+                <TouchableOpacity onPress={() => stepMonth(-1)} hitSlop={8}><Ionicons name="chevron-back" size={18} color={colors.text} /></TouchableOpacity>
+                <Text style={styles.stepTxt}>{monthLabel}</Text>
+                <TouchableOpacity onPress={() => stepMonth(1)} hitSlop={8}><Ionicons name="chevron-forward" size={18} color={colors.text} /></TouchableOpacity>
+              </View>} */}
+          {period === "daily" ? (
+            <TouchableOpacity style={styles.pill} onPress={() => setDateModal(true)}><Ionicons name="calendar-outline" size={14} color={colors.textSecondary} /><Text style={styles.pillTxt}>{dateLabel}</Text></TouchableOpacity>
+          ) : period === "weekly" ? (
+            <View style={styles.stepper}>
+              <TouchableOpacity onPress={() => stepWeek(-1)} hitSlop={8}><Ionicons name="chevron-back" size={18} color={colors.text} /></TouchableOpacity>
+              <Text style={styles.stepTxt}>{weekLabel}</Text>
+              <TouchableOpacity onPress={() => stepWeek(1)} hitSlop={8}><Ionicons name="chevron-forward" size={18} color={colors.text} /></TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.stepper}>
               <TouchableOpacity onPress={() => stepMonth(-1)} hitSlop={8}><Ionicons name="chevron-back" size={18} color={colors.text} /></TouchableOpacity>
               <Text style={styles.stepTxt}>{monthLabel}</Text>
               <TouchableOpacity onPress={() => stepMonth(1)} hitSlop={8}><Ionicons name="chevron-forward" size={18} color={colors.text} /></TouchableOpacity>
-            </View>} */}
-        {period === "daily" ? (
-          <TouchableOpacity style={styles.pill} onPress={() => setDateModal(true)}><Ionicons name="calendar-outline" size={14} color={colors.textSecondary} /><Text style={styles.pillTxt}>{dateLabel}</Text></TouchableOpacity>
-        ) : period === "weekly" ? (
-          <View style={styles.stepper}>
-            <TouchableOpacity onPress={() => stepWeek(-1)} hitSlop={8}><Ionicons name="chevron-back" size={18} color={colors.text} /></TouchableOpacity>
-            <Text style={styles.stepTxt}>{weekLabel}</Text>
-            <TouchableOpacity onPress={() => stepWeek(1)} hitSlop={8}><Ionicons name="chevron-forward" size={18} color={colors.text} /></TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.stepper}>
-            <TouchableOpacity onPress={() => stepMonth(-1)} hitSlop={8}><Ionicons name="chevron-back" size={18} color={colors.text} /></TouchableOpacity>
-            <Text style={styles.stepTxt}>{monthLabel}</Text>
-            <TouchableOpacity onPress={() => stepMonth(1)} hitSlop={8}><Ionicons name="chevron-forward" size={18} color={colors.text} /></TouchableOpacity>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.controls2}>
-        <TouchableOpacity style={[styles.pill, selectedSims.length > 0 && styles.pillActive]} onPress={() => setSimModal(true)}>
-          <Ionicons name="phone-portrait-outline" size={14} color={selectedSims.length > 0 ? "#fff" : colors.textSecondary} />
-          <Text style={[styles.pillTxt, selectedSims.length > 0 && { color: "#fff" }]}>{simLabelTxt}</Text>
-          <Ionicons name="chevron-down" size={13} color={selectedSims.length > 0 ? "#fff" : colors.textSecondary} />
-        </TouchableOpacity>
-        <View style={styles.syncRow}><Ionicons name="refresh" size={12} color={colors.textSecondary} /><Text style={styles.syncTxt}> {t("home.lastSynced")} {syncedLabel}</Text></View>
-      </View>
-
-      {loading ? <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>
-        : isEmpty ? <View style={styles.card}><Text style={styles.empty}>{t("analytics.empty")}</Text></View>
-        : <>
-          <View style={styles.card}>
-            {/* <Text style={styles.cardTitle}>{period === "daily" ? dateLabel : monthLabel}</Text> */}
-            <Text style={styles.cardTitle}>{period === "daily" ? dateLabel : period === "weekly" ? weekLabel : monthLabel}</Text>
-            <View style={styles.keptRow}>
-              <Ionicons name={net >= 0 ? "checkmark-circle" : "alert-circle"} size={18} color={net >= 0 ? colors.success : colors.error} />
-              <Text style={styles.keptTxt}> {net >= 0 ? t("analytics.kept") : t("analytics.overspent")} <Text style={{ fontWeight: "700", color: net >= 0 ? colors.primaryDark : colors.error }}>{money(Math.abs(net))}</Text></Text>
             </View>
-            <Bar label={t("analytics.received")} value={money(totalIn)} width={pctW(totalIn, maxBar)} color={colors.moneyIn} />
-            <Bar label={t("analytics.spent")} value={money(totalOut)} width={pctW(totalOut, maxBar)} color={colors.moneyOut} />
-            <Text style={styles.count}>{data!.transaction_count} {t("analytics.txns")}</Text>
-          </View>
+          )}
+        </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>{t("analytics.whereTitle")}</Text>
-            {cats.length === 0 ? <Text style={styles.empty}>{t("analytics.noSpending")}</Text>
-              : cats.map((c, i) => (
-                <View key={i} style={{ marginTop: 11 }}>
-                  <View style={styles.lineTop}><Text style={styles.catName}>{c.name}</Text><Text style={styles.catAmt}>{money(c.amount)}</Text></View>
-                  <View style={styles.track}><View style={[styles.fill, { width: pctW(c.amount, maxCat), backgroundColor: colors.primary }]} /></View>
-                </View>
-              ))}
-          </View>
-
-          {/* {period === "monthly" && (data as MonthlyAnalytics).daily_trend?.length > 0 && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>{t("analytics.trendTitle")}</Text>
-              <SpendDiary series={(data as MonthlyAnalytics).daily_trend} />
-            </View>
-          )} */}
-
-          {/* {period === "monthly" && (data as MonthlyAnalytics).daily_trend?.length > 0 && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>{t("analytics.trendTitle")}</Text>
-              <Trend series={(data as MonthlyAnalytics).daily_trend} />
-            </View>
-          )} */}
-
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>{t("analytics.highlights")}</Text>
-            {period === "daily" ? <>
-              {(data as DailyAnalytics).largest_in ? <Hl icon="arrow-down" color={colors.moneyIn} text={t("analytics.largestIn", { amount: money((data as DailyAnalytics).largest_in!) })} /> : null}
-              {(data as DailyAnalytics).largest_out ? <Hl icon="arrow-up" color={colors.moneyOut} text={t("analytics.largestOut", { amount: money((data as DailyAnalytics).largest_out!) })} /> : null}
-            </> : <>
-            {/* ) : (
-              <> */}
-              {(data as any).busiest_day ? <Hl icon="calendar" color={colors.info} text={t("analytics.busiestDay", { date: fmtDay((data as any).busiest_day) })} /> : null}
-              {(data as any).busiest_hour != null ? <Hl icon="time" color={colors.info} text={t("analytics.busiestHour", { hour: String((data as any).busiest_hour) })} /> : null}
-              </>
-            }
-              {/* {(data as MonthlyAnalytics).busiest_day ? <Hl icon="calendar" color={colors.info} text={t("analytics.busiestDay", { date: fmtDay((data as MonthlyAnalytics).busiest_day!) })} /> : null}
-              {(data as MonthlyAnalytics).busiest_hour != null ? <Hl icon="time" color={colors.info} text={t("analytics.busiestHour", { hour: String((data as MonthlyAnalytics).busiest_hour) })} /> : null}
-            </>} */}
-            
-          </View>
-
-
-          <TouchableOpacity style={styles.reportBtn}
-            // onPress={() => nav.navigate("Report", period === "daily" ? { period: "daily", date } : { period: "monthly", year: ym.year, month: ym.month })}>
-            onPress={() => nav.navigate("Report", 
-              period === "daily" ? { period: "daily", date } 
-              : period === "weekly" ? { period: "weekly", start: weekStart } 
-              : { period: "monthly", year: ym.year, month: ym.month })}>
-            <Ionicons name="document-text-outline" size={16} color="#fff" />
-            <Text style={styles.reportBtnTxt}>{t("analytics.viewReport")}</Text>
+        <View style={styles.controls2}>
+          <TouchableOpacity style={[styles.pill, selectedSims.length > 0 && styles.pillActive]} onPress={() => setSimModal(true)}>
+            <Ionicons name="phone-portrait-outline" size={14} color={selectedSims.length > 0 ? "#fff" : colors.textSecondary} />
+            <Text style={[styles.pillTxt, selectedSims.length > 0 && { color: "#fff" }]}>{simLabelTxt}</Text>
+            <Ionicons name="chevron-down" size={13} color={selectedSims.length > 0 ? "#fff" : colors.textSecondary} />
           </TouchableOpacity>
-        </>}
+          <View style={styles.syncRow}><Ionicons name="refresh" size={12} color={colors.textSecondary} /><Text style={styles.syncTxt}> {t("home.lastSynced")} {syncedLabel}</Text></View>
+        </View>
 
-      <Modal transparent visible={simModal} animationType="slide" onRequestClose={() => setSimModal(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setSimModal(false)}>
-          <Pressable style={styles.sheet}>
-            <Text style={styles.sheetTitle}>{t("tx.filterSim")}</Text>
-            <TouchableOpacity style={styles.simRow} onPress={() => setSelectedSims([])}><Text style={styles.simTxt}>{t("tx.allSims")}</Text>{selectedSims.length === 0 ? <Ionicons name="checkmark" size={18} color={colors.primary} /> : null}</TouchableOpacity>
-            {sims.map((s) => (
-              <TouchableOpacity key={s.id} style={styles.simRow} onPress={() => toggleSim(s.id)}>
-                <Text style={styles.simTxt}>{simLabel(s)}</Text>
-                {selectedSims.includes(s.id) ? <Ionicons name="checkmark-circle" size={20} color={colors.primary} /> : <Ionicons name="ellipse-outline" size={20} color={colors.border} />}
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity style={styles.applyBtn} onPress={() => setSimModal(false)}><Text style={styles.applyTxt}>{t("tx.apply")}</Text></TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
+        {loading ? <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>
+          // : isEmpty ? <View style={styles.card}><Text style={styles.empty}>{t("analytics.empty")}</Text></View>
+          : isEmpty ? <EmptyState icon="bar-chart-outline" title={t("analytics.empty")} />
+          : <>
+            <View style={styles.card}>
+              {/* <Text style={styles.cardTitle}>{period === "daily" ? dateLabel : monthLabel}</Text> */}
+              <Text style={styles.cardTitle}>{period === "daily" ? dateLabel : period === "weekly" ? weekLabel : monthLabel}</Text>
+              <View style={styles.keptRow}>
+                <Ionicons name={net >= 0 ? "checkmark-circle" : "alert-circle"} size={18} color={net >= 0 ? colors.success : colors.error} />
+                <Text style={styles.keptTxt}> {net >= 0 ? t("analytics.kept") : t("analytics.overspent")} <Text style={{ fontWeight: "700", color: net >= 0 ? colors.primaryDark : colors.error }}>{money(Math.abs(net))}</Text></Text>
+              </View>
+              <Bar label={t("analytics.received")} value={money(totalIn)} width={pctW(totalIn, maxBar)} color={colors.moneyIn} />
+              <Bar label={t("analytics.spent")} value={money(totalOut)} width={pctW(totalOut, maxBar)} color={colors.moneyOut} />
+              <Text style={styles.count}>{data!.transaction_count} {t("analytics.txns")}</Text>
+            </View>
 
-      <Modal transparent visible={dateModal} animationType="slide" onRequestClose={() => setDateModal(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setDateModal(false)}>
-          <Pressable style={styles.sheet}>
-            <MiniCalendar from={date} to={null} onChange={(f) => { if (f) { setDate(f); setDateModal(false); } }} />
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>{t("analytics.whereTitle")}</Text>
+              {cats.length === 0 ? <Text style={styles.empty}>{t("analytics.noSpending")}</Text>
+                : cats.map((c, i) => (
+                  <View key={i} style={{ marginTop: 11 }}>
+                    <View style={styles.lineTop}><Text style={styles.catName}>{c.name}</Text><Text style={styles.catAmt}>{money(c.amount)}</Text></View>
+                    <View style={styles.track}><View style={[styles.fill, { width: pctW(c.amount, maxCat), backgroundColor: colors.primary }]} /></View>
+                  </View>
+                ))}
+            </View>
+
+            {/* {period === "monthly" && (data as MonthlyAnalytics).daily_trend?.length > 0 && (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>{t("analytics.trendTitle")}</Text>
+                <SpendDiary series={(data as MonthlyAnalytics).daily_trend} />
+              </View>
+            )} */}
+
+            {/* {period === "monthly" && (data as MonthlyAnalytics).daily_trend?.length > 0 && (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>{t("analytics.trendTitle")}</Text>
+                <Trend series={(data as MonthlyAnalytics).daily_trend} />
+              </View>
+            )} */}
+
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>{t("analytics.highlights")}</Text>
+              {period === "daily" ? <>
+                {(data as DailyAnalytics).largest_in ? <Hl icon="arrow-down" color={colors.moneyIn} text={t("analytics.largestIn", { amount: money((data as DailyAnalytics).largest_in!) })} /> : null}
+                {(data as DailyAnalytics).largest_out ? <Hl icon="arrow-up" color={colors.moneyOut} text={t("analytics.largestOut", { amount: money((data as DailyAnalytics).largest_out!) })} /> : null}
+              </> : <>
+              {/* ) : (
+                <> */}
+                {(data as any).busiest_day ? <Hl icon="calendar" color={colors.info} text={t("analytics.busiestDay", { date: fmtDay((data as any).busiest_day) })} /> : null}
+                {(data as any).busiest_hour != null ? <Hl icon="time" color={colors.info} text={t("analytics.busiestHour", { hour: String((data as any).busiest_hour) })} /> : null}
+                </>
+              }
+                {/* {(data as MonthlyAnalytics).busiest_day ? <Hl icon="calendar" color={colors.info} text={t("analytics.busiestDay", { date: fmtDay((data as MonthlyAnalytics).busiest_day!) })} /> : null}
+                {(data as MonthlyAnalytics).busiest_hour != null ? <Hl icon="time" color={colors.info} text={t("analytics.busiestHour", { hour: String((data as MonthlyAnalytics).busiest_hour) })} /> : null}
+              </>} */}
+              
+            </View>
+
+
+            <TouchableOpacity style={styles.reportBtn}
+              // onPress={() => nav.navigate("Report", period === "daily" ? { period: "daily", date } : { period: "monthly", year: ym.year, month: ym.month })}>
+              onPress={() => nav.navigate("Report", 
+                period === "daily" ? { period: "daily", date } 
+                : period === "weekly" ? { period: "weekly", start: weekStart } 
+                : { period: "monthly", year: ym.year, month: ym.month })}>
+              <Ionicons name="document-text-outline" size={16} color="#fff" />
+              <Text style={styles.reportBtnTxt}>{t("analytics.viewReport")}</Text>
+            </TouchableOpacity>
+          </>}
+
+        <Modal transparent visible={simModal} animationType="slide" onRequestClose={() => setSimModal(false)}>
+          <Pressable style={styles.backdrop} onPress={() => setSimModal(false)}>
+            <Pressable style={styles.sheet}>
+              <Text style={styles.sheetTitle}>{t("tx.filterSim")}</Text>
+              <TouchableOpacity style={styles.simRow} onPress={() => setSelectedSims([])}><Text style={styles.simTxt}>{t("tx.allSims")}</Text>{selectedSims.length === 0 ? <Ionicons name="checkmark" size={18} color={colors.primary} /> : null}</TouchableOpacity>
+              {sims.map((s) => (
+                <TouchableOpacity key={s.id} style={styles.simRow} onPress={() => toggleSim(s.id)}>
+                  <Text style={styles.simTxt}>{simLabel(s)}</Text>
+                  {selectedSims.includes(s.id) ? <Ionicons name="checkmark-circle" size={20} color={colors.primary} /> : <Ionicons name="ellipse-outline" size={20} color={colors.border} />}
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity style={styles.applyBtn} onPress={() => setSimModal(false)}><Text style={styles.applyTxt}>{t("tx.apply")}</Text></TouchableOpacity>
+            </Pressable>
           </Pressable>
-        </Pressable>
-      </Modal>
-    </ScrollView>
+        </Modal>
+
+        <Modal transparent visible={dateModal} animationType="slide" onRequestClose={() => setDateModal(false)}>
+          <Pressable style={styles.backdrop} onPress={() => setDateModal(false)}>
+            <Pressable style={styles.sheet}>
+              <MiniCalendar from={date} to={null} onChange={(f) => { if (f) { setDate(f); setDateModal(false); } }} />
+            </Pressable>
+          </Pressable>
+        </Modal>
+      </ScrollView>
+      {tipAnalytics ? <CoachTip text={t("onboarding.tipAnalytics")} onDismiss={dismissTipAnalytics} arrow="top-left" style={{ top: 58, left: 16, maxWidth: 280 }} /> : null}
+    </View>
   );
 }
 

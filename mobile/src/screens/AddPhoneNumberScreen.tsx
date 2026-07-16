@@ -11,6 +11,8 @@ import { Button } from "../components/Button";
 import { ApiError } from "../api/client";
 import { normalizePhone, isValidPhone } from "../utils/phone";
 import { addPhoneNumber, verifyPhoneNumber, reclaimNumber, reclaimNumberVerify } from "../data/phoneNumbers";
+import { ResendCode } from "../components/ResendCode";
+
 
 type Cls = "individual" | "business";
 
@@ -144,7 +146,12 @@ export default function AddPhoneNumberScreen() {
             <Text style={styles.otpHint}>{t("phones.codeSentTo")} +252 {normalized.replace(/^252/, "")}</Text>
             <TextField label={t("phones.code")} value={otp} onChangeText={(v) => setOtp(v.replace(/[^0-9]/g, ""))} keyboardType="number-pad" maxLength={6} placeholder="••••••" />
             {error ? <Text style={styles.error}>{error}</Text> : null}
+            {/* <View style={{ marginTop: 4 }}><Button title={t("phones.verify")} onPress={verify} loading={loading} /></View> */}
+          
             <View style={{ marginTop: 4 }}><Button title={t("phones.verify")} onPress={verify} loading={loading} /></View>
+            <ResendCode onResend={() => (mode === "reclaim"
+              ? reclaimNumber(normalized)
+              : addPhoneNumber({ number: normalized, displayName: displayName.trim() || undefined, classification }))} />
             <TouchableOpacity style={{ alignSelf: "center", marginTop: 16 }} onPress={() => { setPhase("details"); setOtp(""); setError(""); }}>
               <Text style={{ color: colors.primary, fontSize: 14 }}>{t("phones.changeNumber")}</Text>
             </TouchableOpacity>

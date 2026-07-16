@@ -21,10 +21,12 @@ type Dashboard = {
 };
 
 type Monthly = { by_category: { category_id: string | null; name: string; amount: number }[] };
+
 // export type TxRow = {
 //   id: string; amount: number; currency: string; direction: "in" | "out";
 //   counterparty_name: string | null; counterparty_number: string | null;
 //   category: { id: string | null; name: string } | null; transacted_at: string;
+//   balance_after: number | null;
 // };
 
 export type TxRow = {
@@ -32,6 +34,7 @@ export type TxRow = {
   counterparty_name: string | null; counterparty_number: string | null;
   category: { id: string | null; name: string } | null; transacted_at: string;
   balance_after: number | null;
+  phone_number_id: string | null;
 };
 
 type TxList = TxRow[];
@@ -107,11 +110,19 @@ export async function readHome(): Promise<HomeData | null> {
   const seen = new Set<string>();
   const recent: TxRow[] = recentTx
     .filter((tx) => (seen.has(tx.id) ? false : (seen.add(tx.id), true)))
+
     .map((tx) => ({
       id: tx.id, amount: tx.amount, currency: tx.currency, direction: tx.direction,
       counterparty_name: tx.counterparty_name, counterparty_number: tx.counterparty_number,
       category: tx.category, transacted_at: tx.transacted_at, balance_after: tx.balance_after,
+      phone_number_id: tx.phone_number_id,
     }));
+
+    // .map((tx) => ({
+    //   id: tx.id, amount: tx.amount, currency: tx.currency, direction: tx.direction,
+    //   counterparty_name: tx.counterparty_name, counterparty_number: tx.counterparty_number,
+    //   category: tx.category, transacted_at: tx.transacted_at, balance_after: tx.balance_after,
+    // }));
 
 
   // const recentTx = await readTransactions(5);

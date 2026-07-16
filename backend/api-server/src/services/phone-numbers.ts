@@ -99,7 +99,7 @@ export async function verifyPhoneNumberOtp(input: VerifyPhoneNumberInput): Promi
 export async function listPhoneNumbers(userId: string): Promise<object[]> {
   const result = await pool.query(
     `SELECT pn.id, pn.number, pn.provider, p.company_name AS provider_name,
-            pn.display_name, pn.classification, pn.is_primary, pn.is_active,
+            p.display_name, pn.classification, pn.is_primary, pn.is_active,
             pn.webhook_token, pn.last_sync_at, pn.created_at
      FROM phone_numbers pn
      JOIN providers p ON p.code = pn.provider

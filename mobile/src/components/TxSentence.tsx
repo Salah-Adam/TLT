@@ -30,7 +30,9 @@ export function TxSentence({ tx, style }: { tx: TxLike; style?: any }) {
   const parts: Record<string, { text: string; color?: string; bold?: boolean }> = {
     amount: { text: money(tx.amount), color: isIn ? colors.moneyIn : colors.moneyOut, bold: true },
     who: { text: who },
-    balance: { text: money(tx.balance_after ?? 0), bold: true },
+    balance: { text: money(tx.balance_after ?? 0) },
+    // balance: { text: money(tx.balance_after ?? 0), bold: true },
+
   };
 
   const nodes = template.split(/(\{\w+\})/g).map((seg, i) => {

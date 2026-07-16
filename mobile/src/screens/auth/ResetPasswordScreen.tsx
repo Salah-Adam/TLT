@@ -10,6 +10,7 @@ import { validateReset } from "../../utils/validate";
 import { authApi, finishAuth } from "../../api/auth";
 import { ApiError } from "../../api/client";
 import type { AuthStackParamList } from "../../navigation/AuthStack";
+import { ResendCode } from "../../components/ResendCode";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Reset">;
 
@@ -51,7 +52,9 @@ export default function ResetPasswordScreen({ route }: Props) {
         />
         <PasswordField label={t("auth.newPassword")} value={newPassword} onChangeText={setNewPassword} />
         {error ? <Text style={styles.error}>{error}</Text> : null}
+        {/* <Button title={t("auth.resetBtn")} onPress={submit} loading={loading} /> */}
         <Button title={t("auth.resetBtn")} onPress={submit} loading={loading} />
+        <ResendCode onResend={() => authApi.forgotPassword(phoneNumber)} />
       </ScrollView>
     </KeyboardAvoidingView>
   );

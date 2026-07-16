@@ -8,6 +8,7 @@ import { t } from "../lib/messages";
 async function phoneNumberRoutes(app: FastifyInstance): Promise<void> {
 
   app.post("/api/v1/phone-numbers", {
+    config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
     preHandler: app.authenticate,
     schema: { body: {
       type: "object", required: ["number"],
@@ -41,6 +42,7 @@ async function phoneNumberRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.post("/api/v1/phone-numbers/reclaim", {
+    config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
     preHandler: app.authenticate,
     schema: { body: { type: "object", required: ["number"], properties: { number: { type: "string", minLength: 6, maxLength: 20 } } } },
   }, async (request, reply) => {

@@ -7,6 +7,7 @@ import { t } from "../lib/messages";
 async function authRoutes(app: FastifyInstance): Promise<void> {
 
   app.post("/api/v1/auth/register", {
+    config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
     schema: { body: {
       type: "object", required: ["fullName", "phoneNumber", "password"],
       properties: {
@@ -64,6 +65,7 @@ async function authRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.post("/api/v1/auth/forgot-password", {
+    config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
     schema: { body: { type: "object", required: ["phoneNumber"], properties: { phoneNumber: { type: "string" } } } },
   }, async (request, reply) => {
     const { phoneNumber } = request.body as { phoneNumber: string };
@@ -88,6 +90,7 @@ async function authRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.post("/api/v1/auth/reclaim", {
+    config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
     schema: { body: {
       type: "object", required: ["fullName", "phoneNumber", "password"],
       properties: {
@@ -119,6 +122,7 @@ async function authRoutes(app: FastifyInstance): Promise<void> {
 
 
   app.post("/api/v1/auth/recover", {
+    config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
     schema: { body: { type: "object", required: ["phoneNumber"], properties: { phoneNumber: { type: "string", minLength: 6, maxLength: 12 } } } },
   }, async (request, reply) => {
     const { phoneNumber } = request.body as { phoneNumber: string };

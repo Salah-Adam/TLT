@@ -14,6 +14,7 @@ import { normalizePhone, isValidPhone } from "../../utils/phone";
 import { authApi, finishAuth } from "../../api/auth";
 import { ApiError } from "../../api/client";
 import type { AuthStackParamList } from "../../navigation/AuthStack";
+import { ResendCode } from "../../components/ResendCode";
 
 export default function RecoverScreen() {
   const { t } = useTranslation();
@@ -78,7 +79,10 @@ export default function RecoverScreen() {
             <PasswordField label={t("recover.newPassword")} value={password} onChangeText={setPassword} />
             <PasswordField label={t("recover.confirmPassword")} value={confirm} onChangeText={setConfirm} />
             {error ? <Text style={styles.error}>{error}</Text> : null}
+            {/* <Button title={t("recover.recoverBtn")} onPress={submit} loading={loading} /> */}
+
             <Button title={t("recover.recoverBtn")} onPress={submit} loading={loading} />
+            <ResendCode onResend={() => authApi.recover(normalized)} />
             <TouchableOpacity style={{ alignSelf: "center", marginTop: 16 }} onPress={() => { setPhase("details"); setOtp(""); setError(""); }}>
               <Text style={{ color: colors.primary, fontSize: 14 }}>{t("recover.changeNumber")}</Text>
             </TouchableOpacity>

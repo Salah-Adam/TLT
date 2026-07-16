@@ -25,7 +25,8 @@ export type AuthStackParamList = {
   Welcome: undefined;
   Login: undefined;
   Register: undefined;
-  Otp: { phoneNumber: string; purpose?: "register" | "reclaim" };
+  // Otp: { phoneNumber: string; purpose?: "register" | "reclaim" };
+  Otp: { phoneNumber: string; purpose?: "register" | "reclaim"; fullName?: string; password?: string; language?: "en" | "so" };
   Forgot: undefined;
   Reset: { phoneNumber: string };
   Recover: { phoneNumber?: string } | undefined;

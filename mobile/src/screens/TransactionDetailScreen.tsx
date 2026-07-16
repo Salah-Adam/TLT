@@ -13,6 +13,8 @@ import {
 } from "../data/transactions";
 import { readCategories, type Category } from "../data/categories";
 
+import { readSims, simEyebrow, type Sim } from "../data/phoneNumbers";
+
 const money = (n: number | null) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 
 export default function TransactionDetailScreen() {
@@ -24,6 +26,9 @@ export default function TransactionDetailScreen() {
 
   const [tx, setTx] = useState<Tx | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [sims, setSims] = useState<Sim[]>([]);
+  
   const [cats, setCats] = useState<Category[]>([]);
   const [catModal, setCatModal] = useState(false);
   const [noteModal, setNoteModal] = useState(false);
@@ -37,6 +42,7 @@ export default function TransactionDetailScreen() {
       setLoading(false);
     })();
     readCategories().then(setCats);
+    readSims().then(setSims);
   }, [id]);
 
   const requireOnline = () => { if (!online) { Alert.alert(t("tx.offlineAction")); return false; } return true; };
@@ -73,6 +79,9 @@ export default function TransactionDetailScreen() {
   const isIn = tx.direction === "in";
   const cpName = tx.counterparty_available ? (tx.counterparty_name || tx.counterparty_number || "—") : t("tx.notAvailable");
 
+  const sim = tx.phone_number_id ? sims.find((s) => s.id === tx.phone_number_id) : undefined;
+
+
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 28 }}>
       {/* hero */}
@@ -80,6 +89,15 @@ export default function TransactionDetailScreen() {
         <View style={[styles.bigIcon, { backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
           <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={26} color={isIn ? "#16A34A" : "#DC2626"} />
         </View>
+
+        {/* <View style={[styles.bigIcon, { backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
+          <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={26} color={isIn ? "#16A34A" : "#DC2626"} />
+        </View> */}
+
+        {sim ? <Text style={styles.heroSim}>{simEyebrow(sim)}</Text> : null}
+
+
+
         <Text style={[styles.bigAmt, { color: isIn ? colors.moneyIn : colors.moneyOut }]}>{isIn ? "+" : "−"}{money(tx.amount)} {tx.currency}</Text>
         <Text style={styles.heroSub}>{isIn ? t("tx.received") : t("tx.spent")}</Text>
       </View>
@@ -88,6 +106,8 @@ export default function TransactionDetailScreen() {
         <Field label={t("tx.counterparty")} value={cpName} />
         {tx.counterparty_available && tx.counterparty_name && tx.counterparty_number
           ? <Field label="" value={tx.counterparty_number} /> : null}
+
+        {/* {sim ? <Field label={t("tx.yourNumber")} value={simEyebrow(sim)} /> : null} */}
 
         {/* category (tappable) */}
         <TouchableOpacity style={styles.fieldRow} onPress={() => setCatModal(true)} activeOpacity={0.7}>
@@ -195,6 +215,9 @@ const styles = StyleSheet.create({
   muted: { color: colors.textSecondary },
   hero: { alignItems: "center", paddingVertical: 24, backgroundColor: colors.surface },
   bigIcon: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", marginBottom: 10 },
+
+  heroSim: { fontSize: 13, fontStyle: "italic", color: "#2563EB", marginBottom: 6 },
+
   bigAmt: { fontSize: 28, fontWeight: "700" },
   heroSub: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
   card: { backgroundColor: colors.surface, marginTop: 12, marginHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 16 },

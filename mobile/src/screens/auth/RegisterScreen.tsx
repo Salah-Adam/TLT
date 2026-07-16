@@ -34,7 +34,8 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await authApi.register({ fullName: fullName.trim(), phoneNumber, password, language });
-      nav.navigate("Otp", { phoneNumber, purpose: "register" });
+      // nav.navigate("Otp", { phoneNumber, purpose: "register" });
+      nav.navigate("Otp", { phoneNumber, purpose: "register", fullName: fullName.trim(), password, language });
     } catch (e) {
       if (e instanceof ApiError && e.code === "PHONE_ALREADY_REGISTERED") {
         setError(e.message);
@@ -52,7 +53,8 @@ export default function RegisterScreen() {
     try {
       const phoneNumber = normalizePhone(phone);
       await authApi.reclaim({ fullName: fullName.trim(), phoneNumber, password, language });
-      nav.navigate("Otp", { phoneNumber, purpose: "reclaim" });
+      // nav.navigate("Otp", { phoneNumber, purpose: "reclaim" });
+      nav.navigate("Otp", { phoneNumber, purpose: "reclaim", fullName: fullName.trim(), password, language });
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t("auth.genericError"));
     } finally {

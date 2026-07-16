@@ -18,6 +18,9 @@ import notificationRoutes from "./routes/notifications";
 import userRoutes from "./routes/users";
 import categoryRoutes from "./routes/categories";
 
+import rateLimit from "@fastify/rate-limit";
+import Redis from "ioredis";
+
 const app = Fastify({
   logger: { level: "debug", transport: { target: "pino-pretty" } },
 });
@@ -25,6 +28,24 @@ const app = Fastify({
 app.register(helmet);
 app.register(cors, { origin: true });
 app.register(jwtPlugin);
+
+const rateLimitRedis = new Redis({
+  host: config.redis.host,
+  port: config.redis.port,
+  connectTimeout: 500,
+  maxRetriesPerRequest: 1,
+  enableOfflineQueue: false, // if Redis is down, fail fast — the plugin then fails open
+});
+
+app.register(rateLimit, {
+  global: false, // opt-in per route
+  redis: rateLimitRedis,
+  errorResponseBuilder: (request, _context) => ({
+    success: false,
+    error: { code: "RATE_LIMITED", message: t("RATE_LIMITED", resolveLang(request)) },
+  }),
+});
+
 
 
 // ── Global error handler — single-language envelope ─────────────────────────────

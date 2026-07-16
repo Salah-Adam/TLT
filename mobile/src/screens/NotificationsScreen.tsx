@@ -10,6 +10,7 @@ import { useNetwork } from "../store/useNetwork";
 import { useNotifications } from "../store/useNotifications";
 import { readFolders, refreshNotifications, flushPendingReads, type Folder } from "../data/notifications";
 import { syncAll } from "../data/sync";
+import { EmptyState } from "../components/EmptyState";
 
 function familyIcon(key: string) {
   switch (key) {
@@ -61,7 +62,8 @@ export default function NotificationsScreen() {
       keyExtractor={(f) => f.key}
       contentContainerStyle={{ paddingVertical: 6 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={doRefresh} tintColor={colors.primary} />}
-      ListEmptyComponent={<Text style={styles.empty}>{t("notif.empty")}</Text>}
+      // ListEmptyComponent={<Text style={styles.empty}>{t("notif.empty")}</Text>}
+      ListEmptyComponent={<EmptyState icon="notifications-outline" title={t("notif.empty")} subtitle={t("notif.emptyHint")} />}
       renderItem={({ item }) => {
         const ic = familyIcon(item.key);
         const when = new Date(item.latestAt).toLocaleDateString([], { day: "numeric", month: "short" });
