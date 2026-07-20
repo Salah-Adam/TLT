@@ -17,6 +17,8 @@ import AddPhoneNumberScreen from "../screens/AddPhoneNumberScreen";
 // import { useEffect, useState } from "react";
 // import { OnboardingIntro } from "../components/OnboardingIntro";
 // import { hasSeen } from "../onboarding";
+import DeletedTransactionsScreen from "../screens/DeletedTransactionsScreen";
+import SpendingAlertDetailScreen from "../screens/SpendingAlertDetailScreen";
 
 export type AppStackParamList = {
   Tabs: undefined;
@@ -24,12 +26,14 @@ export type AppStackParamList = {
   TrackedContactDetail: { id: string; label?: string };
   ContactForm: { id?: string } | undefined;
   SpendingAlerts: undefined;
+  SpendingAlertDetail: { alert: any };
   AlertForm: { alert?: any } | undefined;
   Settings: undefined;
   Profile: undefined;
   ChangePassword: undefined;
   PhoneNumbers: undefined;
   AddPhoneNumber: undefined;
+  DeletedTransactions: undefined;
 };
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -47,11 +51,13 @@ export default function AppStack() {
       <Stack.Screen name="SpendingAlerts" component={SpendingAlertsScreen} options={{ title: t("alerts.title") }} />
       <Stack.Screen name="AlertForm" component={AlertFormScreen}
         options={({ route }) => ({ title: (route.params as any)?.alert ? t("alerts.editTitle") : t("alerts.addTitle") })} />
+      <Stack.Screen name="SpendingAlertDetail" component={SpendingAlertDetailScreen} options={{ title: t("alerts.title") }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t("settings.title") }} />
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: t("settings.profile") }} />
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: t("settings.changePassword") }} />
       <Stack.Screen name="PhoneNumbers" component={PhoneNumbersScreen} options={{ title: t("phones.title") }} />
       <Stack.Screen name="AddPhoneNumber" component={AddPhoneNumberScreen} options={{ title: t("phones.addTitle") }} />
+      <Stack.Screen name="DeletedTransactions" component={DeletedTransactionsScreen} options={{ title: t("deleted.title") }} />
     </Stack.Navigator>
   );
 }

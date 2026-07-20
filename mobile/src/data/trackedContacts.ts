@@ -23,10 +23,19 @@ export type TrackedContact = {
 
 export type ContactTx = {
   id: string; amount: number; currency: string; direction: "in" | "out"; type: string | null;
+  phone_number_id: string | null;
   counterparty_name: string | null; counterparty_number: string | null; counterparty_available: boolean;
   category: { id: string; name: string } | null;
   note: string | null; transacted_at: string; transacted_date: string;
 };
+
+// -- the newer one. the above is the old - just added the needed line
+// export type ContactTx = {
+//   id: string; amount: number; currency: string; direction: "in" | "out"; type: string | null;
+//   phone_number_id: string | null;
+//   counterparty_name: string | null; counterparty_number: string | null; counterparty_available: boolean;
+//   category: { id: string; name: string } | null; note: string | null; transacted_at: string; transacted_date: string;
+// };
 
 export type ContactSummary = { total_sent: number; total_received: number; net: number; transaction_count: number };
 export type ContactTxPage = { items: ContactTx[]; cursor: string | null; hasMore: boolean; summary: ContactSummary | null };

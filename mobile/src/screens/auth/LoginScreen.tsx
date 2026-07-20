@@ -32,12 +32,26 @@ export default function LoginScreen() {
     try {
       const tokens = await authApi.login(normalizePhone(phone), password);
       await finishAuth(tokens);
+    // } catch (e) {
+    //   if (e instanceof ApiError && e.code === "RATE_LIMITED") setError(e.message); // show the real "slow down" message
+    //   else setError(e instanceof ApiError ? t("auth.invalidCredentials") : t("auth.genericError"));
+    // } finally {
+    //   setLoading(false);
+    // }
     } catch (e) {
-      setError(e instanceof ApiError ? t("auth.invalidCredentials") : t("auth.genericError"));
+      if (e instanceof ApiError && e.code === "RATE_LIMITED") setError(t("auth.rateLimited"));
+      else setError(e instanceof ApiError ? t("auth.invalidCredentials") : t("auth.genericError"));
     } finally {
       setLoading(false);
     }
+    // } catch (e) {
+    //   setError(e instanceof ApiError ? t("auth.invalidCredentials") : t("auth.genericError"));
+    // } finally {
+    //   setLoading(false);
+    // }
   };
+
+
   // const submit = async () => {
   //   const phoneNumber = normalizePhone(phone);
   //   const v = validateLogin(phoneNumber, password);

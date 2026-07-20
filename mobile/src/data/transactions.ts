@@ -235,3 +235,17 @@ export async function deleteTransactionTx(id: string): Promise<void> {
   const db = await getDb();
   await db.runAsync("DELETE FROM transactions WHERE id = ?", [id]);
 }
+
+// One-shot fetch (no pagination) for small, tightly-filtered slices like an alert's category+period.
+export async function fetchTransactions(filters: TxFilters, limit = 100): Promise<Tx[]> {
+  const query = qs({
+    phone_number_ids: filters.phoneNumberIds?.length ? filters.phoneNumberIds.join(",") : undefined,
+    direction: filters.direction,
+    category_id: filters.categoryId,
+    date_from: filters.dateFrom,
+    date_to: filters.dateTo,
+    limit,
+  });
+  const data = await api.get<Tx[]>(`/api/v1/transactions${query}`);
+  return data ?? [];
+}

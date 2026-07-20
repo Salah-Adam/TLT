@@ -1,5 +1,10 @@
 import Fastify from 'fastify';
 import dotenv from 'dotenv';
+import "./instrument";
+import './summary-worker';
+
+// import * as Sentry from "@sentry/node";
+// Sentry.captureMessage("workers sentry test");
 
 dotenv.config();
 

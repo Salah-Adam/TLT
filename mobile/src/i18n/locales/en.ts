@@ -15,6 +15,7 @@ export default {
     loginBtn: "Log in", errorTitle: "Error", logout: "Log out",
     invalidCredentials: "Phone number or password is incorrect.",
     genericError: "Something went wrong. Please try again.",
+    rateLimited: "Too many attempts. Please wait a moment and try again.",
 
     resendCode: "Resend code",
     resendIn: "Resend code in {{time}}",
@@ -245,6 +246,26 @@ export default {
     tipHome: "Tap here for Settings, Spending alerts, and Tracked contacts.",
     tipTx: "Tap any transaction to categorize it or add a note.",
     tipAnalytics: "Switch between daily, weekly, and monthly here — then open a full report for the details.",
+  },
+
+  deleted: {
+    title: "Recently deleted",
+    empty: "Nothing deleted",
+    emptyHint: "Deleted transactions can be restored here within 30 days.",
+    restore: "Restore",
+    autoDeletes: "Deletes in {{days}}d",
+    offlineTitle: "You're offline",
+    offlineHint: "Connect to the internet to view and restore deleted transactions.",
+  },
+
+  alertDetail: {
+    // transactions: "Transactions",
+    // scope_period: "This period",
+    // scope_all: "All",
+    // empty: "No transactions in this category yet.",
+    transactions: "Transactions",
+    fullPeriod: "Full period",
+    empty: "No transactions in this range.",
   },
 
 };

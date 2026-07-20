@@ -37,7 +37,19 @@ async function authRoutes(app: FastifyInstance): Promise<void> {
     return ok(reply, result);
   });
 
+  // app.post("/api/v1/auth/login", {
+  //   schema: { body: {
+  //     type: "object", required: ["phoneNumber", "password"],
+  //     properties: { phoneNumber: { type: "string" }, password: { type: "string" }, deviceInfo: { type: "string" } },
+  //   } },
+  // }, async (request, reply) => {
+  //   const b = request.body as { phoneNumber: string; password: string; deviceInfo?: string };
+  //   const result = await authService.login({ ...b, ipAddress: request.ip }, app.jwt.sign.bind(app.jwt));
+  //   return ok(reply, result);
+  // });
+
   app.post("/api/v1/auth/login", {
+    config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
     schema: { body: {
       type: "object", required: ["phoneNumber", "password"],
       properties: { phoneNumber: { type: "string" }, password: { type: "string" }, deviceInfo: { type: "string" } },

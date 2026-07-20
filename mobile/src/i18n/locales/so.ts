@@ -17,6 +17,7 @@ export default {
     loginBtn: "Gal", errorTitle: "Khalad", logout: "Ka bax",
     invalidCredentials: "Lambarka ama furaha sirta ah waa khalad.",
     genericError: "Wax baa qaldamay. Fadlan isku day mar kale.",
+    rateLimited: "Isku-day badan. Fadlan wax yar sug oo isku day mar kale.",
 
     resendCode: "Dib u dir koodhka",
     resendIn: "Dib u dir koodhka {{time}} gudahood",
@@ -255,6 +256,29 @@ export default {
     tipTx: "Riix dhaqdhaqaaq kasta si aad u kala saarto ama qoraal ugu darto.",
     tipAnalytics: "Halkan ka beddel maalinle, toddobaadle, iyo bille — kadibna fur warbixin buuxda oo faahfaahsan.",
   },
+
+  deleted: {
+    title: "Kuwa dhawaan la tirtiray",
+    empty: "Waxba lama tirtirin",
+    emptyHint: "Dhaqdhaqaaqa la tirtiray waa la soo celin karaa halkan 30 maalmood gudahood.",
+    restore: "Soo celi",
+    autoDeletes: "{{days}}m ka dib waa la tirtiri",
+    offlineTitle: "Ma xidhna internet",
+    offlineHint: "Ku xidhan internetka si aad u aragto oo u soo celiso dhaqdhaqaaqa la tirtiray.",
+  },
+
+  alertDetail: {
+    transactions: "Dhaqdhaqaaqa",
+    fullPeriod: "Muddada oo dhan",
+    empty: "Dhaqdhaqaaq kuma jiro muddadan.",
+  },
+
+  // alertDetail: {
+  //   transactions: "Dhaqdhaqaaqa",
+  //   scope_period: "Muddadan",
+  //   scope_all: "Dhammaan",
+  //   empty: "Weli ma jiraan dhaqdhaqaaq qaybtan ah.",
+  // },
 
 };
 

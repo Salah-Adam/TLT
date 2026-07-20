@@ -47,7 +47,11 @@ export default function SettingsScreen() {
         <Row icon="call-outline" label={t("phones.title")} onPress={() => nav.navigate("PhoneNumbers")} />
         <View style={styles.divider} />
         <Row icon="lock-closed-outline" label={t("settings.changePassword")} onPress={() => nav.navigate("ChangePassword")} />
+        <View style={styles.divider} />
+        <Row icon="trash-outline" label={t("deleted.title")} onPress={() => nav.navigate("DeletedTransactions")} />
+
       </View>
+      
 
       <Text style={styles.section}>{t("settings.preferences")}</Text>
       <View style={styles.group}>

@@ -4,6 +4,7 @@ import { AppError } from "../lib/errors";
 import { Lang } from "../lib/messages";
 import { encodeCursor, decodeCursor } from "../utils/cursor";
 import { evaluateSpendingAlerts } from "./spending-alerts";
+import { enqueueSummaryRecompute } from "../queue";
 
 type Dek = Buffer | null;
 
@@ -139,7 +140,12 @@ export async function updateTransaction(input: {
 }) {
   const { userId, id, lang } = input;
 
-  const exists = await pool.query(`SELECT id FROM transactions WHERE id=$1 AND user_id=$2 AND is_deleted=FALSE`, [id, userId]);
+  // const exists = await pool.query(`SELECT id FROM transactions WHERE id=$1 AND user_id=$2 AND is_deleted=FALSE`, [id, userId]);
+  // if (exists.rowCount === 0) throw new AppError("TRANSACTION_NOT_FOUND", 404);
+  const exists = await pool.query(
+    `SELECT phone_number_id, transacted_date::text AS d FROM transactions WHERE id=$1 AND user_id=$2 AND is_deleted=FALSE`,
+    [id, userId]
+  );
   if (exists.rowCount === 0) throw new AppError("TRANSACTION_NOT_FOUND", 404);
 
   if (input.categoryId !== undefined && input.categoryId !== null) {
@@ -161,6 +167,13 @@ export async function updateTransaction(input: {
   if (input.categoryId) {
     try { await evaluateSpendingAlerts(userId, id); }
     catch (e) { console.error("spending-alert evaluation failed:", e); }
+  }
+
+  // Category change moves the transaction between category buckets → resync that day + month.
+  if (input.categoryId !== undefined) {
+    const { phone_number_id, d } = exists.rows[0];
+    const [y, m] = d.split("-").map(Number);
+    enqueueSummaryRecompute({ userId, phoneNumberId: phone_number_id, date: d, year: y, month: m });
   }
 
   return getTransaction(userId, id, lang);

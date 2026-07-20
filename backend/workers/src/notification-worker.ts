@@ -2,6 +2,7 @@ import { Worker, Job } from "bullmq";
 import { config } from "./config";
 import { processNotificationJob, pushStoredNotification } from "./notification-processor";
 import type { TransactionNotification } from "./services/notifications";
+import { monitorWorker } from "./sentry-monitor";
 
 const worker = new Worker(
   "notifications",
@@ -18,6 +19,8 @@ const worker = new Worker(
   },
   { connection: { host: config.redis.host, port: config.redis.port, maxRetriesPerRequest: null } }
 );
+
+monitorWorker(worker, "notification");
 
 worker.on("completed", (job) => console.log(`[notif ${job.id}] completed ✓`));
 worker.on("failed", (job, err) => console.error(`[notif ${job?.id}] failed ✗ — ${err.message}`));

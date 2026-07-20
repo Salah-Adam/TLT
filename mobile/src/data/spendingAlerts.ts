@@ -4,6 +4,8 @@
 import { api } from "../api/client";
 import { setCache, getCache } from "./cache";
 
+import { type Tx } from "./transactions";
+
 export type SpendingAlert = {
   id: string;
   category: { id: string; name: string };
@@ -16,6 +18,29 @@ export type SpendingAlert = {
   last_alerted_at: string | null;
   progress: { spent: number; percent: number; period_start: string; period_end: string };
 };
+
+export type AlertTxSummary = { spent: number; count: number };
+export type AlertTxPage = { items: Tx[]; cursor: string | null; hasMore: boolean; summary?: AlertTxSummary };
+
+export async function getAlertTransactions(
+  alertId: string,
+  opts: { cursor?: string | null; dateFrom?: string; dateTo?: string } = {}
+): Promise<AlertTxPage> {
+  const parts = [
+    opts.dateFrom ? `date_from=${opts.dateFrom}` : "",
+    opts.dateTo ? `date_to=${opts.dateTo}` : "",
+    opts.cursor ? `cursor=${encodeURIComponent(opts.cursor)}` : "",
+    "limit=50",
+  ].filter(Boolean).join("&");
+  const { data, meta } = await api.getWithMeta<Tx[]>(`/api/v1/spending-alerts/${alertId}/transactions?${parts}`);
+  const s = (meta as any)?.summary;
+  return {
+    items: data ?? [],
+    cursor: (meta as any)?.cursor ?? null,
+    hasMore: !!(meta as any)?.has_more,
+    summary: s ? { spent: Number(s.spent ?? 0), count: Number(s.count ?? 0) } : undefined,
+  };
+}
 
 const LIST_KEY = "alerts:list";
 

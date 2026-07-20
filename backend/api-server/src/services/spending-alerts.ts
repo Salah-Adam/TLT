@@ -41,6 +41,39 @@ async function computeSpend(
   return { start: r.start, end: r.end, spent: r.spent, already: r.already };
 }
 
+// Resolve an alert's scope + its current period window (for the alert-transactions endpoint).
+export async function getAlertScope(userId: string, alertId: string) {
+  const a = (await pool.query(
+    `SELECT category_id, phone_number_id, period FROM spending_alerts WHERE id=$1 AND user_id=$2`,
+    [alertId, userId]
+  )).rows[0];
+  if (!a) throw new AppError("ALERT_NOT_FOUND", 404);
+  const today = (await pool.query(`SELECT (now() AT TIME ZONE 'Africa/Mogadishu')::date::text AS d`)).rows[0].d;
+  const win = await computeSpend(userId, a.category_id, a.period, today, null, a.phone_number_id);
+  return {
+    categoryId: a.category_id as string,
+    phoneNumberId: (a.phone_number_id ?? null) as string | null,
+    periodStart: win.start as string,
+    periodEnd: win.end as string,
+  };
+}
+
+// SUM(out) for a category over an explicit range — the alert's own definition (feed-only: includes deleted).
+export async function spendInRange(
+  userId: string, categoryId: string, dateFrom: string, dateTo: string, phoneNumberId: string | null
+) {
+  const params: any[] = [userId, categoryId, dateFrom, dateTo];
+  let scope = "";
+  if (phoneNumberId) { params.push(phoneNumberId); scope = `AND t.phone_number_id = $${params.length}`; }
+  const r = (await pool.query(
+    `SELECT COALESCE(SUM(t.amount) FILTER (WHERE t.direction='out'),0)::float AS spent, COUNT(*)::int AS count
+     FROM transactions t
+     WHERE t.user_id=$1 AND t.category_id=$2 AND t.transacted_date BETWEEN $3 AND $4 ${scope}`,
+    params
+  )).rows[0];
+  return { spent: Number(r.spent), count: Number(r.count) };
+}
+
 function shape(a: any, lang: Lang, progress: any) {
   const limit = Number(a.limit_amount);
   return {

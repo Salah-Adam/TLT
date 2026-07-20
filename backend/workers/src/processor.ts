@@ -1,7 +1,11 @@
 import { parsePayload } from "./services/parser";
 import { encryptField, hashValue, getUserDek } from "./services/encryption";
 import { pool } from "./db";
-import { updateDailySummary, updateMonthlySummary } from "./services/summaries";
+
+// import { updateDailySummary, updateMonthlySummary } from "./services/summaries";
+
+import { recomputeDailySummary, recomputeMonthlySummary } from "./services/summaries";
+
 import { updateTrackedContact } from "./services/tracking";
 import { enqueueTransactionNotification } from "./services/notifications";
 import { NormalisedStructuredJob } from "./types/job";
@@ -78,14 +82,18 @@ export async function processTransactionJob(job: NormalisedStructuredJob): Promi
 
     insertedId = ins.rows[0].id;
 
-    await updateDailySummary(client, {
-      phoneNumberId: job.phoneNumberId, userId: job.userId,
-      summaryDate, isIn, amount: r.amount, balanceAfter: r.balance,
-    });
-    await updateMonthlySummary(client, {
-      phoneNumberId: job.phoneNumberId, userId: job.userId,
-      year, month, isIn, amount: r.amount,
-    });
+    // await updateDailySummary(client, {
+    //   phoneNumberId: job.phoneNumberId, userId: job.userId,
+    //   summaryDate, isIn, amount: r.amount, balanceAfter: r.balance,
+    // });
+    // await updateMonthlySummary(client, {
+    //   phoneNumberId: job.phoneNumberId, userId: job.userId,
+    //   year, month, isIn, amount: r.amount,
+    // });
+
+    await recomputeDailySummary(client, job.userId, job.phoneNumberId, summaryDate);
+    await recomputeMonthlySummary(client, job.userId, job.phoneNumberId, year, month);
+
     matched = await updateTrackedContact(client, {
       userId: job.userId, phoneHash, isOut: !isIn,
       amount: r.amount, transactedAt: utc.toISOString(),

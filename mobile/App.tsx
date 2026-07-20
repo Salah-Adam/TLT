@@ -16,9 +16,18 @@ import { syncAll } from "./src/data/sync";
 
 import { navRef } from "./src/navigation/navRef";
 import { registerPush, initPushListeners } from "./src/services/push";
+import * as Sentry from "@sentry/react-native";
 
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: !!process.env.EXPO_PUBLIC_SENTRY_DSN,   // no DSN → disabled (safe locally)
+  environment: __DEV__ ? "development" : "production",
+  tracesSampleRate: 0,                              // errors only, no perf tracing (stays in free quota)
+  sendDefaultPii: false,                            // finance app — no PII to a third party
+});
 
-export default function App() {
+// export default function App() {
+function App() {
   const hydrated = useSession((s) => s.hydrated);
   const hydrate = useSession((s) => s.hydrate);
 
@@ -44,7 +53,7 @@ export default function App() {
     });
     return () => sub.remove();
   }, []);
-
+  
   if (!hydrated) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
@@ -64,6 +73,8 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+export default Sentry.wrap(App);
 
 
 

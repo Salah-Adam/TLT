@@ -64,6 +64,7 @@ services:
       AWS_KMS_KEY_ID: ${AWS_KMS_KEY_ID}
       KEK_VERSION: ${KEK_VERSION}
       HMAC_SECRET: ${HMAC_SECRET}
+      SENTRY_DSN: ${SENTRY_DSN}
     ports:
       - "3002:3002"
     restart: unless-stopped
@@ -97,6 +98,7 @@ services:
       HMAC_SECRET: ${HMAC_SECRET}
       PARSER_URL: http://parser:8000
       FCM_CREDENTIALS_PATH: /secrets/fcm-service-account.json
+      SENTRY_DSN: ${SENTRY_DSN}
     volumes:
       - ../backend/workers/fcm-service-account.json:/secrets/fcm-service-account.json:ro
     ports:

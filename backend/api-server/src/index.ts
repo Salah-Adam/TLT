@@ -21,6 +21,9 @@ import categoryRoutes from "./routes/categories";
 import rateLimit from "@fastify/rate-limit";
 import Redis from "ioredis";
 
+import "./instrument";
+import * as Sentry from "@sentry/node";
+
 const app = Fastify({
   logger: { level: "debug", transport: { target: "pino-pretty" } },
 });
@@ -74,9 +77,19 @@ app.setErrorHandler((error: FastifyError, request, reply) => {
     });
   }
 
+  // @fastify/rate-limit throws when the limit is exceeded; our custom error handler must
+  // format it as our 429 envelope, or it falls through to a generic 500.
+  const rl = error as any;
+  if (reply.statusCode === 429 || rl?.statusCode === 429 || rl?.error?.code === "RATE_LIMITED" || rl?.code === "RATE_LIMITED") {
+    return reply.status(429).send({ success: false, error: { code: "RATE_LIMITED", message: t("RATE_LIMITED", lang) } });
+  }
+
   // Legacy / unexpected errors
+  
+  // const statusCode = (error as any).statusCode ?? 500;
+  // if (statusCode >= 500) app.log.error(error);
   const statusCode = (error as any).statusCode ?? 500;
-  if (statusCode >= 500) app.log.error(error);
+  if (statusCode >= 500) { app.log.error(error); Sentry.captureException(error); }
   return reply.status(statusCode).send({
     success: false,
     error: {

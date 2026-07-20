@@ -2,6 +2,7 @@ import { Worker, Job } from "bullmq";
 import { config } from "./config";
 import { NormalisedStructuredJob } from "./types/job";
 import { processTransactionJob } from "./processor";
+import { monitorWorker } from "./sentry-monitor";
 
 const worker = new Worker<NormalisedStructuredJob>(
   "transaction-processing",
@@ -17,6 +18,9 @@ const worker = new Worker<NormalisedStructuredJob>(
     },
   }
 );
+// …after const worker = new Worker(...):
+monitorWorker(worker, "transaction");
+
 
 worker.on("completed", (job) => console.log(`[job ${job.id}] completed ✓`));
 worker.on("failed", (job, err) => console.error(`[job ${job?.id}] failed ✗ — ${err.message}`));

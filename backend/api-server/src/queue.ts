@@ -18,3 +18,17 @@ export async function enqueueStoredPush(notificationId: string, userId: string):
     console.error(`stored-push enqueue failed: ${(err as Error).message}`);
   }
 }
+
+const summariesQueue = new Queue("summaries", {
+  connection: { host: config.redis.host, port: config.redis.port },
+});
+
+export async function enqueueSummaryRecompute(p: {
+  userId: string; phoneNumberId: string; date: string; year: number; month: number;
+}): Promise<void> {
+  try {
+    await summariesQueue.add("recompute", p, { removeOnComplete: 1000, removeOnFail: 5000 });
+  } catch (err) {
+    console.error(`summary-recompute enqueue failed: ${(err as Error).message}`);
+  }
+}

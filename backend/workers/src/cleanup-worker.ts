@@ -1,6 +1,7 @@
 import { Queue, Worker } from "bullmq";
 import { config } from "./config";
 import { runCleanup } from "./cleanup";
+import { monitorWorker } from "./sentry-monitor";
 
 const connection = { host: config.redis.host, port: config.redis.port };
 
@@ -14,6 +15,8 @@ const worker = new Worker(
   },
   { connection: { ...connection, maxRetriesPerRequest: null } }
 );
+
+monitorWorker(worker, "cleanup");
 
 worker.on("completed", () => console.log("[cleanup] run completed ✓"));
 worker.on("failed", (_job, err) => console.error(`[cleanup] run failed ✗ — ${err.message}`));

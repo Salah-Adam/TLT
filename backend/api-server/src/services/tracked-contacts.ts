@@ -364,7 +364,13 @@ export async function getContactTransactions(
   params.push(lim + 1);
 
   const res = await pool.query(
-    `SELECT t.id, t.amount::float AS amount, t.currency, t.direction, t.type,
+    // `SELECT t.id, t.amount::float AS amount, t.currency, t.direction, t.type,
+    //         t.counterparty_name_enc, t.counterparty_phone_enc, t.note, t.transacted_at, t.transacted_date,
+    //         t.category_id, c.name_en AS category_name_en, c.name_so AS category_name_so
+    //  FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
+    //  WHERE ${where.join(" AND ")}
+    //  ORDER BY t.transacted_at DESC, t.id DESC LIMIT $${params.length}`
+    `SELECT t.id, t.amount::float AS amount, t.currency, t.direction, t.type, t.phone_number_id,
             t.counterparty_name_enc, t.counterparty_phone_enc, t.note, t.transacted_at, t.transacted_date,
             t.category_id, c.name_en AS category_name_en, c.name_so AS category_name_so
      FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
@@ -372,6 +378,8 @@ export async function getContactTransactions(
      ORDER BY t.transacted_at DESC, t.id DESC LIMIT $${params.length}`,
     params
   );
+
+  
 
   const dek = await loadDek(userId);
   let rows = res.rows;
@@ -393,8 +401,15 @@ export async function getContactTransactions(
 
   const transactions = rows.map((r) => {
     const cp = decode(r);
+    // return {
+    //   id: r.id, amount: r.amount, currency: r.currency, direction: r.direction, type: r.type,
+    //   counterparty_name: cp.name, counterparty_number: cp.number, counterparty_available: cp.available,
+    //   category: r.category_id ? { id: r.category_id, name: lang === "so" ? r.category_name_so : r.category_name_en } : null,
+    //   note: r.note ?? null, transacted_at: r.transacted_at, transacted_date: r.transacted_date,
+    // };
     return {
       id: r.id, amount: r.amount, currency: r.currency, direction: r.direction, type: r.type,
+      phone_number_id: r.phone_number_id ?? null,
       counterparty_name: cp.name, counterparty_number: cp.number, counterparty_available: cp.available,
       category: r.category_id ? { id: r.category_id, name: lang === "so" ? r.category_name_so : r.category_name_en } : null,
       note: r.note ?? null, transacted_at: r.transacted_at, transacted_date: r.transacted_date,

@@ -21,6 +21,8 @@ import {
   type TrackedContact, type ContactTx, type ContactSummary,
 } from "../data/trackedContacts";
 
+import { readSims, simEyebrow, simColor, type Sim } from "../data/phoneNumbers";
+
 const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const localNum = (n?: string | null) => (n ?? "").replace(/^252/, "");
 const isTrackable = (norm: string) => /^252\d{6,12}$/.test(norm);
@@ -69,6 +71,9 @@ export default function TrackedContactDetailScreen() {
   const [addOpen, setAddOpen] = useState(false);
   const [numDraft, setNumDraft] = useState("");
   const [savingNum, setSavingNum] = useState(false);
+
+  const [sims, setSims] = useState<Sim[]>([]);
+  useEffect(() => { readSims().then(setSims); }, []);
 
   const requireOnline = () => { if (!useNetwork.getState().online) { Alert.alert(t("contacts.offlineAction")); return false; } return true; };
 
@@ -165,6 +170,11 @@ export default function TrackedContactDetailScreen() {
 //   const isPos = contact.net >= 0;
 
   const totals = summary ?? { total_sent: contact.total_sent, total_received: contact.total_received, net: contact.net, transaction_count: contact.transaction_count };
+
+  const showSim = sims.length >= 2;
+  const simMap: Record<string, Sim> = {};
+  sims.forEach((s) => (simMap[s.id] = s));
+
   const isPos = totals.net >= 0;
 
   const dateLabel = dateSel.kind === "all" ? t("tx.date")
@@ -241,17 +251,41 @@ export default function TrackedContactDetailScreen() {
         onEndReached={loadMore}
         ListEmptyComponent={online ? <Text style={styles.muted2}>{t("contacts.noActivity")}</Text> : null}
         ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 16 }} color={colors.primary} /> : null}
-        renderItem={({ item }) => (
-          <View style={styles.txRow}>
-            <View style={[styles.txIcon, { backgroundColor: item.direction === "in" ? "#DCFCE7" : "#FEE2E2" }]}>
-              <Ionicons name={item.direction === "in" ? "arrow-down" : "arrow-up"} size={16} color={item.direction === "in" ? "#16A34A" : "#DC2626"} />
+        // renderItem={({ item }) => (
+        //   <View style={styles.txRow}>
+        //     <View style={[styles.txIcon, { backgroundColor: item.direction === "in" ? "#DCFCE7" : "#FEE2E2" }]}>
+        //       <Ionicons name={item.direction === "in" ? "arrow-down" : "arrow-up"} size={16} color={item.direction === "in" ? "#16A34A" : "#DC2626"} />
+        //     </View>
+        //     <View style={{ flex: 1, marginLeft: 11 }}>
+        //       <TxSentence tx={{ ...item, balance_after: null }} style={styles.sentence} />
+        //       <Text style={styles.txTime}>{new Date(item.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</Text>
+        //     </View>
+        //   </View>
+        // )}
+        renderItem={({ item }) => {
+          const sim = showSim && item.phone_number_id ? simMap[item.phone_number_id] : undefined;
+          const accent = sim ? simColor(sim.id) : undefined;
+          return (
+            <View style={styles.txRow}>
+              <View style={[styles.txIcon, { backgroundColor: item.direction === "in" ? "#DCFCE7" : "#FEE2E2" }]}>
+                <Ionicons name={item.direction === "in" ? "arrow-down" : "arrow-up"} size={16} color={item.direction === "in" ? "#16A34A" : "#DC2626"} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 11 }}>
+                <TxSentence tx={{ ...item, balance_after: null }} style={styles.sentence} />
+                <View style={styles.metaRow}>
+                  <Text style={styles.txTime}>{new Date(item.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</Text>
+                  {sim ? (
+                    <View style={[styles.simChip, { backgroundColor: accent! + "22" }]}>
+                      <View style={[styles.simDot, { backgroundColor: accent }]} />
+                      <Text style={[styles.simChipTxt, { color: accent }]} numberOfLines={1}>{simEyebrow(sim)}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
             </View>
-            <View style={{ flex: 1, marginLeft: 11 }}>
-              <TxSentence tx={{ ...item, balance_after: null }} style={styles.sentence} />
-              <Text style={styles.txTime}>{new Date(item.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</Text>
-            </View>
-          </View>
-        )}
+          );
+        }}
+
       />
 
       {/* number multi-select */}
@@ -365,6 +399,12 @@ const styles = StyleSheet.create({
   orPick: { fontSize: 12, color: colors.textSecondary, marginBottom: 10 },
   applyBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 13, alignItems: "center", marginTop: 16 },
   applyTxt: { color: "#fff", fontSize: 15, fontWeight: "600" },
+
+  metaRow: { flexDirection: "row", alignItems: "center", marginTop: 3, gap: 8 },
+  simChip: { flexDirection: "row", alignItems: "center", paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, flexShrink: 1 },
+  simDot: { width: 4, height: 4, borderRadius: 3, marginRight: 4 },
+  simChipTxt: { fontSize: 9, fontWeight: "600", flexShrink: 1 },
+
 });
 
 

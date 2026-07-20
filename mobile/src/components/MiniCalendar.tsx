@@ -8,8 +8,12 @@ import { colors } from "../theme";
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const WEEK = ["S", "M", "T", "W", "T", "F", "S"];
 
-export function MiniCalendar({ from, to, onChange }: {
+// export function MiniCalendar({ from, to, onChange }: {
+//   from: string | null; to: string | null; onChange: (from: string | null, to: string | null) => void;
+
+export function MiniCalendar({ from, to, onChange, min, max }: {
   from: string | null; to: string | null; onChange: (from: string | null, to: string | null) => void;
+  min?: string | null; max?: string | null;
 }) {
   const init = from ? new Date(from + "T00:00:00") : new Date();
   const [view, setView] = useState(new Date(init.getFullYear(), init.getMonth(), 1));
@@ -39,9 +43,24 @@ export function MiniCalendar({ from, to, onChange }: {
       </View>
       <View style={styles.weekRow}>{WEEK.map((w, i) => <Text key={i} style={styles.weekTxt}>{w}</Text>)}</View>
       <View style={styles.grid}>
+        {/* {cells.map((d, i) => {
+          if (!d) return <View key={i} style={styles.cell} />;
+          const k = ymd(d), end = isEnd(k), mid = inRange(k);
+          return (
+            <TouchableOpacity key={i} style={styles.cell} onPress={() => pick(d)} activeOpacity={0.7}>
+              <View style={[styles.day, mid && styles.dayMid, end && styles.dayEnd]}>
+                <Text style={[styles.dayTxt, end && { color: "#fff", fontWeight: "700" }]}>{d.getDate()}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })} */}
         {cells.map((d, i) => {
           if (!d) return <View key={i} style={styles.cell} />;
           const k = ymd(d), end = isEnd(k), mid = inRange(k);
+          const disabled = (!!min && k < min) || (!!max && k > max);
+          if (disabled) {
+            return <View key={i} style={styles.cell}><View style={styles.day}><Text style={[styles.dayTxt, styles.dayDisabled]}>{d.getDate()}</Text></View></View>;
+          }
           return (
             <TouchableOpacity key={i} style={styles.cell} onPress={() => pick(d)} activeOpacity={0.7}>
               <View style={[styles.day, mid && styles.dayMid, end && styles.dayEnd]}>
@@ -66,4 +85,6 @@ const styles = StyleSheet.create({
   dayMid: { backgroundColor: "#D1FAE5", borderRadius: 0, width: "100%" },
   dayEnd: { backgroundColor: colors.primary },
   dayTxt: { fontSize: 14, color: colors.text },
+
+  dayDisabled: { color: "#CBD5E1" },
 });

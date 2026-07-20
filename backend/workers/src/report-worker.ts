@@ -1,6 +1,7 @@
 import { Queue, Worker } from "bullmq";
 import { config } from "./config";
 import { runReportNotifications, ReportPeriod } from "./report-notifications";
+import { monitorWorker } from "./sentry-monitor";
 
 const connection = { host: config.redis.host, port: config.redis.port };
 
@@ -13,6 +14,8 @@ const worker = new Worker(
   },
   { connection: { ...connection, maxRetriesPerRequest: null } }
 );
+
+monitorWorker(worker, "report");
 
 worker.on("completed", (job) => console.log(`[reports] ${job.data?.period} completed ✓`));
 worker.on("failed", (job, err) => console.error(`[reports] ${job?.data?.period} failed ✗ — ${err.message}`));

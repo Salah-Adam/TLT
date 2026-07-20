@@ -1,7 +1,7 @@
 import { pool } from "../db";
 import { Lang, t } from "../lib/messages";
 import { getUserDek, decryptField } from "../encryption";
-import { Scope, scopeFilters } from "./analytics";
+// import { Scope, scopeFilters } from "./analytics";
 
 export type Period = "daily" | "weekly" | "monthly";
 
@@ -43,9 +43,24 @@ async function resolveWindow(period: Period, a: { date?: string; start?: string;
 }
 
 // Build "user + date range + scope" WHERE, appending params in order.
-function rangeWhere(params: any[], userId: string, start: string, end: string, scope: Scope): string {
+// function rangeWhere(params: any[], userId: string, start: string, end: string, scope: Scope): string {
+//   params.push(userId, start, end);
+//   return `t.user_id = $1 AND t.transacted_date BETWEEN $2 AND $3 ${scopeFilters(scope, params)}`;
+// }
+
+// user + date range (+ optional SIM) for TRANSACTION queries (t.*).
+function txWhere(params: any[], userId: string, start: string, end: string, phoneIds?: string[]): string {
   params.push(userId, start, end);
-  return `t.user_id = $1 AND t.transacted_date BETWEEN $2 AND $3 ${scopeFilters(scope, params)}`;
+  let w = `t.user_id = $1 AND t.transacted_date BETWEEN $2 AND $3`;
+  if (phoneIds?.length) { params.push(phoneIds); w += ` AND t.phone_number_id = ANY($${params.length}::uuid[])`; }
+  return w;
+}
+// same, for daily-SUMMARY queries (s.*).
+function sumWhere(params: any[], userId: string, start: string, end: string, phoneIds?: string[]): string {
+  params.push(userId, start, end);
+  let w = `s.user_id = $1 AND s.summary_date BETWEEN $2 AND $3`;
+  if (phoneIds?.length) { params.push(phoneIds); w += ` AND s.phone_number_id = ANY($${params.length}::uuid[])`; }
+  return w;
 }
 
 async function loadDek(userId: string): Promise<Buffer | null> {
@@ -65,32 +80,96 @@ function decodeCp(row: any, dek: Buffer | null) {
   return { counterparty_name: name, counterparty_number: number, counterparty_available: available };
 }
 
-async function totals(userId: string, start: string, end: string, scope: Scope) {
-  const p: any[] = [];
-  const where = rangeWhere(p, userId, start, end, scope);
+// async function totals(userId: string, start: string, end: string, scope: Scope) {
+//   const p: any[] = [];
+//   const where = rangeWhere(p, userId, start, end, scope);
+//   const r = (await pool.query(
+//     `SELECT COALESCE(SUM(amount) FILTER (WHERE direction='in'),0)::float  AS total_in,
+//             COALESCE(SUM(amount) FILTER (WHERE direction='out'),0)::float AS total_out,
+//             COUNT(*)::int AS transaction_count
+//      FROM transactions t WHERE ${where}`, p
+//   )).rows[0];
+//   return { total_in: r.total_in, total_out: r.total_out, net: r.total_in - r.total_out, transaction_count: r.transaction_count };
+// }
+
+async function totals(userId: string, start: string, end: string, phoneIds?: string[]) {
+  const p: any[] = []; const w = sumWhere(p, userId, start, end, phoneIds);
   const r = (await pool.query(
-    `SELECT COALESCE(SUM(amount) FILTER (WHERE direction='in'),0)::float  AS total_in,
-            COALESCE(SUM(amount) FILTER (WHERE direction='out'),0)::float AS total_out,
-            COUNT(*)::int AS transaction_count
-     FROM transactions t WHERE ${where}`, p
+    `SELECT COALESCE(SUM(s.total_in),0)::float AS total_in, COALESCE(SUM(s.total_out),0)::float AS total_out,
+            COALESCE(SUM(s.transaction_count),0)::int AS transaction_count
+     FROM daily_summaries s WHERE ${w}`, p
   )).rows[0];
   return { total_in: r.total_in, total_out: r.total_out, net: r.total_in - r.total_out, transaction_count: r.transaction_count };
 }
 
-async function categoriesRaw(userId: string, start: string, end: string, scope: Scope) {
-  const p: any[] = [];
-  const where = rangeWhere(p, userId, start, end, scope);
-  return (await pool.query(
-    `SELECT t.category_id, c.name_en, c.name_so, SUM(t.amount)::float AS amount, COUNT(*)::int AS count
-     FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
-     WHERE ${where} AND t.direction='out'
-     GROUP BY t.category_id, c.name_en, c.name_so ORDER BY amount DESC`, p
-  )).rows;
+// async function categoriesRaw(userId: string, start: string, end: string, scope: Scope) {
+//   const p: any[] = [];
+//   const where = rangeWhere(p, userId, start, end, scope);
+//   return (await pool.query(
+//     `SELECT t.category_id, c.name_en, c.name_so, SUM(t.amount)::float AS amount, COUNT(*)::int AS count
+//      FROM transactions t LEFT JOIN categories c ON c.id = t.category_id
+//      WHERE ${where} AND t.direction='out'
+//      GROUP BY t.category_id, c.name_en, c.name_so ORDER BY amount DESC`, p
+//   )).rows;
+// }
+
+async function categoriesRaw(userId: string, start: string, end: string, phoneIds?: string[]) {
+  const p: any[] = []; const w = sumWhere(p, userId, start, end, phoneIds);
+  const rows = (await pool.query(`SELECT s.category_breakdown FROM daily_summaries s WHERE ${w}`, p)).rows;
+  const merged: Record<string, { out: number; countOut: number }> = {};
+  for (const r of rows) for (const [k, v] of Object.entries((r.category_breakdown ?? {}) as Record<string, any>)) {
+    let b = merged[k]; if (!b) { b = { out: 0, countOut: 0 }; merged[k] = b; }
+    b.out += Number(v.out ?? 0); b.countOut += Number(v.countOut ?? 0);
+  }
+  const ids = Object.keys(merged).filter((k) => k !== "uncategorized" && merged[k].countOut > 0);
+  const names: Record<string, { en: string; so: string }> = {};
+  if (ids.length) {
+    const nr = await pool.query(`SELECT id, name_en, name_so FROM categories WHERE id = ANY($1::uuid[])`, [ids]);
+    for (const x of nr.rows) names[x.id] = { en: x.name_en, so: x.name_so };
+  }
+  const out: { category_id: string | null; name_en: string | null; name_so: string | null; amount: number; count: number }[] = [];
+  for (const [k, b] of Object.entries(merged)) {
+    if (b.countOut <= 0) continue;
+    const isUncat = k === "uncategorized";
+    out.push({ category_id: isUncat ? null : k, name_en: isUncat ? null : (names[k]?.en ?? null), name_so: isUncat ? null : (names[k]?.so ?? null), amount: b.out, count: b.countOut });
+  }
+  return out.sort((a, b) => b.amount - a.amount);
 }
 
-async function topCounterparties(userId: string, start: string, end: string, scope: Scope, dek: Buffer | null) {
+// async function topCounterparties(userId: string, start: string, end: string, scope: Scope, dek: Buffer | null) {
+//   const p: any[] = [];
+//   const where = rangeWhere(p, userId, start, end, scope);
+//   const rows = (await pool.query(
+//     `SELECT counterparty_phone_hash AS hash, direction,
+//             (array_agg(counterparty_name_enc))[1]  AS name_enc,
+//             (array_agg(counterparty_phone_enc))[1] AS phone_enc,
+//             SUM(amount)::float AS total, COUNT(*)::int AS count
+//      FROM transactions t
+//      WHERE ${where} AND counterparty_phone_hash IS NOT NULL
+//      GROUP BY counterparty_phone_hash, direction`, p
+//   )).rows;
+//   const top = (dir: string) =>
+//     rows.filter((r) => r.direction === dir).sort((a, b) => b.total - a.total).slice(0, 5)
+//         .map((r) => ({ ...decodeCp(r, dek), total: r.total, count: r.count }));
+//   return { top_recipients: top("out"), top_senders: top("in") };
+// }
+
+// async function largest(userId: string, start: string, end: string, scope: Scope, dek: Buffer | null) {
+//   const p: any[] = [];
+//   const where = rangeWhere(p, userId, start, end, scope);
+//   const rows = (await pool.query(
+//     `SELECT t.id, t.amount::float AS amount, t.direction, t.type, t.transacted_at,
+//             t.counterparty_name_enc AS name_enc, t.counterparty_phone_enc AS phone_enc
+//      FROM transactions t WHERE ${where}
+//      ORDER BY t.amount DESC LIMIT 5`, p
+//   )).rows;
+//   return rows.map((r) => ({ id: r.id, amount: r.amount, direction: r.direction, type: r.type, transacted_at: r.transacted_at, ...decodeCp(r, dek) }));
+// }
+
+async function topCounterparties(userId: string, start: string, end: string, phoneIds: string[] | undefined, dek: Buffer | null) {
   const p: any[] = [];
-  const where = rangeWhere(p, userId, start, end, scope);
+  const where = txWhere(p, userId, start, end, phoneIds);   // ← was rangeWhere(..., scope)
+  // …rest unchanged…
   const rows = (await pool.query(
     `SELECT counterparty_phone_hash AS hash, direction,
             (array_agg(counterparty_name_enc))[1]  AS name_enc,
@@ -106,9 +185,11 @@ async function topCounterparties(userId: string, start: string, end: string, sco
   return { top_recipients: top("out"), top_senders: top("in") };
 }
 
-async function largest(userId: string, start: string, end: string, scope: Scope, dek: Buffer | null) {
+
+async function largest(userId: string, start: string, end: string, phoneIds: string[] | undefined, dek: Buffer | null) {
   const p: any[] = [];
-  const where = rangeWhere(p, userId, start, end, scope);
+  const where = txWhere(p, userId, start, end, phoneIds);   // ← was rangeWhere(..., scope)
+  // …rest unchanged…
   const rows = (await pool.query(
     `SELECT t.id, t.amount::float AS amount, t.direction, t.type, t.transacted_at,
             t.counterparty_name_enc AS name_enc, t.counterparty_phone_enc AS phone_enc
@@ -118,41 +199,89 @@ async function largest(userId: string, start: string, end: string, scope: Scope,
   return rows.map((r) => ({ id: r.id, amount: r.amount, direction: r.direction, type: r.type, transacted_at: r.transacted_at, ...decodeCp(r, dek) }));
 }
 
-async function busiest(userId: string, start: string, end: string, scope: Scope) {
-  const p1: any[] = []; const w1 = rangeWhere(p1, userId, start, end, scope);
-  const day = (await pool.query(
-    `SELECT t.transacted_date::text AS day, COUNT(*)::int AS count FROM transactions t WHERE ${w1}
-     GROUP BY t.transacted_date ORDER BY count DESC, day ASC LIMIT 1`, p1
-  )).rows[0];
-  const p2: any[] = []; const w2 = rangeWhere(p2, userId, start, end, scope);
-  const hour = (await pool.query(
-    `SELECT t.transacted_hour AS hour, COUNT(*)::int AS count FROM transactions t WHERE ${w2}
-     GROUP BY t.transacted_hour ORDER BY count DESC, hour ASC LIMIT 1`, p2
-  )).rows[0];
-  return { busiest_day: day?.day ?? null, busiest_day_count: day?.count ?? 0, busiest_hour: hour?.hour ?? null };
+
+
+// async function busiest(userId: string, start: string, end: string, scope: Scope) {
+//   const p1: any[] = []; const w1 = rangeWhere(p1, userId, start, end, scope);
+//   const day = (await pool.query(
+//     `SELECT t.transacted_date::text AS day, COUNT(*)::int AS count FROM transactions t WHERE ${w1}
+//      GROUP BY t.transacted_date ORDER BY count DESC, day ASC LIMIT 1`, p1
+//   )).rows[0];
+//   const p2: any[] = []; const w2 = rangeWhere(p2, userId, start, end, scope);
+//   const hour = (await pool.query(
+//     `SELECT t.transacted_hour AS hour, COUNT(*)::int AS count FROM transactions t WHERE ${w2}
+//      GROUP BY t.transacted_hour ORDER BY count DESC, hour ASC LIMIT 1`, p2
+//   )).rows[0];
+//   return { busiest_day: day?.day ?? null, busiest_day_count: day?.count ?? 0, busiest_hour: hour?.hour ?? null };
+// }
+
+async function busiest(userId: string, start: string, end: string, phoneIds?: string[]) {
+  const p: any[] = []; const w = sumWhere(p, userId, start, end, phoneIds);
+  const rows = (await pool.query(
+    `SELECT s.summary_date::text AS date, s.transaction_count, s.hourly_breakdown FROM daily_summaries s WHERE ${w}`, p
+  )).rows;
+  const perDay: Record<string, number> = {}, hourly: Record<string, number> = {};
+  for (const r of rows) {
+    perDay[r.date] = (perDay[r.date] ?? 0) + r.transaction_count;
+    for (const [h, v] of Object.entries((r.hourly_breakdown ?? {}) as Record<string, any>))
+      hourly[h] = (hourly[h] ?? 0) + Number(v.countIn ?? 0) + Number(v.countOut ?? 0);
+  }
+  let bd: string | null = null, bdc = -1;
+  for (const [d, c] of Object.entries(perDay).sort((a, b) => (a[0] < b[0] ? -1 : 1))) if (c > bdc) { bdc = c; bd = d; }
+  let bh: number | null = null, bhc = -1;
+  for (const [h, c] of Object.entries(hourly).sort((a, b) => Number(a[0]) - Number(b[0]))) if (c > bhc) { bhc = c; bh = Number(h); }
+  return { busiest_day: bd, busiest_day_count: bd ? bdc : 0, busiest_hour: bh };
 }
 
 // Last N same-length periods of spending (for the trend chart + trend insight).
-async function trendSeries(userId: string, period: Period, win: Win, scope: Scope) {
-  const p: any[] = [];
-  let sql: string;
+// async function trendSeries(userId: string, period: Period, win: Win, scope: Scope) {
+//   const p: any[] = [];
+//   let sql: string;
+//   if (period === "daily") {
+//     p.push(userId, win.end); const sc = scopeFilters(scope, p);
+//     sql = `SELECT g::date::text AS bucket, COALESCE(SUM(t.amount) FILTER (WHERE t.direction='out'),0)::float AS spent
+//            FROM generate_series($2::date - 6, $2::date, INTERVAL '1 day') g
+//            LEFT JOIN transactions t ON t.user_id=$1 AND t.transacted_date = g::date ${sc}
+//            GROUP BY g ORDER BY g`;
+//   } else if (period === "weekly") {
+//     p.push(userId, win.start); const sc = scopeFilters(scope, p);
+//     sql = `SELECT g::date::text AS bucket, COALESCE(SUM(t.amount) FILTER (WHERE t.direction='out'),0)::float AS spent
+//            FROM generate_series($2::date - INTERVAL '5 weeks', $2::date, INTERVAL '1 week') g
+//            LEFT JOIN transactions t ON t.user_id=$1 AND t.transacted_date BETWEEN g::date AND (g::date + 6) ${sc}
+//            GROUP BY g ORDER BY g`;
+//   } else {
+//     p.push(userId, win.start); const sc = scopeFilters(scope, p);
+//     sql = `SELECT to_char(g,'YYYY-MM') AS bucket, COALESCE(SUM(t.amount) FILTER (WHERE t.direction='out'),0)::float AS spent
+//            FROM generate_series($2::date - INTERVAL '5 months', $2::date, INTERVAL '1 month') g
+//            LEFT JOIN transactions t ON t.user_id=$1 AND date_trunc('month',t.transacted_date)=date_trunc('month',g) ${sc}
+//            GROUP BY g ORDER BY g`;
+//   }
+//   return (await pool.query(sql, p)).rows as { bucket: string; spent: number }[];
+// }
+
+
+async function trendSeries(userId: string, period: Period, win: Win, phoneIds?: string[]) {
+  const p: any[] = []; let sql: string; let pf = "";
   if (period === "daily") {
-    p.push(userId, win.end); const sc = scopeFilters(scope, p);
-    sql = `SELECT g::date::text AS bucket, COALESCE(SUM(t.amount) FILTER (WHERE t.direction='out'),0)::float AS spent
+    p.push(userId, win.end);
+    if (phoneIds?.length) { p.push(phoneIds); pf = `AND s.phone_number_id = ANY($${p.length}::uuid[])`; }
+    sql = `SELECT g::date::text AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent
            FROM generate_series($2::date - 6, $2::date, INTERVAL '1 day') g
-           LEFT JOIN transactions t ON t.user_id=$1 AND t.transacted_date = g::date ${sc}
+           LEFT JOIN daily_summaries s ON s.user_id=$1 AND s.summary_date = g::date ${pf}
            GROUP BY g ORDER BY g`;
   } else if (period === "weekly") {
-    p.push(userId, win.start); const sc = scopeFilters(scope, p);
-    sql = `SELECT g::date::text AS bucket, COALESCE(SUM(t.amount) FILTER (WHERE t.direction='out'),0)::float AS spent
+    p.push(userId, win.start);
+    if (phoneIds?.length) { p.push(phoneIds); pf = `AND s.phone_number_id = ANY($${p.length}::uuid[])`; }
+    sql = `SELECT g::date::text AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent
            FROM generate_series($2::date - INTERVAL '5 weeks', $2::date, INTERVAL '1 week') g
-           LEFT JOIN transactions t ON t.user_id=$1 AND t.transacted_date BETWEEN g::date AND (g::date + 6) ${sc}
+           LEFT JOIN daily_summaries s ON s.user_id=$1 AND s.summary_date BETWEEN g::date AND (g::date + 6) ${pf}
            GROUP BY g ORDER BY g`;
   } else {
-    p.push(userId, win.start); const sc = scopeFilters(scope, p);
-    sql = `SELECT to_char(g,'YYYY-MM') AS bucket, COALESCE(SUM(t.amount) FILTER (WHERE t.direction='out'),0)::float AS spent
+    p.push(userId, win.start);
+    if (phoneIds?.length) { p.push(phoneIds); pf = `AND s.phone_number_id = ANY($${p.length}::uuid[])`; }
+    sql = `SELECT to_char(g,'YYYY-MM') AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent
            FROM generate_series($2::date - INTERVAL '5 months', $2::date, INTERVAL '1 month') g
-           LEFT JOIN transactions t ON t.user_id=$1 AND date_trunc('month',t.transacted_date)=date_trunc('month',g) ${sc}
+           LEFT JOIN monthly_summaries s ON s.user_id=$1 AND s.summary_year=EXTRACT(YEAR FROM g)::int AND s.summary_month=EXTRACT(MONTH FROM g)::int ${pf}
            GROUP BY g ORDER BY g`;
   }
   return (await pool.query(sql, p)).rows as { bucket: string; spent: number }[];
@@ -212,24 +341,66 @@ function buildInsights(
   return out;
 }
 
+// export async function getReport(
+//   userId: string,
+//   lang: Lang,
+//   period: Period,
+//   anchor: { date?: string; start?: string; year?: number; month?: number },
+//   scope: Scope = {}
+// ) {
+//   const win = await resolveWindow(period, anchor);
+//   const dek = await loadDek(userId);
+
+//   const tot  = await totals(userId, win.start, win.end, scope);
+//   const prev = await totals(userId, win.prevStart, win.prevEnd, scope);
+//   const cats = await categoriesRaw(userId, win.start, win.end, scope);
+//   const tcp  = await topCounterparties(userId, win.start, win.end, scope, dek);
+//   const lrg  = await largest(userId, win.start, win.end, scope, dek);
+//   const bz   = await busiest(userId, win.start, win.end, scope);
+//   const trend = await trendSeries(userId, period, win, scope);
+
+//   const currency = "USD";
+//   const by_category = cats.map((c) => ({
+//     category_id: c.category_id,
+//     name: c.category_id ? (lang === "so" ? c.name_so : c.name_en) : t("UNCATEGORIZED", lang),
+//     amount: c.amount, count: c.count,
+//     percent_of_spending: tot.total_out > 0 ? Math.round((c.amount / tot.total_out) * 1000) / 10 : 0,
+//   }));
+
+//   const insights = buildInsights(lang, period, tot, prev, by_category, tcp, lrg, bz, trend, currency);
+
+//   return {
+//     period, start: win.start, end: win.end, currency,
+//     total_in: tot.total_in, total_out: tot.total_out, net: tot.net, transaction_count: tot.transaction_count,
+//     vs_last_period: { in_change_percent: pctChange(tot.total_in, prev.total_in), out_change_percent: pctChange(tot.total_out, prev.total_out) },
+//     trend,
+//     by_category,
+//     top_senders: tcp.top_senders,
+//     top_recipients: tcp.top_recipients,
+//     largest_transactions: lrg,
+//     busiest_day: bz.busiest_day, busiest_hour: bz.busiest_hour,
+//     insights,
+//   };
+// }
+
 export async function getReport(
-  userId: string,
-  lang: Lang,
-  period: Period,
+  userId: string, lang: Lang, period: Period,
   anchor: { date?: string; start?: string; year?: number; month?: number },
-  scope: Scope = {}
+  phoneNumberIds?: string[]
 ) {
   const win = await resolveWindow(period, anchor);
   const dek = await loadDek(userId);
 
-  const tot  = await totals(userId, win.start, win.end, scope);
-  const prev = await totals(userId, win.prevStart, win.prevEnd, scope);
-  const cats = await categoriesRaw(userId, win.start, win.end, scope);
-  const tcp  = await topCounterparties(userId, win.start, win.end, scope, dek);
-  const lrg  = await largest(userId, win.start, win.end, scope, dek);
-  const bz   = await busiest(userId, win.start, win.end, scope);
-  const trend = await trendSeries(userId, period, win, scope);
+  const tot   = await totals(userId, win.start, win.end, phoneNumberIds);
+  const prev  = await totals(userId, win.prevStart, win.prevEnd, phoneNumberIds);
+  const cats  = await categoriesRaw(userId, win.start, win.end, phoneNumberIds);
+  const tcp   = await topCounterparties(userId, win.start, win.end, phoneNumberIds, dek);
+  const lrg   = await largest(userId, win.start, win.end, phoneNumberIds, dek);
+  const bz    = await busiest(userId, win.start, win.end, phoneNumberIds);
+  const trend = await trendSeries(userId, period, win, phoneNumberIds);
 
+  // …the rest of getReport (by_category, insights, return {...}) is unchanged…
+  
   const currency = "USD";
   const by_category = cats.map((c) => ({
     category_id: c.category_id,
@@ -253,6 +424,7 @@ export async function getReport(
     insights,
   };
 }
+
 
 // import { pool } from "../db";
 // import { Lang, t } from "../lib/messages";
