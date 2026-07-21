@@ -4,6 +4,8 @@ import * as authService from "../services/auth";
 import { ok, resolveLang } from "../lib/http";
 import { t } from "../lib/messages";
 
+// phoneNumber: { type: "string", minLength: 6, maxLength: 12 },
+
 async function authRoutes(app: FastifyInstance): Promise<void> {
 
   app.post("/api/v1/auth/register", {
@@ -12,7 +14,7 @@ async function authRoutes(app: FastifyInstance): Promise<void> {
       type: "object", required: ["fullName", "phoneNumber", "password"],
       properties: {
         fullName:    { type: "string", minLength: 2, maxLength: 100 },
-        phoneNumber: { type: "string", minLength: 6, maxLength: 12 },
+        phoneNumber: { type: "string", pattern: "^252(61|62|77)\\d{7}$" },
         password:    { type: "string", minLength: 4 },
         language:    { type: "string", enum: ["en", "so"] },
       },

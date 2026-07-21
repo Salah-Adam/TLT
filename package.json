@@ -1,0 +1,10 @@
+{
+  "name": "tlt",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "npm --prefix backend/api-server test && npm --prefix backend/workers test",
+    "test:api": "npm --prefix backend/api-server test",
+    "test:workers": "npm --prefix backend/workers test"
+  }
+}
