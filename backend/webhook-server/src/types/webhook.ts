@@ -2,25 +2,25 @@
 // These are intentionally loose (unknown fields allowed)
 // because telecoms can send extra fields we don't expect
 
-export interface EVCPlusWebhookPayload {
-  message?: string      // raw SMS text
-  msisdn?: string       // phone number
-  shortcode?: string    // sender shortcode
-  [key: string]: unknown
-}
+// export interface EVCPlusWebhookPayload {
+//   message?: string      // raw SMS text
+//   msisdn?: string       // phone number
+//   shortcode?: string    // sender shortcode
+//   [key: string]: unknown
+// }
 
-export interface EDahabWebhookPayload {
-  message?: string
-  sender?: string
-  receiver?: string
-  [key: string]: unknown
-}
+// export interface EDahabWebhookPayload {
+//   message?: string
+//   sender?: string
+//   receiver?: string
+//   [key: string]: unknown
+// }
 
 
-// Union of all provider payloads
-export type RawWebhookPayload =
-  | EVCPlusWebhookPayload
-  | EDahabWebhookPayload
+// // Union of all provider payloads
+// export type RawWebhookPayload =
+//   | EVCPlusWebhookPayload
+//   | EDahabWebhookPayload
 
 
 
