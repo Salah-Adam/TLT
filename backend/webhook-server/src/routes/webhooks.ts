@@ -29,9 +29,33 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
 
       const { provider } = request.params
 
+      // // Step 1 — Validate token against database
+      // const token = request.headers['x-webhook-token'] as string | undefined
+      // const phoneNumber = await validateWebhookToken(token, provider)
+
+      // if (!phoneNumber) {
+      //   app.log.warn({
+      //     event:    'unauthorized_webhook',
+      //     provider,
+      //     ip:       request.ip,
+      //     hasToken: !!token,
+      //   })
+      //   return reply.status(401).send({ error: 'Unauthorized' })
+      // }
+
       // Step 1 — Validate token against database
       const token = request.headers['x-webhook-token'] as string | undefined
-      const phoneNumber = await validateWebhookToken(token, provider)
+
+      let phoneNumber
+      try {
+        phoneNumber = await validateWebhookToken(token, provider)
+      } catch (err) {
+        // We could not VERIFY the token (DB down, pool exhausted, timeout).
+        // That's our fault, not the provider's — 503 tells them to retry.
+        // A 401 here would make them treat it as permanent and drop the message.
+        app.log.error({ event: 'webhook_token_check_failed', provider, err })
+        return reply.status(503).header('Retry-After', '30').send({ error: 'Service Unavailable' })
+      }
 
       if (!phoneNumber) {
         app.log.warn({
@@ -54,19 +78,39 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
         structuredPayload: request.body as Record<string, unknown>,
       }
 
+      // // Step 3 — Push to queue
+      // try{
+      //   await transactionQueue.add(
+      //     `webhook-${provider}`,
+      //     normalisedJob,
+      //     { jobId: `${provider}-${phoneNumber.id}-${Date.now()}` }
+      //   )
+      // } catch (err) {
+      //   // Could NOT durably queue the job (Redis down/unreachable).
+      //   // Do NOT ack — an ack here would lose the message permanently.
+      //   app.log.error({ event: 'webhook_enqueue_failed', provider, phoneNumberId: phoneNumber.id, err })
+      //   return reply.status(503).header('Retry-After', '30').send({ error: 'Service Unavailable' })
+      // }
       // Step 3 — Push to queue
-      await transactionQueue.add(
-        `webhook-${provider}`,
-        normalisedJob,
-        { jobId: `${provider}-${phoneNumber.id}-${Date.now()}` }
-      )
+      try {
+        await transactionQueue.add(
+          `webhook-${provider}`,
+          normalisedJob,
+          { jobId: `${provider}-${phoneNumber.id}-${Date.now()}` }
+        )
+      } catch (err) {
+        // Could NOT durably queue the job (Redis down/unreachable).
+        // Do NOT ack — an ack here would lose the message permanently.
+        app.log.error({ event: 'webhook_enqueue_failed', provider, phoneNumberId: phoneNumber.id, err })
+        return reply.status(503).header('Retry-After', '30').send({ error: 'Service Unavailable' })
+      }
 
-      app.log.info({
-        event:         'webhook_queued',
-        provider,
-        phoneNumberId: phoneNumber.id,
-        userId:        phoneNumber.user_id,
-      })
+      // app.log.info({
+      //   event:         'webhook_queued',
+      //   provider,
+      //   phoneNumberId: phoneNumber.id,
+      //   userId:        phoneNumber.user_id,
+      // })
 
       // Step 4 — Respond immediately
       return reply.status(200).send({ received: true })
