@@ -24,7 +24,7 @@ export const config = {
   database: {
     host: process.env.DB_HOST || 'postgres',
     port: parseInt(process.env.DB_PORT || '5432', 10),
-    database: process.env.DB_NAME || 'TLT',
+    database: process.env.DB_NAME || 'TLT_DB',
     user: process.env.DB_USER || 'TLT_user_sai',
     password: requireEnv('DB_PASSWORD'),
   },

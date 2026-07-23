@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "migrate": "dotenv -e ../.env -- db-migrate up",
-    "migrate:dry": "dotenv -e ../.env -- db-migrate up --dry-run",
-    "migrate:down": "dotenv -e ../.env -- db-migrate down"
+    "migrate":            "dotenv -e ../.env -- db-migrate up",
+    "migrate:down":       "dotenv -e ../.env -- db-migrate down",
+    "migrate:reset":      "dotenv -e ../.env -- db-migrate reset",
+    "migrate:test":       "dotenv -e ../.env -- db-migrate up -e test",
+    "migrate:test:down":  "dotenv -e ../.env -- db-migrate down -e test",
+    "migrate:test:reset": "dotenv -e ../.env -- db-migrate reset -e test"
   },
   "keywords": [],
   "author": "",

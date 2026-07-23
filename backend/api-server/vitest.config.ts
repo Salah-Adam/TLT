@@ -7,7 +7,7 @@ export default defineConfig({
     env: {
       DB_HOST: "localhost",
       DB_PORT: "5432",
-      DB_NAME: "TLT_test",
+      DB_NAME: "TLT_DB_test",
       REDIS_HOST: "localhost",
       REDIS_PORT: "6379",
     },
