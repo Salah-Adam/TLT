@@ -2,6 +2,7 @@ import { PoolClient } from "pg";
 import { pool } from "./db";
 import { hashValue } from "./encryption";
 import { AppError } from "./lib/errors";
+import { timingSafeEqual } from "crypto";
 
 // export type OtpPurpose = "registration" | "reclaim" | "add_phone" | "password_reset";
 export type OtpPurpose = "registration" | "reclaim" | "add_phone" | "password_reset" | "recover";
@@ -143,10 +144,19 @@ export async function verifyChallenge(
   if (!c) throw new AppError("OTP_NOT_REQUESTED", 400);
   if (c.attempts >= MAX_ATTEMPTS) throw new AppError("OTP_TOO_MANY_ATTEMPTS", 429);
   if (new Date(c.expires_at) < new Date()) throw new AppError("OTP_EXPIRED", 400);
-  if (c.code_hash !== hashValue(code)) {
+  // Constant-time compare so response time never leaks how much of the hash matched.
+  const expected = Buffer.from(c.code_hash, "hex");
+  const provided = Buffer.from(hashValue(code), "hex");
+  const matches = expected.length === provided.length && timingSafeEqual(expected, provided);
+  if (!matches) {
     await client.query(`UPDATE otp_challenges SET attempts = attempts + 1 WHERE id = $1`, [c.id]);
     throw new AppError("OTP_INVALID", 400);
   }
+
+  // if (c.code_hash !== hashValue(code)) {
+  //   await client.query(`UPDATE otp_challenges SET attempts = attempts + 1 WHERE id = $1`, [c.id]);
+  //   throw new AppError("OTP_INVALID", 400);
+  // }
 
   // Consume + scrub the sensitive payload (already captured in c.payload).
   await client.query(
