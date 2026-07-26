@@ -20,24 +20,3 @@ const styles = StyleSheet.create({
   t: { fontSize: 26, fontWeight: "600", color: colors.text },
   s: { fontSize: 14, color: colors.textSecondary, marginTop: 6 },
 });
-
-
-// -------------------------------------
-
-// import { StyleSheet, Text, View } from "react-native";
-// import { colors } from "../theme";
-
-// export function ScreenPlaceholder({ title }: { title: string }) {
-//   return (
-//     <View style={styles.c}>
-//       <Text style={styles.t}>{title}</Text>
-//       <Text style={styles.s}>Coming soon</Text>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   c: { flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" },
-//   t: { fontSize: 26, fontWeight: "600", color: colors.text },
-//   s: { fontSize: 14, color: colors.textSecondary, marginTop: 6 },
-// });

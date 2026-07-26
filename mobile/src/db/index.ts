@@ -10,21 +10,6 @@ let dbInstance: SQLite.SQLiteDatabase | null = null;
 // let dbInstance: SQLite.SQLiteDatabase | null = null;
 let opening: Promise<SQLite.SQLiteDatabase> | null = null;
 
-
-// const SCHEMA = `
-
-//   CREATE TABLE IF NOT EXISTS categories (
-//     id TEXT PRIMARY KEY, name TEXT NOT NULL, icon TEXT, color TEXT, is_system INTEGER
-//   );
-
-//   CREATE TABLE IF NOT EXISTS kv_cache (
-//     key TEXT PRIMARY KEY, value TEXT NOT NULL, fetched_at TEXT NOT NULL
-//   );
-//   CREATE TABLE IF NOT EXISTS meta (
-//     key TEXT PRIMARY KEY, value TEXT
-//   );
-// `;
-
 const SCHEMA = `
 
   CREATE TABLE IF NOT EXISTS categories (
@@ -90,10 +75,8 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
   opening = (async () => {
     const key = await getKey();
     const db = await SQLite.openDatabaseAsync("tlt.db");
-    // await db.execAsync(`PRAGMA key = '${key}'`);
 
     await db.execAsync(`PRAGMA key = '${key}'`);
-    // await db.execAsync("PRAGMA journal_mode = WAL;");
     await db.execAsync("PRAGMA busy_timeout = 3000;");
 
     const ver = await db.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
@@ -121,43 +104,6 @@ export function withDbLock<T>(fn: () => Promise<T>): Promise<T> {
   return run;
 }
 
-
-// export async function getDb(): Promise<SQLite.SQLiteDatabase> {
-//   if (dbInstance) return dbInstance;
-//   const key = await getKey();
-//   const db = await SQLite.openDatabaseAsync("tlt.db");
-//   await db.execAsync(`PRAGMA key = '${key}'`);
-
-//   const ver = await db.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
-//   const v = ver?.user_version ?? 0;
-//   if (v < 3) await db.execAsync("DROP TABLE IF EXISTS categories;");
-//   if (v < 4) await db.execAsync("DROP TABLE IF EXISTS transactions;");
-//   if (v < 4) await db.execAsync("PRAGMA user_version = 4;");
-//   if (v < 4) await db.execAsync("DROP TABLE IF EXISTS phone_numbers;");
-//   if (v < 5) await db.execAsync("DROP TABLE IF EXISTS notifications;");
-//   if (v < 5) await db.execAsync("PRAGMA user_version = 5;");
-  
-
-//   // const ver = await db.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
-//   // if ((ver?.user_version ?? 0) < 3) {
-//   //   await db.execAsync("DROP TABLE IF EXISTS categories;");
-//   //   await db.execAsync("PRAGMA user_version = 3;");
-//   // }
-
-
-//   await db.execAsync(SCHEMA);
-//   dbInstance = db;
-//   return db;
-// }
-
-
-// export async function wipeDb(): Promise<void> {
-//   const db = await getDb();
-//   await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta; DELETE FROM transactions;");
-
-//   await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta; DELETE FROM transactions; DELETE FROM phone_numbers;");
-// }
-
 export async function wipeDb(): Promise<void> {
   const db = await getDb();
   await db.execAsync("DELETE FROM categories; DELETE FROM kv_cache; DELETE FROM meta; DELETE FROM transactions; DELETE FROM phone_numbers; DELETE FROM notifications;");
@@ -166,37 +112,3 @@ export async function wipeDb(): Promise<void> {
 export function closeDb(): void {
   dbInstance = null;
 }
-
-
-// import * as SQLite from "expo-sqlite";
-// import * as SecureStore from "expo-secure-store";
-// import * as Crypto from "expo-crypto";
-
-// const KEY_NAME = "tlt_db_key";
-// let dbInstance: SQLite.SQLiteDatabase | null = null;
-
-// // A 256-bit random key, generated once and kept in the OS keystore.
-// async function getKey(): Promise<string> {
-//   let key = await SecureStore.getItemAsync(KEY_NAME);
-//   if (!key) {
-//     const bytes = await Crypto.getRandomBytesAsync(32);
-//     key = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
-//     await SecureStore.setItemAsync(KEY_NAME, key);
-//   }
-//   return key;
-// }
-
-// // Opens the encrypted DB (PRAGMA key MUST be the first statement) and caches the handle.
-// export async function getDb(): Promise<SQLite.SQLiteDatabase> {
-//   if (dbInstance) return dbInstance;
-//   const key = await getKey();
-//   const db = await SQLite.openDatabaseAsync("tlt.db");
-//   await db.execAsync(`PRAGMA key = '${key}'`);
-//   dbInstance = db;
-//   return db;
-// }
-
-// // Drops the cached handle (3B wires the full wipe-on-logout).
-// export function closeDb(): void {
-//   dbInstance = null;
-// }

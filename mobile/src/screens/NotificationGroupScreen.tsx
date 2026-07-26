@@ -45,15 +45,7 @@ export default function NotificationGroupScreen() {
       await load();
       useNotifications.getState().refresh();
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [family]);
-
-//   const doRefresh = useCallback(async () => {
-//     setRefreshing(true);
-//     if (useNetwork.getState().online) { try { await flushPendingReads(); await refreshNotifications(); } catch {} }
-//     await load(); useNotifications.getState().refresh();
-//     setRefreshing(false);
-//   }, [load]);
 
   const doRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -61,12 +53,6 @@ export default function NotificationGroupScreen() {
     await load(); useNotifications.getState().refresh();
     setRefreshing(false);
   }, [load]);
-
-  // const onTap = (n: Notif) => {
-  //   if ((n.type === "transaction_received" || n.type === "transaction_sent") && n.data?.transactionId) {
-  //     nav.navigate("Transactions", { screen: "TxDetail", params: { id: String(n.data.transactionId) } });
-  //   }
-  // };
 
   const onTap = (n: Notif) => {
     const d = (n.data ?? {}) as Record<string, any>;

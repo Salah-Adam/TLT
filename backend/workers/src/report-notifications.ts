@@ -4,14 +4,6 @@ import { sendPush } from "./services/fcm";
 export type ReportPeriod = "daily" | "weekly" | "monthly";
 
 
-// async function getDeviceToken(userId: string): Promise<string | null> {
-//   const r = await pool.query(
-//     `SELECT token FROM device_tokens WHERE user_id=$1 AND is_active=TRUE ORDER BY last_used_at DESC LIMIT 1`,
-//     [userId]
-//   );
-//   return r.rows[0]?.token ?? null;
-// }
-
 async function getDeviceToken(userId: string): Promise<string | null> {
   const r = await pool.query(
     `SELECT token FROM device_tokens WHERE user_id=$1 AND is_active=TRUE ORDER BY last_used_at DESC LIMIT 1`,
@@ -107,12 +99,7 @@ export async function runReportNotifications(period: ReportPeriod): Promise<void
       body:  lang === "so" ? bodySo : bodyEn,
       data: { ...anchor.data, notificationId: id },
     });
-    // const messageId = await sendPush({
-    //   token: null,
-    //   title: lang === "so" ? titleSo : titleEn,
-    //   body:  lang === "so" ? bodySo : bodyEn,
-    //   data: anchor.data,
-    // });
+
     if (messageId) await pool.query(`UPDATE notifications SET fcm_message_id=$1 WHERE id=$2`, [messageId, id]);
     made++;
   }

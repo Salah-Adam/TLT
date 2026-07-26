@@ -1,7 +1,3 @@
-// The Transactions list: SIM filter (multi-select) + direction + date presets + search.
-// Online → server (paginated, full history, cache grows). Offline → local cache query.
-
-
 // Transactions ledger: single filter bar (SIM dropdown · In/Out · Date), 4 aligned columns
 // (Transaction · Category · Amount · Balance), date groups with daily net. Online → server; offline → cache.
 
@@ -17,23 +13,14 @@ import { useTranslation } from "react-i18next";
 import { colors } from "../theme";
 import { useNetwork } from "../store/useNetwork";
 import { fetchTransactionsPage, queryCache, type Tx, type TxFilters } from "../data/transactions";
-
-// import { readSims, simLabel, type Sim } from "../data/phoneNumbers";
-
 import { readSims, simLabel, simColor, simEyebrow, type Sim } from "../data/phoneNumbers";
-
-// import { readSims, simLabel, simColor, type Sim } from "../data/phoneNumbers";
-
 import { readCategories } from "../data/categories";
 import { MiniCalendar } from "../components/MiniCalendar";
 import { syncAll } from "../data/sync";
-
 import { useSync } from "../store/useSync";
 import { TxSentence } from "../components/TxSentence";
-
 import { EmptyState } from "../components/EmptyState";
 import { ErrorState } from "../components/ErrorState";
-
 import { CoachTip } from "../components/CoachTip";
 import { hasSeen, markSeen } from "../onboarding";
 
@@ -112,26 +99,6 @@ export default function TransactionsScreen() {
   const simMap = useMemo(() => { const m: Record<string, Sim> = {}; sims.forEach((s) => (m[s.id] = s)); return m; }, [sims]);
   const showSim = sims.length >= 2;
 
-  // const firstLoad = useCallback(async () => {
-  //   setLoading(true);
-  //   try {
-  //     if (online) {
-  //       try {
-  //         const page = await fetchTransactionsPage({ cursor: null, filters: buildFilters(), q: appliedQ });
-  //         setItems(page.items); cursorRef.current = page.cursor; hasMoreRef.current = page.hasMore;
-  //       } catch (e) {
-  //         console.warn("tx: online fetch failed, falling back to cache:", e); // remove later
-  //         const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 500 });
-  //         setItems(rows); cursorRef.current = null; hasMoreRef.current = false;
-  //       }
-  //     } else {
-  //       const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 500 });
-  //       setItems(rows); cursorRef.current = null; hasMoreRef.current = false;
-  //     }
-  //   } catch {}
-  //   setLoading(false);
-  // }, [online, appliedQ, buildFilters]);
-
   const firstLoad = useCallback(async () => {
     setLoading(true);
     try {
@@ -204,24 +171,6 @@ export default function TransactionsScreen() {
     });
   }, [items, t]);
 
-  // const sections = useMemo(() => {
-  //   const todayY = ymd(new Date());
-  //   const yd = new Date(); yd.setDate(yd.getDate() - 1); const yestY = ymd(yd);
-  //   const map = new Map<string, Tx[]>();
-  //   for (const tx of items) {
-  //     const key = tx.transacted_date || tx.transacted_at.slice(0, 10);
-  //     if (!map.has(key)) map.set(key, []);
-  //     map.get(key)!.push(tx);
-  //   }
-  //   return Array.from(map.entries()).map(([key, data]) => {
-  //     const net = data.reduce((s, tx) => s + (tx.direction === "in" ? tx.amount : -tx.amount), 0);
-  //     const title = key === todayY ? t("tx.today") : key === yestY ? t("tx.yesterday")
-  //       : new Date(key + "T00:00:00").toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
-  //     return { title, net, data };
-  //   });
-  // }, [items, t]);
-
-
   const renderRow = useCallback(
     ({ item }: { item: Tx }) => <Row tx={item} colors2={catColors} simMap={simMap} showSim={showSim} onPress={openTx} />,
     [catColors, simMap, showSim, openTx]
@@ -263,17 +212,6 @@ export default function TransactionsScreen() {
           <Text style={[styles.pillBtnTxt, dateSel.kind !== "all" && { color: "#fff" }]}>{dateLabelTxt}</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* <View style={styles.colHead}>
-        <Text style={[styles.colHeadTxt, { flex: 1 }]}>{t("tx.colTransaction")}</Text>
-        <Text style={[styles.colHeadTxt, styles.cCat]}>{t("tx.colCategory")}</Text>
-        <Text style={[styles.colHeadTxt, styles.cAmt, { textAlign: "right" }]}>{t("tx.colAmount")}</Text>
-        <Text style={[styles.colHeadTxt, styles.cBal, { textAlign: "right" }]}>{t("tx.colBalance")}</Text>
-      </View> */}
-{/* 
-      {loading ? (
-        <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>
-      ) : ( */}
       
       {loading ? (
         <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>
@@ -290,25 +228,12 @@ export default function TransactionsScreen() {
               <Text style={styles.secTitle}>{section.title}</Text>
             </View>
           )}
-          // renderSectionHeader={({ section }) => (
-          //   <View style={styles.secHead}>
-          //     <Text style={styles.secTitle}>{section.title}</Text>
-          //     <Text style={[styles.secNet, { color: (section as any).net >= 0 ? colors.moneyIn : colors.moneyOut }]}>
-          //       {t("tx.net")} {(section as any).net >= 0 ? "+" : "−"}{money(Math.abs((section as any).net))}
-          //     </Text>
-          //   </View>
-          // )}
-
-          // renderItem={({ item }) => <Row tx={item} colors2={catColors} onPress={() => nav.navigate("TxDetail", { id: item.id })} />}
-
-          // renderItem={({ item }) => <Row tx={item} colors2={catColors} simMap={simMap} showSim={showSim} onPress={() => nav.navigate("TxDetail", { id: item.id })} />}
-         
+          
           renderItem={renderRow}
 
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={doRefresh} tintColor={colors.primary} />}
           onEndReachedThreshold={0.4}
           onEndReached={loadMore}
-          // ListEmptyComponent={<Text style={styles.empty}>{t("tx.empty")}</Text>}
           ListEmptyComponent={<EmptyState icon="swap-horizontal-outline" title={t("tx.empty")} subtitle={t("tx.emptyHint")} />}
           ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 16 }} color={colors.primary} /> : null}
         />
@@ -358,43 +283,6 @@ export default function TransactionsScreen() {
   );
 }
 
-
-// function Row({ tx, colors2, simMap, showSim, onPress }: { tx: Tx; colors2: Record<string, string | null>; simMap: Record<string, Sim>; showSim: boolean; onPress: () => void }) {
-//   const isIn = tx.direction === "in";
-//   const time = new Date(tx.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-//   const hex = tx.category ? colors2[tx.category.id] ?? null : null;
-//   const sim = showSim && tx.phone_number_id ? simMap[tx.phone_number_id] : undefined;
-//   const accent = sim ? simColor(sim.id) : undefined;
-//   return (
-//     <TouchableOpacity
-//       style={[styles.row, showSim && { borderLeftWidth: 3, borderLeftColor: accent ?? "transparent" }]}
-//       onPress={onPress}
-//       activeOpacity={0.7}
-//     >
-
-//       <View style={[styles.arrow, { backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
-//         <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={17} color={isIn ? "#16A34A" : "#DC2626"} />
-//       </View>
-
-
-//       <View style={{ flex: 1 , marginLeft: 11}}>
-
-//         {sim ? <Text style={[styles.simEyebrow, { color: accent }]} numberOfLines={1}>{simEyebrow(sim)}</Text> : null}
-
-//         <TxSentence tx={tx} style={styles.sentence} />
-//         <View style={styles.meta}>
-
-//           <Text style={styles.time}>{time}</Text>
-//           {tx.category
-//             ? <Text style={[styles.tag, { backgroundColor: hex ? hex + "22" : "#EEF2F6", color: hex ?? colors.textSecondary }]}>{tx.category.name}</Text>
-//             : null}
-//         </View>
-//       </View>
-
-//     </TouchableOpacity>
-//   );
-// }
-
 const Row = React.memo(function Row({ tx, colors2, simMap, showSim, onPress }: { tx: Tx; colors2: Record<string, string | null>; simMap: Record<string, Sim>; showSim: boolean; onPress: (id: string) => void }) {
   const isIn = tx.direction === "in";
   const time = new Date(tx.transacted_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -443,54 +331,23 @@ const styles = StyleSheet.create({
   segActive: { backgroundColor: colors.primary },
   segTxt: { fontSize: 13, color: colors.textSecondary },
   segTxtActive: { color: "#fff", fontWeight: "600" },
-  // colHead: { flexDirection: "row", alignItems: "center" , paddingHorizontal: 16, paddingVertical: 7, marginTop: 6, backgroundColor: "#F1F5F9", borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border },
   colHeadTxt: { fontSize: 11, color: colors.text, fontWeight: "600" },
-  // cCat: { width: 64, paddingHorizontal: 4 },
-  // cAmt: { width: 60 },
-  // cBal: { width: 62 },
   secHead: { paddingHorizontal: 16, paddingVertical: 7, backgroundColor: colors.background },
   secTitle: { fontSize: 12, fontWeight: "600", color: colors.textSecondary },
-
-  // secHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 7, backgroundColor: colors.background },
-  // secTitle: { fontSize: 12, fontWeight: "600", color: colors.textSecondary },
-  // secNet: { fontSize: 12, fontWeight: "600" },
-
-
   row: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 12, paddingHorizontal: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
   arrow: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", marginTop: 1 },
   sentence: { fontSize: 14, lineHeight: 20, color: colors.text },
-
-  // simEyebrow: { fontSize: 11, fontWeight: "600", marginBottom: 3, alignSelf: "auto"},
-
-  
-
   provNum: { marginTop: 4, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999 },
   simChip: { flexDirection: "row", alignItems: "center", paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, flexShrink: 1 },
   simDot: { width: 4, height: 4, borderRadius: 3, marginRight: 4 },
   simChipTxt: { fontSize: 9, fontWeight: "600", flexShrink: 1 },
   categ: { marginTop: 4 },
-
-
-  // simEyebrow: { fontSize: 11, fontWeight: "600", marginBottom: 3, alignSelf: "flex-end" },
-
   meta: { flexDirection: "row", alignItems: "center", marginTop: 5 },
   time: { fontSize: 11, color: colors.textSecondary },
   tag: { fontSize: 10, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, overflow: "hidden", marginLeft: 8 },
-  // row: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
   cTxn: { flex: 1, flexDirection: "row", alignItems: "center", minWidth: 0 },
-  // name: { fontSize: 14, fontWeight: "500", color: colors.text },
-  // sub: { fontSize: 11, color: colors.textSecondary, marginTop: 1 },
-
   metaRow: { flexDirection: "row", alignItems: "center", marginTop: 2 },
   metaNum: { fontSize: 11, color: colors.text, fontWeight: "600", flexShrink: 1 },
-
-
-
-
-  // pill: { fontSize: 10, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, overflow: "hidden", alignSelf: "flex-start" },
-  // dash: { fontSize: 12, color: colors.textSecondary },
-  // amt: { fontSize: 13, fontWeight: "600", textAlign: "right" },
-  // bal: { fontSize: 12, color: colors.textSecondary, textAlign: "right" },
   empty: { textAlign: "center", color: colors.textSecondary, marginTop: 40, fontSize: 14 },
   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 18, borderTopRightRadius: 18, padding: 18, paddingBottom: 28 },
@@ -508,260 +365,3 @@ const styles = StyleSheet.create({
 
 
 
-
-
-
-
-
-
-
-
-
-// ----------------------
-
-// import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-// import {
-//   ActivityIndicator, Modal, Pressable, RefreshControl, ScrollView, SectionList,
-//   StyleSheet, Text, TextInput, TouchableOpacity, View,
-// } from "react-native";
-// import { useNavigation, useFocusEffect } from "@react-navigation/native";
-// import { Ionicons } from "@expo/vector-icons";
-// import { useTranslation } from "react-i18next";
-// import { colors } from "../theme";
-// import { useNetwork } from "../store/useNetwork";
-// import { fetchTransactionsPage, queryCache, type Tx, type TxFilters } from "../data/transactions";
-// import { readSims, simLabel, type Sim } from "../data/phoneNumbers";
-
-// const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
-// const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
-// type Dir = "all" | "in" | "out";
-// type DatePreset = "all" | "today" | "week" | "month";
-
-// function dateRange(p: DatePreset): { dateFrom?: string; dateTo?: string } {
-//   if (p === "all") return {};
-//   const now = new Date();
-//   if (p === "today") return { dateFrom: ymd(now), dateTo: ymd(now) };
-//   if (p === "week") { const s = new Date(now); s.setDate(now.getDate() - 6); return { dateFrom: ymd(s), dateTo: ymd(now) }; }
-//   const s = new Date(now.getFullYear(), now.getMonth(), 1);
-//   return { dateFrom: ymd(s), dateTo: ymd(now) };
-// }
-
-// export default function TransactionsScreen() {
-//   const { t } = useTranslation();
-//   const nav = useNavigation<any>();
-//   const online = useNetwork((s) => s.online);
-
-//   const [sims, setSims] = useState<Sim[]>([]);
-//   const [selectedSims, setSelectedSims] = useState<string[]>([]);
-//   const [direction, setDirection] = useState<Dir>("all");
-//   const [datePreset, setDatePreset] = useState<DatePreset>("all");
-//   const [dateModal, setDateModal] = useState(false);
-
-//   const [q, setQ] = useState("");
-//   const [appliedQ, setAppliedQ] = useState("");
-
-//   const [items, setItems] = useState<Tx[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [refreshing, setRefreshing] = useState(false);
-//   const [loadingMore, setLoadingMore] = useState(false);
-
-//   const cursorRef = useRef<string | null>(null);
-//   const hasMoreRef = useRef(false);
-//   const busyRef = useRef(false);
-
-//   useEffect(() => { readSims().then(setSims); }, []);
-
-//   // debounce the search box
-//   useEffect(() => { const id = setTimeout(() => setAppliedQ(q.trim()), 350); return () => clearTimeout(id); }, [q]);
-
-//   const buildFilters = useCallback((): TxFilters => ({
-//     phoneNumberIds: selectedSims.length ? selectedSims : undefined,
-//     direction: direction === "all" ? undefined : direction,
-//     ...dateRange(datePreset),
-//   }), [selectedSims, direction, datePreset]);
-
-//   const firstLoad = useCallback(async () => {
-//     setLoading(true);
-//     try {
-//       if (online) {
-//         const page = await fetchTransactionsPage({ cursor: null, filters: buildFilters(), q: appliedQ });
-//         setItems(page.items); cursorRef.current = page.cursor; hasMoreRef.current = page.hasMore;
-//       } else {
-//         const rows = await queryCache({ filters: buildFilters(), q: appliedQ, limit: 500 });
-//         setItems(rows); cursorRef.current = null; hasMoreRef.current = false;
-//       }
-//     } catch { /* keep what we have */ }
-//     setLoading(false);
-//   }, [online, appliedQ, buildFilters]);
-
-//   const loadMore = useCallback(async () => {
-//     if (!online || !hasMoreRef.current || busyRef.current || !cursorRef.current) return;
-//     busyRef.current = true; setLoadingMore(true);
-//     try {
-//       const page = await fetchTransactionsPage({ cursor: cursorRef.current, filters: buildFilters(), q: appliedQ });
-//       setItems((prev) => [...prev, ...page.items]); cursorRef.current = page.cursor; hasMoreRef.current = page.hasMore;
-//     } catch {}
-//     busyRef.current = false; setLoadingMore(false);
-//   }, [online, appliedQ, buildFilters]);
-
-//   const doRefresh = useCallback(async () => { setRefreshing(true); await firstLoad(); setRefreshing(false); }, [firstLoad]);
-
-//   // run on filter/search change (skip the very first render — focus handles mount)
-//   const didMount = useRef(false);
-//   useEffect(() => {
-//     if (!didMount.current) { didMount.current = true; return; }
-//     firstLoad();
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [appliedQ, selectedSims, direction, datePreset, online]);
-
-//   // refresh on mount + when returning from detail (category/note/delete reflect)
-//   const firstLoadRef = useRef(firstLoad); firstLoadRef.current = firstLoad;
-//   useFocusEffect(useCallback(() => { firstLoadRef.current(); }, []));
-
-//   const toggleSim = (id: string) =>
-//     setSelectedSims((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-
-//   // group into date sections (items already sorted newest-first)
-//   const sections = useMemo(() => {
-//     const todayY = ymd(new Date());
-//     const yest = new Date(); yest.setDate(yest.getDate() - 1);
-//     const yestY = ymd(yest);
-//     const map = new Map<string, Tx[]>();
-//     for (const tx of items) {
-//       const key = tx.transacted_date || tx.transacted_at.slice(0, 10);
-//       if (!map.has(key)) map.set(key, []);
-//       map.get(key)!.push(tx);
-//     }
-//     return Array.from(map.entries()).map(([key, data]) => {
-//       const title = key === todayY ? t("tx.today") : key === yestY ? t("tx.yesterday")
-//         : new Date(key + "T00:00:00").toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
-//       return { title, data };
-//     });
-//   }, [items, t]);
-
-//   const dateLabel = datePreset === "all" ? t("tx.date") : t(`tx.date_${datePreset}` as any);
-
-//   return (
-//     <View style={{ flex: 1, backgroundColor: colors.background }}>
-//       {/* search */}
-//       <View style={styles.searchWrap}>
-//         <Ionicons name="search" size={18} color={colors.textSecondary} />
-//         <TextInput
-//           style={styles.searchInput}
-//           placeholder={t("tx.searchPlaceholder")}
-//           placeholderTextColor={colors.textSecondary}
-//           value={q}
-//           onChangeText={setQ}
-//           returnKeyType="search"
-//         />
-//         {q ? <TouchableOpacity onPress={() => setQ("")}><Ionicons name="close-circle" size={18} color={colors.textSecondary} /></TouchableOpacity> : null}
-//       </View>
-
-//       {/* SIM chips (multi-select) */}
-//       {sims.length > 0 && (
-//         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-//           <Chip label={t("tx.all")} active={selectedSims.length === 0} onPress={() => setSelectedSims([])} icon="apps" />
-//           {sims.map((s) => (
-//             <Chip key={s.id} label={simLabel(s)} active={selectedSims.includes(s.id)} onPress={() => toggleSim(s.id)} icon="phone-portrait-outline" />
-//           ))}
-//         </ScrollView>
-//       )}
-
-//       {/* direction + date */}
-//       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-//         <Chip label={t("tx.all")} active={direction === "all"} onPress={() => setDirection("all")} />
-//         <Chip label={t("tx.in")} active={direction === "in"} onPress={() => setDirection("in")} />
-//         <Chip label={t("tx.out")} active={direction === "out"} onPress={() => setDirection("out")} />
-//         <Chip label={dateLabel} active={datePreset !== "all"} onPress={() => setDateModal(true)} icon="calendar-outline" />
-//       </ScrollView>
-
-//       {loading ? (
-//         <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>
-//       ) : (
-//         <SectionList
-//           sections={sections}
-//           keyExtractor={(tx) => tx.id}
-//           stickySectionHeadersEnabled={false}
-//           contentContainerStyle={{ paddingBottom: 24 }}
-//           renderSectionHeader={({ section }) => <Text style={styles.sectionHead}>{section.title}</Text>}
-//           renderItem={({ item }) => <TxRow tx={item} onPress={() => nav.navigate("TxDetail", { id: item.id })} />}
-//           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={doRefresh} tintColor={colors.primary} />}
-//           onEndReachedThreshold={0.4}
-//           onEndReached={loadMore}
-//           ListEmptyComponent={<Text style={styles.empty}>{t("tx.empty")}</Text>}
-//           ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 16 }} color={colors.primary} /> : null}
-//         />
-//       )}
-
-//       {/* date preset modal */}
-//       <Modal transparent visible={dateModal} animationType="fade" onRequestClose={() => setDateModal(false)}>
-//         <Pressable style={styles.backdrop} onPress={() => setDateModal(false)}>
-//           <View style={styles.sheet}>
-//             {(["all", "today", "week", "month"] as DatePreset[]).map((p) => (
-//               <TouchableOpacity key={p} style={styles.sheetRow} onPress={() => { setDatePreset(p); setDateModal(false); }}>
-//                 <Text style={[styles.sheetTxt, datePreset === p && { color: colors.primary, fontWeight: "700" }]}>
-//                   {p === "all" ? t("tx.date_all") : t(`tx.date_${p}` as any)}
-//                 </Text>
-//                 {datePreset === p ? <Ionicons name="checkmark" size={18} color={colors.primary} /> : null}
-//               </TouchableOpacity>
-//             ))}
-//           </View>
-//         </Pressable>
-//       </Modal>
-//     </View>
-//   );
-// }
-
-// function Chip({ label, active, onPress, icon }: { label: string; active: boolean; onPress: () => void; icon?: any }) {
-//   return (
-//     <TouchableOpacity style={[styles.chip, active && styles.chipActive]} onPress={onPress} activeOpacity={0.8}>
-//       {icon ? <Ionicons name={icon} size={13} color={active ? "#fff" : colors.textSecondary} style={{ marginRight: 5 }} /> : null}
-//       <Text style={[styles.chipTxt, active && styles.chipTxtActive]}>{label}</Text>
-//     </TouchableOpacity>
-//   );
-// }
-
-// function TxRow({ tx, onPress }: { tx: Tx; onPress: () => void }) {
-//   const isIn = tx.direction === "in";
-//   const title = tx.counterparty_name || tx.counterparty_number || "—";
-//   const time = new Date(tx.transacted_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-//   const subParts: string[] = [];
-//   if (tx.counterparty_name && tx.counterparty_number) subParts.push(tx.counterparty_number);
-//   if (tx.category?.name) subParts.push(tx.category.name);
-//   subParts.push(time);
-//   return (
-//     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
-//       <View style={[styles.iconCircle, { backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
-//         <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={18} color={isIn ? "#16A34A" : "#DC2626"} />
-//       </View>
-//       <View style={{ flex: 1, marginLeft: 11 }}>
-//         <Text style={styles.title} numberOfLines={1}>{title}</Text>
-//         <Text style={styles.sub} numberOfLines={1}>{subParts.join(" · ")}</Text>
-//       </View>
-//       <Text style={[styles.amt, { color: isIn ? colors.moneyIn : colors.moneyOut }]}>{isIn ? "+" : "−"}{money(tx.amount)}</Text>
-//     </TouchableOpacity>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-//   searchWrap: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 12, marginHorizontal: 16, marginTop: 12, paddingHorizontal: 12, height: 44 },
-//   searchInput: { flex: 1, marginLeft: 8, fontSize: 15, color: colors.text },
-//   chipRow: { paddingHorizontal: 16, paddingTop: 10, gap: 8 },
-//   chip: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 999, paddingHorizontal: 14, height: 34 },
-//   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-//   chipTxt: { fontSize: 13, color: colors.textSecondary },
-//   chipTxtActive: { color: "#fff", fontWeight: "600" },
-//   sectionHead: { fontSize: 13, fontWeight: "600", color: colors.textSecondary, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 6 },
-//   row: { flexDirection: "row", alignItems: "center", paddingVertical: 11, paddingHorizontal: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-//   iconCircle: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
-//   title: { fontSize: 14, fontWeight: "500", color: colors.text },
-//   sub: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-//   amt: { fontSize: 14, fontWeight: "600" },
-//   empty: { textAlign: "center", color: colors.textSecondary, marginTop: 40, fontSize: 14 },
-//   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
-//   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 18, borderTopRightRadius: 18, paddingVertical: 8 },
-//   sheetRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 15, paddingHorizontal: 22 },
-//   sheetTxt: { fontSize: 16, color: colors.text },
-// });

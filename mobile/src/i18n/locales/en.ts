@@ -259,19 +259,9 @@ export default {
   },
 
   alertDetail: {
-    // transactions: "Transactions",
-    // scope_period: "This period",
-    // scope_all: "All",
-    // empty: "No transactions in this category yet.",
     transactions: "Transactions",
     fullPeriod: "Full period",
     empty: "No transactions in this range.",
   },
 
 };
-
-// export default {
-//   tabs: { home: "Home", transactions: "Transactions", analytics: "Analytics", notifications: "Notifications" },
-//   common: { comingSoon: "Coming soon" },
-//   auth: { loginTitle: "Welcome back", phone: "Phone number", numberHint: "Number", password: "Password", loginBtn: "Log in", errorTitle: "Error", logout: "Log out" },
-// };

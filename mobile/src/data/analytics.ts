@@ -34,9 +34,6 @@ export type MonthlyAnalytics = {
   daily_trend: { date: string; total_in: number; total_out: number; count: number }[];
 };
 
-// export type AnalyticsSel =
-//   | { period: "daily"; date: string; simIds: string[] }
-//   | { period: "monthly"; year: number; month: number; simIds: string[] };
 
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
@@ -44,11 +41,6 @@ function qs(params: Record<string, string | number | undefined>): string {
   const parts = Object.entries(params).filter(([, v]) => v !== undefined && v !== "").map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`);
   return parts.length ? `?${parts.join("&")}` : "";
 }
-
-// function cacheKey(sel: AnalyticsSel): string {
-//   const sims = sel.simIds.length ? [...sel.simIds].sort().join(",") : "all";
-//   return sel.period === "daily" ? `an:d:${sel.date}:${sims}` : `an:m:${sel.year}-${sel.month}:${sims}`;
-// }
 
 function cacheKey(sel: AnalyticsSel): string {
   const sims = sel.simIds.length ? [...sel.simIds].sort().join(",") : "all";
@@ -62,9 +54,6 @@ function cacheKey(sel: AnalyticsSel): string {
 export async function readAnalytics(sel: AnalyticsSel): Promise<DailyAnalytics | MonthlyAnalytics | null> {
   const key = cacheKey(sel);
   const sims = sel.simIds.length ? sel.simIds.join(",") : undefined;
-//   const path = sel.period === "daily"
-//     ? `/api/v1/analytics/daily${qs({ date: sel.date, phone_number_ids: sims })}`
-//     : `/api/v1/analytics/monthly${qs({ year: sel.year, month: sel.month, phone_number_ids: sims })}`;
 
   const path = sel.period === "daily"
     ? `/api/v1/analytics/daily${qs({ date: sel.date, phone_number_ids: sims })}`
@@ -72,13 +61,6 @@ export async function readAnalytics(sel: AnalyticsSel): Promise<DailyAnalytics |
     ? `/api/v1/analytics/weekly${qs({ start: sel.start, phone_number_ids: sims })}`
     : `/api/v1/analytics/monthly${qs({ year: sel.year, month: sel.month, phone_number_ids: sims })}`;
     
-//   try {
-//     const data = await api.get<any>(path);
-//     await setCache(key, data);
-//     return data;
-//   } catch {
-//     return (await getCache<any>(key)) ?? null;
-//   }
   try {
     const data = await api.get<any>(path);
     setCache(key, data).catch(() => {});   // cache in the background — don't block the screen

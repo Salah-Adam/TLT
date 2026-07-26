@@ -42,27 +42,3 @@ export const config = {
   },
 };
 
-
-
-
-
-
-
-// import dotenv from "dotenv";
-// dotenv.config();
-
-// function required(name: string): string {
-//   const value = process.env[name];
-//   if (!value) {
-//     throw new Error(`Missing required environment variable: ${name}`);
-//   }
-//   return value;
-// }
-
-// export const config = {
-//   aws: {
-//     region: required("AWS_REGION"),
-//     kmsKeyId: required("AWS_KMS_KEY_ID"),
-//   },
-//   // db, redis, etc. get added here as we build out the rest of the worker
-// };

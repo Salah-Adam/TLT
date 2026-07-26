@@ -37,15 +37,6 @@ export const authApi = {
       "/api/v1/auth/recover/verify", { phoneNumber, otp, newPassword, deviceInfo: "TLT Android" }, false),
 };
 
-// export async function finishAuth(tokens: Tokens) {
-//   await useSession.getState().signIn(tokens);
-//   const me = await authApi.getMe();
-//   useSession.getState().setUser({ id: me.id, full_name: me.full_name, language: me.language });
-//   useLanguage.getState().setLanguage(me.language);
-// };
-
-// right after login we do a full pull so the local cache is populated immediately. It's wrapped in try/catch so a sync hiccup never blocks getting into the app.
-
 export async function finishAuth(tokens: Tokens) {
   await useSession.getState().signIn(tokens);
   const me = await authApi.getMe();
@@ -54,26 +45,3 @@ export async function finishAuth(tokens: Tokens) {
   try { await syncAll(); } catch { /* best-effort; offline-safe */ }
 };
 
-
-
-// import { api } from "./client";
-// import { useSession } from "../store/useSession";
-// import { useLanguage } from "../store/useLanguage";
-
-// type Tokens = { accessToken: string; refreshToken: string };
-// export type Me = { id: string; full_name: string; phone_number: string; language: "en" | "so"; email: string | null };
-
-// export const authApi = {
-//   login: (phoneNumber: string, password: string) =>
-//     api.post<Tokens>("/api/v1/auth/login", { phoneNumber, password, deviceInfo: "TLT Android" }, false),
-//   getMe: () => api.get<Me>("/api/v1/users/me"),
-//   logout: (refreshToken: string) => api.post("/api/v1/auth/logout", { refreshToken }, false),
-// };
-
-// // Run after any successful tokens: save them, load profile, set the UI language from the account.
-// export async function finishAuth(tokens: Tokens) {
-//   await useSession.getState().signIn(tokens);
-//   const me = await authApi.getMe();
-//   useSession.getState().setUser({ id: me.id, full_name: me.full_name, language: me.language });
-//   useLanguage.getState().setLanguage(me.language);
-// }

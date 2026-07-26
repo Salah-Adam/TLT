@@ -34,13 +34,6 @@ export default function SettingsScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingVertical: 12 }}>
       <Text style={styles.section}>{t("settings.account")}</Text>
-      
-      {/* <View style={styles.group}>
-        <Row icon="person-outline" label={t("settings.profile")} onPress={() => nav.navigate("Profile")} />
-        <View style={styles.divider} />
-        <Row icon="lock-closed-outline" label={t("settings.changePassword")} onPress={() => nav.navigate("ChangePassword")} />
-      </View> */}
-
       <View style={styles.group}>
         <Row icon="person-outline" label={t("settings.profile")} onPress={() => nav.navigate("Profile")} />
         <View style={styles.divider} />

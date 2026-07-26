@@ -83,11 +83,6 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        {/* <View style={styles.info}>
-          <View style={styles.infoRow}><Text style={styles.infoLabel}>{t("settings.phone")}</Text><Text style={styles.infoVal}>+252 {localNum(orig?.phone_number)}</Text></View>
-          <View style={[styles.infoRow, { borderBottomWidth: 0 }]}><Text style={styles.infoLabel}>{t("settings.memberSince")}</Text><Text style={styles.infoVal}>{joined}</Text></View>
-        </View> */}
-
         <TouchableOpacity style={styles.infoRow} onPress={() => nav.navigate("PhoneNumbers")}>
           <Text style={styles.infoLabel}>{t("settings.phone")}</Text>
           <Text style={[styles.infoVal, { color: colors.primary }]}>+252 {localNum(orig?.phone_number)} ›</Text>

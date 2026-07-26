@@ -84,45 +84,6 @@ export default function AddPhoneNumberScreen() {
     setLoading(false);
   };
 
-  // const startReclaim = async () => {
-  //   setError(""); setLoading(true);
-  //   try { await reclaimNumber(normalized); setMode("reclaim"); setPhase("otp"); }
-  //   catch (e: any) { setError(e?.message ?? t("auth.genericError")); }
-  //   setLoading(false);
-  // };
-
-  // const sendCode = async () => {
-  //   setError("");
-  //   if (!isValidPhone(normalized)) { setError(t("phones.needNumber")); return; }
-  //   setLoading(true);
-  //   try {
-  //     await addPhoneNumber({ number: normalized, displayName: displayName.trim() || undefined, classification });
-  //     setMode("add"); setPhase("otp");
-  //   } catch (e: any) {
-  //     if (e instanceof ApiError && e.code === "ALREADY_ADDED_NUMBER") setError(t("phones.alreadyAdded"));
-  //     else if (e instanceof ApiError && e.code === "PHONE_PREFIX_UNRECOGNISED") setError(t("phones.unsupported"));
-  //     else if (e instanceof ApiError && e.code === "NUMBER_OWNED_BY_OTHER") {
-  //       Alert.alert(t("phones.ownedTitle"), t("phones.ownedBody"), [
-  //         { text: t("settings.cancel"), style: "cancel" },
-  //         { text: t("phones.reclaim"), onPress: startReclaim },
-  //       ]);
-  //     } else setError(e?.message ?? t("auth.genericError"));
-  //   }
-  //   setLoading(false);
-  // };
-
-  // const verify = async () => {
-  //   setError("");
-  //   if (otp.trim().length !== 6) { setError(t("phones.needCode")); return; }
-  //   setLoading(true);
-  //   try {
-  //     if (mode === "reclaim") await reclaimNumberVerify(normalized, otp.trim());
-  //     else await verifyPhoneNumber({ number: normalized, otp: otp.trim(), displayName: displayName.trim() || undefined, classification });
-  //     nav.goBack();
-  //   } catch (e: any) { setError(e?.message ?? t("auth.genericError")); }
-  //   setLoading(false);
-  // };
-
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={{ padding: 20 }} keyboardShouldPersistTaps="handled">
@@ -146,7 +107,6 @@ export default function AddPhoneNumberScreen() {
             <Text style={styles.otpHint}>{t("phones.codeSentTo")} +252 {normalized.replace(/^252/, "")}</Text>
             <TextField label={t("phones.code")} value={otp} onChangeText={(v) => setOtp(v.replace(/[^0-9]/g, ""))} keyboardType="number-pad" maxLength={6} placeholder="••••••" />
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            {/* <View style={{ marginTop: 4 }}><Button title={t("phones.verify")} onPress={verify} loading={loading} /></View> */}
           
             <View style={{ marginTop: 4 }}><Button title={t("phones.verify")} onPress={verify} loading={loading} /></View>
             <ResendCode onResend={() => (mode === "reclaim"

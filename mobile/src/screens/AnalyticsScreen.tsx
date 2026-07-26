@@ -8,7 +8,6 @@ import { useTranslation } from "react-i18next";
 import { colors } from "../theme";
 import { useSync } from "../store/useSync";
 import { syncAll, getLastSynced } from "../data/sync";
-// import { readAnalytics, type AnalyticsSel, type DailyAnalytics, type MonthlyAnalytics } from "../data/analytics";
 import { readSims, simLabel, type Sim } from "../data/phoneNumbers";
 import { MiniCalendar } from "../components/MiniCalendar";
 
@@ -60,16 +59,6 @@ export default function AnalyticsScreen() {
   const [tipAnalytics, setTipAnalytics] = useState(false);
   useEffect(() => { (async () => { if (await hasSeen("intro") && !(await hasSeen("tipAnalytics"))) setTipAnalytics(true); })(); }, []);
   const dismissTipAnalytics = () => { markSeen("tipAnalytics"); setTipAnalytics(false); };
-
-  // const load = useCallback(async () => {
-  //   setLoading(true);
-  //   const sel: AnalyticsSel = period === "daily"
-  //     ? { period: "daily", date, simIds: selectedSims }
-  //     : { period: "monthly", year: ym.year, month: ym.month, simIds: selectedSims };
-  //   setData(await readAnalytics(sel));
-  //   setLoading(false);                                  // show data immediately
-  //   getLastSynced().then(setLastSynced).catch(() => {}); // update the label async
-  // }, [period, date, ym.year, ym.month, selectedSims]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -131,13 +120,6 @@ export default function AnalyticsScreen() {
               </TouchableOpacity>
             ))}
           </View>
-          {/* {period === "daily"
-            ? <TouchableOpacity style={styles.pill} onPress={() => setDateModal(true)}><Ionicons name="calendar-outline" size={14} color={colors.textSecondary} /><Text style={styles.pillTxt}>{dateLabel}</Text></TouchableOpacity>
-            : <View style={styles.stepper}>
-                <TouchableOpacity onPress={() => stepMonth(-1)} hitSlop={8}><Ionicons name="chevron-back" size={18} color={colors.text} /></TouchableOpacity>
-                <Text style={styles.stepTxt}>{monthLabel}</Text>
-                <TouchableOpacity onPress={() => stepMonth(1)} hitSlop={8}><Ionicons name="chevron-forward" size={18} color={colors.text} /></TouchableOpacity>
-              </View>} */}
           {period === "daily" ? (
             <TouchableOpacity style={styles.pill} onPress={() => setDateModal(true)}><Ionicons name="calendar-outline" size={14} color={colors.textSecondary} /><Text style={styles.pillTxt}>{dateLabel}</Text></TouchableOpacity>
           ) : period === "weekly" ? (
@@ -190,42 +172,20 @@ export default function AnalyticsScreen() {
                   </View>
                 ))}
             </View>
-
-            {/* {period === "monthly" && (data as MonthlyAnalytics).daily_trend?.length > 0 && (
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>{t("analytics.trendTitle")}</Text>
-                <SpendDiary series={(data as MonthlyAnalytics).daily_trend} />
-              </View>
-            )} */}
-
-            {/* {period === "monthly" && (data as MonthlyAnalytics).daily_trend?.length > 0 && (
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>{t("analytics.trendTitle")}</Text>
-                <Trend series={(data as MonthlyAnalytics).daily_trend} />
-              </View>
-            )} */}
-
             <View style={styles.card}>
               <Text style={styles.cardTitle}>{t("analytics.highlights")}</Text>
               {period === "daily" ? <>
                 {(data as DailyAnalytics).largest_in ? <Hl icon="arrow-down" color={colors.moneyIn} text={t("analytics.largestIn", { amount: money((data as DailyAnalytics).largest_in!) })} /> : null}
                 {(data as DailyAnalytics).largest_out ? <Hl icon="arrow-up" color={colors.moneyOut} text={t("analytics.largestOut", { amount: money((data as DailyAnalytics).largest_out!) })} /> : null}
               </> : <>
-              {/* ) : (
-                <> */}
                 {(data as any).busiest_day ? <Hl icon="calendar" color={colors.info} text={t("analytics.busiestDay", { date: fmtDay((data as any).busiest_day) })} /> : null}
                 {(data as any).busiest_hour != null ? <Hl icon="time" color={colors.info} text={t("analytics.busiestHour", { hour: String((data as any).busiest_hour) })} /> : null}
                 </>
               }
-                {/* {(data as MonthlyAnalytics).busiest_day ? <Hl icon="calendar" color={colors.info} text={t("analytics.busiestDay", { date: fmtDay((data as MonthlyAnalytics).busiest_day!) })} /> : null}
-                {(data as MonthlyAnalytics).busiest_hour != null ? <Hl icon="time" color={colors.info} text={t("analytics.busiestHour", { hour: String((data as MonthlyAnalytics).busiest_hour) })} /> : null}
-              </>} */}
-              
             </View>
 
 
             <TouchableOpacity style={styles.reportBtn}
-              // onPress={() => nav.navigate("Report", period === "daily" ? { period: "daily", date } : { period: "monthly", year: ym.year, month: ym.month })}>
               onPress={() => nav.navigate("Report", 
                 period === "daily" ? { period: "daily", date } 
                 : period === "weekly" ? { period: "weekly", start: weekStart } 
@@ -276,59 +236,7 @@ function Hl({ icon, color, text }: { icon: any; color: string; text: string }) {
   return <View style={styles.hl}><Ionicons name={icon} size={15} color={color} /><Text style={styles.hlTxt}> {text}</Text></View>;
 }
 
-// function SpendDiary({ series }: { series: { date: string; total_out: number }[] }) {
-//   const { t, i18n } = useTranslation();
-//   const so = i18n.language === "so";
-//   const days = series.filter((d) => d.total_out > 0).sort((a, b) => (a.date < b.date ? 1 : -1)); // newest first
-//   if (days.length === 0) return <Text style={styles.empty}>{t("analytics.noSpending")}</Text>;
-//   const template = t("analytics.spendDiary");
-//   return (
-//     <>
-//       {days.map((d, i) => {
-//         const dt = new Date(d.date + "T00:00:00");
-//         const month = so ? SO_MONTHS[dt.getMonth()] : dt.toLocaleDateString("en-US", { month: "long" });
-//         const parts: Record<string, { text: string; red?: boolean }> = {
-//           month: { text: month },
-//           day: { text: String(dt.getDate()) },
-//           amount: { text: money(d.total_out), red: true },
-//         };
-//         const nodes = template.split(/(\{\w+\})/g).map((seg, j) => {
-//           const m = seg.match(/^\{(\w+)\}$/);
-//           if (m && parts[m[1]]) {
-//             const p = parts[m[1]];
-//             return <Text key={j} style={p.red ? { color: colors.moneyOut, fontWeight: "700" } : undefined}>{p.text}</Text>;
-//           }
-//           return <Text key={j}>{seg}</Text>;
-//         });
-//         return (
-//           <View key={i} style={styles.diaryRow}>
-//             <View style={styles.diaryDot}><Ionicons name="calendar-outline" size={15} color={colors.moneyOut} /></View>
-//             <Text style={styles.diaryTxt}>{nodes}</Text>
-//           </View>
-//         );
-//       })}
-//     </>
-//   );
-// }
 
-// function Trend({ series }: { series: { date: string; total_out: number }[] }) {
-//   const max = Math.max(...series.map((d) => d.total_out), 1);
-//   return (
-//     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trend}>
-//       {series.map((d, i) => {
-//         const day = new Date(d.date + "T00:00:00").getDate();
-//         return (
-//           <View key={i} style={styles.trendCol}>
-//             <View style={styles.trendBarWrap}>
-//               <View style={[styles.trendBar, { height: Math.max(3, Math.round((d.total_out / max) * 56)) }]} />
-//             </View>
-//             <Text style={styles.trendLbl}>{day}</Text>
-//           </View>
-//         );
-//       })}
-//     </ScrollView>
-//   );
-// }
 const styles = StyleSheet.create({
   center: { paddingVertical: 60, alignItems: "center" },
   controls: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: 14, gap: 8 },
@@ -361,10 +269,7 @@ const styles = StyleSheet.create({
   empty: { fontSize: 13, color: colors.textSecondary, marginTop: 10, textAlign: "center" },
   hl: { flexDirection: "row", alignItems: "center", marginTop: 10 },
   hlTxt: { fontSize: 14, color: colors.text, flex: 1 },
-  // rend: { flexDirection: "row", alignItems: "flex-end", height: 66, marginTop: 12, gap: 2 },
-  // trendCol: { flex: 1, alignItems: "center", justifyContent: "flex-end" },
-  // trendBar: { width: "70%", borderRadius: 2, backgroundColor: colors.primary },
-
+  
   // unused
   trend: { alignItems: "flex-end", marginTop: 12, gap: 8, flexGrow: 1, justifyContent: "center", paddingHorizontal: 4 },
   trendCol: { alignItems: "center", width: 26 },

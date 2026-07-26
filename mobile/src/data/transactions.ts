@@ -88,14 +88,6 @@ async function upsertOne(db: any, t: Tx): Promise<void> {
   );
 }
 
-// async function upsertMany(items: Tx[]): Promise<void> {
-//   if (!items.length) return;
-//   const db = await getDb();
-//   await db.withTransactionAsync(async () => {
-//     for (const t of items) await upsertOne(db, t);
-//   });
-// }
-
 async function upsertMany(items: Tx[]): Promise<void> {
   if (!items.length) return;
   const db = await getDb();
@@ -131,10 +123,6 @@ export async function fetchTransactionsPage(opts: {
     cursor: cursor ?? undefined,
     limit: WINDOW,
   });
-  // const { data, meta } = await api.getWithMeta<Tx[]>(`${base}${query}`);
-  // const items = data ?? [];
-  // await upsertMany(items); // cache grows as you scroll/search online
-  // return { items, cursor: meta?.cursor ?? null, hasMore: !!meta?.has_more };
 
   const { data, meta } = await api.getWithMeta<Tx[]>(`${base}${query}`);
   const items = data ?? [];
@@ -143,17 +131,6 @@ export async function fetchTransactionsPage(opts: {
 
 
 }
-
-// ── sync: refresh the cached window (called by syncAll) ──────────
-// export async function refreshTransactions(): Promise<void> {
-//   const { data } = await api.getWithMeta<Tx[]>(`/api/v1/transactions?limit=${WINDOW}`);
-//   const items = data ?? [];
-//   const db = await getDb();
-//   await db.withTransactionAsync(async () => {
-//     await db.execAsync("DELETE FROM transactions");
-//     for (const t of items) await upsertOne(db, t);
-//   });
-// }
 
 export async function refreshTransactions(): Promise<void> {
   const { data } = await api.getWithMeta<Tx[]>(`/api/v1/transactions?limit=${WINDOW}`);
@@ -189,14 +166,6 @@ export async function queryCache(opts: { filters?: TxFilters; q?: string; limit?
   const rows = await db.getAllAsync<any>(sql, args);
   return rows.map(rowToTx);
 
-  // const rows = await db.getAllAsync<any>(sql, args);
-  // const seen = new Set<string>();
-  // return rows.map(rowToTx).filter((tx) => (seen.has(tx.id) ? false : (seen.add(tx.id), true)));
-  // const rows = await db.getAllAsync<any>(sql, args);
-  // const ids = rows.map((r: any) => r.id);
-  // const dup = ids.filter((v, i) => ids.indexOf(v) !== i);
-  // if (dup.length) console.warn("DIAG[queryCache] SELECT returned dup:", dup, "| all:", ids);
-  // return rows.map(rowToTx);
 }
 
 export async function readTransactions(limit = WINDOW): Promise<Tx[]> {

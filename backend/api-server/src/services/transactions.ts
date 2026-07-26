@@ -178,7 +178,6 @@ export async function updateTransaction(input: {
 
   return getTransaction(userId, id, lang);
 
-  // return getTransaction(userId, id, lang);
 }
 
 // ── Soft delete (snapshot + flag; summaries untouched, per decision) ──

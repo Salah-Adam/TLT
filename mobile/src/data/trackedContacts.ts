@@ -29,14 +29,6 @@ export type ContactTx = {
   note: string | null; transacted_at: string; transacted_date: string;
 };
 
-// -- the newer one. the above is the old - just added the needed line
-// export type ContactTx = {
-//   id: string; amount: number; currency: string; direction: "in" | "out"; type: string | null;
-//   phone_number_id: string | null;
-//   counterparty_name: string | null; counterparty_number: string | null; counterparty_available: boolean;
-//   category: { id: string; name: string } | null; note: string | null; transacted_at: string; transacted_date: string;
-// };
-
 export type ContactSummary = { total_sent: number; total_received: number; net: number; transaction_count: number };
 export type ContactTxPage = { items: ContactTx[]; cursor: string | null; hasMore: boolean; summary: ContactSummary | null };
 
@@ -89,22 +81,6 @@ export async function addNumber(id: string, number: string): Promise<TrackedCont
 export async function removeNumber(id: string, numberId: string): Promise<void> {
   await api.del(`/api/v1/tracked-contacts/${id}/numbers/${numberId}`);
 }
-
-
-
-// ── timeline (online, paginated, optional number/date filters) ──
-// export async function getContactTransactions(
-//   id: string, cursor?: string | null,
-//   filters?: { numberId?: string | null; dateFrom?: string; dateTo?: string }
-// ): Promise<ContactTxPage> {
-//   const parts: string[] = ["limit=50"];
-//   if (cursor) parts.push(`cursor=${encodeURIComponent(cursor)}`);
-//   if (filters?.numberId) parts.push(`number_id=${encodeURIComponent(filters.numberId)}`);
-//   if (filters?.dateFrom) parts.push(`date_from=${encodeURIComponent(filters.dateFrom)}`);
-//   if (filters?.dateTo)   parts.push(`date_to=${encodeURIComponent(filters.dateTo)}`);
-//   const { data, meta } = await api.getWithMeta<ContactTx[]>(`/api/v1/tracked-contacts/${id}/transactions?${parts.join("&")}`);
-//   return { items: data ?? [], cursor: meta?.cursor ?? null, hasMore: !!meta?.has_more };
-// }
 
 export async function getContactTransactions(
   id: string, cursor?: string | null,

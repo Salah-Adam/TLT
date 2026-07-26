@@ -43,17 +43,6 @@ export function MiniCalendar({ from, to, onChange, min, max }: {
       </View>
       <View style={styles.weekRow}>{WEEK.map((w, i) => <Text key={i} style={styles.weekTxt}>{w}</Text>)}</View>
       <View style={styles.grid}>
-        {/* {cells.map((d, i) => {
-          if (!d) return <View key={i} style={styles.cell} />;
-          const k = ymd(d), end = isEnd(k), mid = inRange(k);
-          return (
-            <TouchableOpacity key={i} style={styles.cell} onPress={() => pick(d)} activeOpacity={0.7}>
-              <View style={[styles.day, mid && styles.dayMid, end && styles.dayEnd]}>
-                <Text style={[styles.dayTxt, end && { color: "#fff", fontWeight: "700" }]}>{d.getDate()}</Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })} */}
         {cells.map((d, i) => {
           if (!d) return <View key={i} style={styles.cell} />;
           const k = ymd(d), end = isEnd(k), mid = inRange(k);

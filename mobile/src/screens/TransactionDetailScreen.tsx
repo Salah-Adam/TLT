@@ -89,15 +89,7 @@ export default function TransactionDetailScreen() {
         <View style={[styles.bigIcon, { backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
           <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={26} color={isIn ? "#16A34A" : "#DC2626"} />
         </View>
-
-        {/* <View style={[styles.bigIcon, { backgroundColor: isIn ? "#DCFCE7" : "#FEE2E2" }]}>
-          <Ionicons name={isIn ? "arrow-down" : "arrow-up"} size={26} color={isIn ? "#16A34A" : "#DC2626"} />
-        </View> */}
-
         {sim ? <Text style={styles.heroSim}>{simEyebrow(sim)}</Text> : null}
-
-
-
         <Text style={[styles.bigAmt, { color: isIn ? colors.moneyIn : colors.moneyOut }]}>{isIn ? "+" : "−"}{money(tx.amount)} {tx.currency}</Text>
         <Text style={styles.heroSub}>{isIn ? t("tx.received") : t("tx.spent")}</Text>
       </View>
@@ -106,9 +98,6 @@ export default function TransactionDetailScreen() {
         <Field label={t("tx.counterparty")} value={cpName} />
         {tx.counterparty_available && tx.counterparty_name && tx.counterparty_number
           ? <Field label="" value={tx.counterparty_number} /> : null}
-
-        {/* {sim ? <Field label={t("tx.yourNumber")} value={simEyebrow(sim)} /> : null} */}
-
         {/* category (tappable) */}
         <TouchableOpacity style={styles.fieldRow} onPress={() => setCatModal(true)} activeOpacity={0.7}>
           <Text style={styles.fieldLabel}>{t("tx.category")}</Text>

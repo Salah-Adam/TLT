@@ -1,7 +1,6 @@
 // Notifications repository. Read = local cache (offline-safe). Mark-read = optimistic + queue
 // (read_pending flag, flushed on sync). Delete = online-only.
 
-// import { getDb } from "../db";
 import { getDb, withDbLock } from "../db";
 
 import { api } from "../api/client";
@@ -35,20 +34,6 @@ export async function refreshNotifications(): Promise<void> {
   );
   const localById = new Map(localRows.map((r) => [r.id, r]));
 
-  // await db.withTransactionAsync(async () => {
-  //   await db.execAsync("DELETE FROM notifications");
-  //   for (const n of items) {
-  //     const local = localById.get(n.id);
-  //     const isRead = (n.is_read || local?.is_read === 1) ? 1 : 0;   // read is sticky
-  //     const readPending = local?.read_pending === 1 ? 1 : 0;         // keep queued reads
-  //     await db.runAsync(
-  //       `INSERT OR REPLACE INTO notifications (id, type, title, body, data, is_read, read_pending, sent_at, read_at)
-  //        VALUES (?,?,?,?,?,?,?,?,?)`,
-  //       [n.id, n.type, n.title, n.body, n.data ? JSON.stringify(n.data) : null, isRead, readPending, n.sent_at, n.read_at ?? null]
-  //     );
-  //   }
-  // });
-
   await withDbLock(() => db.withTransactionAsync(async () => {
     await db.execAsync("DELETE FROM notifications");
     for (const n of items) {
@@ -63,22 +48,6 @@ export async function refreshNotifications(): Promise<void> {
     }
   }));
 }
-
-// export async function refreshNotifications(): Promise<void> {
-//   const { data } = await api.getWithMeta<ApiNotif[]>(`/api/v1/notifications?limit=${WINDOW}`);
-//   const items = data ?? [];
-//   const db = await getDb();
-//   await db.withTransactionAsync(async () => {
-//     await db.execAsync("DELETE FROM notifications");
-//     for (const n of items) {
-//       await db.runAsync(
-//         `INSERT OR REPLACE INTO notifications (id, type, title, body, data, is_read, read_pending, sent_at, read_at)
-//          VALUES (?,?,?,?,?,?,0,?,?)`,
-//         [n.id, n.type, n.title, n.body, n.data ? JSON.stringify(n.data) : null, n.is_read ? 1 : 0, n.sent_at, n.read_at ?? null]
-//       );
-//     }
-//   });
-// }
 
 export async function readNotifications(opts: { unreadOnly?: boolean; limit?: number } = {}): Promise<Notif[]> {
   const db = await getDb();

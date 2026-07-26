@@ -273,19 +273,4 @@ export default {
     empty: "Dhaqdhaqaaq kuma jiro muddadan.",
   },
 
-  // alertDetail: {
-  //   transactions: "Dhaqdhaqaaqa",
-  //   scope_period: "Muddadan",
-  //   scope_all: "Dhammaan",
-  //   empty: "Weli ma jiraan dhaqdhaqaaq qaybtan ah.",
-  // },
-
 };
-
-
-
-// export default {
-//   tabs: { home: "Guriga", transactions: "Dhaqdhaqaaq", analytics: "Falanqayn", notifications: "Ogeysiis" },
-//   common: { comingSoon: "Dhowaan" },
-//   auth: { loginTitle: "Ku soo dhowow", phone: "Lambarka taleefanka", numberHint: "Lambarka", password: "Furaha sirta ah", loginBtn: "Gal", errorTitle: "Khalad", logout: "Ka bax" },
-// };

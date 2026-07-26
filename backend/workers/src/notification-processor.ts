@@ -3,10 +3,7 @@ import { renderTransactionNotification, pickLanguage } from "./services/messages
 import { sendPush } from "./services/fcm";
 import type { TransactionNotification } from "./services/notifications";
 
-// Phase 6 wires this to the device tokens the mobile app registers.
-// async function getDeviceToken(_userId: string): Promise<string | null> {
-//   return null;
-// }
+
 async function getDeviceToken(userId: string): Promise<string | null> {
   const r = await pool.query(
     `SELECT token FROM device_tokens
@@ -75,34 +72,3 @@ export async function pushStoredNotification(notificationId: string, userId: str
   }
 }
 
-
-
-
-
-// import { pool } from "./db";
-// import { renderTransactionNotification } from "./services/messages";
-// import type { TransactionNotification } from "./services/notifications";
-
-// /**
-//  * Render a queued notification into both languages and store it.
-//  * (4.3 will add: look up the device token, send via FCM, and write
-//  * back the fcm_message_id.)
-//  */
-// export async function processNotificationJob(job: TransactionNotification): Promise<void> {
-//   const rendered = renderTransactionNotification(job);
-
-//   const result = await pool.query(
-//     `INSERT INTO notifications (
-//        user_id, type, title_en, title_so, body_en, body_so, data
-//      ) VALUES ($1,$2,$3,$4,$5,$6,$7)
-//      RETURNING id`,
-//     [
-//       job.userId, rendered.type,
-//       rendered.titleEn, rendered.titleSo,
-//       rendered.bodyEn, rendered.bodySo,
-//       JSON.stringify(rendered.data),
-//     ]
-//   );
-
-//   console.log(`  stored notification ${result.rows[0].id} for user ${job.userId} (${rendered.type})`);
-// }

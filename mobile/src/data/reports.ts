@@ -36,13 +36,6 @@ export async function readReport(sel: ReportSel): Promise<ReportData | null> {
   const k = cacheKey(sel);
   const sims = sel.simIds?.length ? sel.simIds.join(",") : undefined;
   const path = `/api/v1/reports/${sel.period}${qs({ date: sel.date, start: sel.start, year: sel.year, month: sel.month, phone_number_ids: sims })}`;
-//   try {
-//     const data = await api.get<ReportData>(path);
-//     await setCache(k, data);
-//     return data;
-//   } catch {
-//     return (await getCache<ReportData>(k)) ?? null;
-//   }
   try {
     const data = await api.get<ReportData>(path);
     setCache(k, data).catch(() => {});     // background write

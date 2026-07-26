@@ -47,10 +47,6 @@ export function buildApp() {
     }),
   });
 
-  // Close the Redis client when the app closes — needed so tests exit cleanly.
-//   app.addHook("onClose", async () => {
-//     await rateLimitRedis.quit();
-//   });
   app.addHook("onClose", () => {
     rateLimitRedis.disconnect();
   });

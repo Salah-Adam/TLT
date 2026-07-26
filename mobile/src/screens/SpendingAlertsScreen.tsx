@@ -72,7 +72,6 @@ export default function SpendingAlertsScreen() {
         const fill = `${Math.min(pct, 100)}%` as `${number}%`;
         return (
           <TouchableOpacity style={[styles.card, !item.is_active && { opacity: 0.55 }]} activeOpacity={0.7}
-            // onPress={() => nav.navigate("AlertForm", { alert: item })}>
             onPress={() => nav.navigate("SpendingAlertDetail", { alert: item })}>
             <View style={styles.top}>
               <View style={{ flex: 1 }}>

@@ -38,28 +38,6 @@ export default function PhoneNumbersScreen() {
     });
   }, [nav]);
 
-  // const onDelete = (p: PhoneNumber) => {
-  //   if (!useNetwork.getState().online) { Alert.alert(t("phones.offlineAction")); return; }
-  //   const isLast = items.length <= 1;
-  //   Alert.alert(
-  //     isLast ? t("phones.deleteLastTitle") : t("phones.deleteTitle"),
-  //     isLast ? t("phones.deleteLastBody") : t("phones.deleteBody"),
-  //     [
-  //       { text: t("settings.cancel"), style: "cancel" },
-  //       { text: t("phones.delete"), style: "destructive", onPress: async () => {
-  //         try {
-  //           const r = await deletePhoneNumber(p.id);
-  //           if (r.accountDeleted) {
-  //             Alert.alert(t("phones.accountDeletedTitle"), t("phones.accountDeletedBody"), [
-  //               { text: "OK", onPress: () => useSession.getState().signOut() },
-  //             ]);
-  //           } else { await load(); }
-  //         } catch (e: any) { Alert.alert(t("auth.errorTitle"), e?.message ?? ""); }
-  //       } },
-  //     ]
-  //   );
-  // };
-
   const doDelete = async (p: PhoneNumber) => {
     try {
       const r = await deletePhoneNumber(p.id);

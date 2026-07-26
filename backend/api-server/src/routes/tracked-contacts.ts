@@ -113,28 +113,6 @@ async function trackedContactRoutes(app: FastifyInstance): Promise<void> {
     // return ok(reply, r.transactions, 200, { cursor: r.cursor, has_more: r.has_more });
     return ok(reply, r.transactions, 200, { cursor: r.cursor, has_more: r.has_more, summary: r.summary });
   });
-  // async (request, reply) => {
-  //   const { id } = request.params as { id: string };
-  //   const q = request.query as any;
-  //   const r = await tc.getContactTransactions(request.user.sub, resolveLang(request), id, q.cursor, q.limit, {
-  //     numberId: q.number_id, dateFrom: q.date_from, dateTo: q.date_to,
-  //   });
-  //   return ok(reply, r.transactions, 200, { cursor: r.cursor, has_more: r.has_more });
-  // });
-
-  // app.get("/api/v1/tracked-contacts/:id/transactions", {
-  //   preHandler: app.authenticate,
-  //   schema: {
-  //     params: { type: "object", required: ["id"], properties: { id: { type: "string" } } },
-  //     querystring: { type: "object", properties: { cursor: { type: "string" }, limit: { type: "integer", minimum: 10, maximum: 100 } } },
-  //   },
-  // }, async (request, reply) => {
-  //   const { id } = request.params as { id: string };
-  //   const q = request.query as any;
-  //   const r = await tc.getContactTransactions(request.user.sub, resolveLang(request), id, q.cursor, q.limit);
-  //   return ok(reply, r.transactions, 200, { cursor: r.cursor, has_more: r.has_more });
-  // });
-
 }
 
 export default fp(trackedContactRoutes);

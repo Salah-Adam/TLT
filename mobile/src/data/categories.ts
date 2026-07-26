@@ -17,15 +17,6 @@ export async function readCategories(): Promise<Category[]> {
 export async function refreshCategories(): Promise<void> {
   const fresh = await api.get<Category[]>("/api/v1/categories");
   const db = await getDb();
-  // await db.withTransactionAsync(async () => {
-  //   await db.execAsync("DELETE FROM categories");
-  //   for (const c of fresh) {
-  //     await db.runAsync(
-  //       "INSERT OR REPLACE INTO categories (id, name, icon, color, is_system) VALUES (?, ?, ?, ?, ?)",
-  //       [c.id, c.name, c.icon ?? null, c.color ?? null, c.is_system ? 1 : 0]
-  //     );
-  //   }
-  // });
 
   await withDbLock(() => db.withTransactionAsync(async () => {
     await db.execAsync("DELETE FROM categories");

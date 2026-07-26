@@ -17,23 +17,3 @@ export async function resetDb(): Promise<void> {
   await pool.query(`DELETE FROM users`); // not TRUNCATE — avoids cascading into categories
 }
 
-
-
-// ------------
-
-// import { pool } from "../src/db";
-
-// // Tables holding seeded reference data — must survive between tests.
-// // (`migrations` only exists in the real DB, harmless to list.)
-// const KEEP = ["migrations", "providers", "categories"];
-
-// /** Empty every data table so each test starts from a known-clean state. */
-// export async function resetDb(): Promise<void> {
-//   const { rows } = await pool.query(
-//     `SELECT tablename FROM pg_tables WHERE schemaname = 'public'`
-//   );
-//   const targets = rows.map((r) => r.tablename).filter((t) => !KEEP.includes(t));
-//   if (targets.length === 0) return;
-//   const list = targets.map((t) => `"${t}"`).join(", ");
-//   await pool.query(`TRUNCATE ${list} RESTART IDENTITY CASCADE`);
-// }

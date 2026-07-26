@@ -3,12 +3,9 @@
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import { api } from "../api/client";
-// import { refreshNotifications } from "../data/notifications";
 import { useNotifications } from "../store/useNotifications";
 import { navigateFromPush } from "../navigation/navRef";
-
 import { syncAll } from "../data/sync";
-
 import { markRead } from "../data/notifications";
 import { useNetwork } from "../store/useNetwork";
 
@@ -42,10 +39,6 @@ export async function registerPush(): Promise<void> {
 
 // Foreground receipt + tap handling + token refresh. Returns an unsubscribe.
 export function initPushListeners(): () => void {
-//   const onReceive = Notifications.addNotificationReceivedListener(async () => {
-//     try { await refreshNotifications(); } catch {}
-//     useNotifications.getState().refresh();
-//   });
   const onReceive = Notifications.addNotificationReceivedListener(async () => {
     try { await syncAll(); } catch {}
     useNotifications.getState().refresh();
@@ -56,26 +49,10 @@ export function initPushListeners(): () => void {
   });
   const onTokenChange = Notifications.addPushTokenListener((t) => { sendToken(String(t.data)); });
 
-//   Notifications.getLastNotificationResponseAsync().then((resp) => {
-//     if (resp) handlePushTap((resp.notification.request.content.data ?? {}) as Record<string, any>);
-//   });
-
   const last = Notifications.getLastNotificationResponse();
   if (last) handlePushTap((last.notification.request.content.data ?? {}) as Record<string, any>);
 
   return () => { onReceive.remove(); onTap.remove(); onTokenChange.remove(); };
-
-//   const onTap = Notifications.addNotificationResponseReceivedListener((resp) => {
-//     navigateFromPush((resp.notification.request.content.data ?? {}) as Record<string, any>);
-//   });
-//   const onTokenChange = Notifications.addPushTokenListener((t) => { sendToken(String(t.data)); });
-
-//   // App opened cold by tapping a notification:
-//   Notifications.getLastNotificationResponseAsync().then((resp) => {
-//     if (resp) navigateFromPush((resp.notification.request.content.data ?? {}) as Record<string, any>);
-//   });
-
-//   return () => { onReceive.remove(); onTap.remove(); onTokenChange.remove(); };
 }
 
 async function handlePushTap(data: Record<string, any>): Promise<void> {

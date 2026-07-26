@@ -37,10 +37,4 @@ export async function validateWebhookToken(
 
   return phoneNumber
 
-  // } catch (error) {
-  //   console.error('Database error during webhook token validation:', error)
-  //   // Return null — treat DB errors as auth failures
-  //   // Do not expose error details in the response
-  //   return null
-  // }
 }

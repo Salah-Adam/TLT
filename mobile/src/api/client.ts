@@ -55,32 +55,6 @@ async function request<T>(path: string, opts: Options = {}): Promise<T> {
   return (await requestEnvelope<T>(path, opts)).data;
 }
 
-// async function request<T>(path: string, opts: Options = {}, isRetry = false): Promise<T> {
-//   const { method = "GET", body, auth = true } = opts;
-//   const headers: Record<string, string> = { "Content-Type": "application/json" };
-
-//   const { accessToken } = useSession.getState();
-//   if (auth && accessToken) headers.Authorization = `Bearer ${accessToken}`;
-
-//   const res = await fetch(`${BASE_URL}${path}`, {
-//     method,
-//     headers,
-//     body: body !== undefined ? JSON.stringify(body) : undefined,
-//   });
-
-//   if (res.status === 401 && auth && !isRetry) {
-//     const ok = await tryRefresh();
-//     if (ok) return request<T>(path, opts, true);
-//   }
-
-//   const json = await res.json().catch(() => null);
-//   if (!res.ok || !json?.success) {
-//     const err = json?.error ?? {};
-//     throw new ApiError(res.status, err.code ?? "ERROR", err.message ?? "Request failed", err.field);
-//   }
-//   return json.data as T;
-// }
-
 async function tryRefresh(): Promise<boolean> {
   const { refreshToken, setAccessToken, signOut } = useSession.getState();
   if (!refreshToken) return false;
@@ -102,12 +76,6 @@ async function tryRefresh(): Promise<boolean> {
   return false;
 }
 
-// export const api = {
-//   get: <T>(path: string, auth = true) => request<T>(path, { method: "GET", auth }),
-//   post: <T>(path: string, body?: unknown, auth = true) => request<T>(path, { method: "POST", body, auth }),
-//   patch: <T>(path: string, body?: unknown, auth = true) => request<T>(path, { method: "PATCH", body, auth }),
-//   del: <T>(path: string, auth = true) => request<T>(path, { method: "DELETE", auth }),
-// };
 
 export const api = {
   get: <T>(path: string, auth = true) => request<T>(path, { method: "GET", auth }),
@@ -117,10 +85,3 @@ export const api = {
   del: <T>(path: string, auth = true) => request<T>(path, { method: "DELETE", auth }),
 };
 
-// const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
-
-// export async function apiGet<T>(path: string): Promise<T> {
-//   const res = await fetch(`${BASE_URL}${path}`);
-//   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-//   return (await res.json()) as T;
-// }
