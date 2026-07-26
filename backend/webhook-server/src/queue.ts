@@ -15,7 +15,7 @@ export const transactionQueue = new Queue('transaction-processing', {
       delay: 1000,
     },
     removeOnComplete: {
-      count: 1000,    // keep last 1000 completed jobs for debugging
+      count: 20,    // keep last 1000 completed jobs for debugging
     },
     removeOnFail: {
       count: 5000,    // keep last 5000 failed jobs for investigation
