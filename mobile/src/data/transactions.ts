@@ -28,13 +28,6 @@ export type Tx = {
   transacted_date: string;
 };
 
-// export type TxFilters = {
-//   direction?: "in" | "out";
-//   categoryId?: string;
-//   dateFrom?: string; // YYYY-MM-DD
-//   dateTo?: string;   // YYYY-MM-DD
-// };
-
 export type TxFilters = {
   phoneNumberIds?: string[];
   direction?: "in" | "out";

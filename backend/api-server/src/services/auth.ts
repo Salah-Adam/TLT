@@ -479,10 +479,9 @@ export async function reclaimNumberRequest(input: {
   return { message: "ok" };
 }
 
+
 export async function reclaimNumberVerify(input: {
-  userId: string;
-  number: string;
-  otp: string;
+  userId: string; number: string; otp: string;
 }): Promise<{ webhookToken: string | null }> {
   const { userId, number, otp } = input;
 
@@ -492,17 +491,11 @@ export async function reclaimNumberVerify(input: {
     const { userId: challengeUserId } = await verifyChallenge(client, { purpose: "reclaim", phoneNumber: number, code: otp });
     if (challengeUserId !== userId) throw new AppError("OTP_WRONG_ACCOUNT", 400);
 
-    const { webhookToken } = await transferNumberToUser(client, { number, newUserId: userId, makePrimary: false });
-    await client.query("COMMIT");
-
     const transfer = await transferNumberToUser(client, { number, newUserId: userId, makePrimary: false });
     await client.query("COMMIT");
+
     await enqueueStoredPush(transfer.reclaimNotificationId, transfer.previousOwnerId);
     return { webhookToken: transfer.webhookToken };
-
-
-
-    return { webhookToken };
   } catch (e) {
     await client.query("ROLLBACK");
     throw e;
@@ -510,6 +503,7 @@ export async function reclaimNumberVerify(input: {
     client.release();
   }
 }
+
 
 // ── Account recovery — reactivate the most-recent deactivated orphan for a number ──
 

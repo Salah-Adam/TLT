@@ -2,7 +2,7 @@ import { PoolClient } from "pg";
 import { pool } from "./db";
 import { hashValue } from "./encryption";
 import { AppError } from "./lib/errors";
-import { timingSafeEqual } from "crypto";
+import { randomInt, timingSafeEqual } from "crypto";
 
 // export type OtpPurpose = "registration" | "reclaim" | "add_phone" | "password_reset";
 export type OtpPurpose = "registration" | "reclaim" | "add_phone" | "password_reset" | "recover";
@@ -16,8 +16,9 @@ const RESEND_COOLDOWN_MS      = 60 * 1000;       // min gap between two code req
 const REQUEST_WINDOW_MS       = 60 * 60 * 1000;  // rolling window
 const MAX_REQUESTS_PER_WINDOW = 5;               // max codes per window
 
+
 function generateCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return randomInt(100000, 1000000).toString();  // 100000–999999, uniform, CSPRNG
 }
 
 export async function issueChallenge(params: {

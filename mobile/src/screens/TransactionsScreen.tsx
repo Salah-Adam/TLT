@@ -192,7 +192,7 @@ export default function TransactionsScreen() {
         {q ? <TouchableOpacity onPress={() => setQ("")}><Ionicons name="close-circle" size={18} color={colors.textSecondary} /></TouchableOpacity> : null}
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll} contentContainerStyle={styles.filterRow}>
         <TouchableOpacity style={[styles.pillBtn, selectedSims.length > 0 && styles.pillBtnActive]} onPress={() => setSimModal(true)}>
           <Ionicons name="phone-portrait-outline" size={14} color={selectedSims.length > 0 ? "#fff" : colors.textSecondary} />
           <Text style={[styles.pillBtnTxt, selectedSims.length > 0 && { color: "#fff" }]}>{simLabelTxt}</Text>
@@ -219,6 +219,7 @@ export default function TransactionsScreen() {
         <ErrorState onRetry={firstLoad} />
       ) : (
         <SectionList
+          style={{ flex: 1 }}
           sections={sections}
           keyExtractor={(tx) => tx.id}
           stickySectionHeadersEnabled={false}
@@ -300,9 +301,9 @@ const Row = React.memo(function Row({ tx, colors2, simMap, showSim, onPress }: {
           <Text style={styles.time}>{time}</Text>
           <View style={styles.provNum}>
             {sim ? (
-              <View style={[styles.simChip, { backgroundColor: accent! + "22" }]}>
-                <View style={[styles.simDot, { backgroundColor: accent }]} />
-                <Text style={[styles.simChipTxt, { color: accent }]} numberOfLines={1}>{simEyebrow(sim)}</Text>
+              <View style={[styles.simChip, { backgroundColor: "#2563EB" + "22" }]}>
+                <View style={[styles.simDot, { backgroundColor: "#2563EB" }]} />
+                <Text style={[styles.simChipTxt, { color: "#2563EB" }]} numberOfLines={1}>{simEyebrow(sim)}</Text>
               </View>
             ) : null}
           </View>
@@ -322,6 +323,7 @@ const styles = StyleSheet.create({
   searchWrap: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 12, marginHorizontal: 16, marginTop: 12, paddingHorizontal: 12, height: 44 },
   searchInput: { flex: 1, marginLeft: 8, fontSize: 15, color: colors.text },
   filterRow: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4, gap: 8, alignItems: "center" },
+  filterScroll: { flexGrow: 0} ,
   pillBtn: { flexDirection: "row", alignItems: "center", gap: 5, height: 34, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   pillBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   pillBtnTxt: { fontSize: 13, color: colors.textSecondary },

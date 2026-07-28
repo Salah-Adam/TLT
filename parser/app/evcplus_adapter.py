@@ -78,7 +78,9 @@ class EVCPlusAdapter:
         # Timestamp comes from top-level created_at
         # Slice to 19 chars to remove timezone offset — store as naive ISO datetime
         raw_ts    = payload.get('created_at', '')
-        timestamp = raw_ts[:19] if raw_ts else received_at[:19]
+        # timestamp = raw_ts[:19] if raw_ts else received_at[:19]
+        # Keep the FULL ISO timestamp (with its timezone); the worker parses the offset.
+        timestamp = raw_ts if raw_ts else received_at
 
         return ParseResult(
             provider            = self.provider,

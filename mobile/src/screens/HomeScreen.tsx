@@ -246,9 +246,9 @@ function TxItem({ tx, last, sims, showSim, onPress }: { tx: TxRow; last: boolean
 
             <View style={styles.provNum}>
               {sim ? (
-                <View style={[styles.simEyebrow, { backgroundColor: accent! + "22" }]}>
-                  <View style={[styles.simDot, { backgroundColor: accent }]} />
-                  <Text style={[styles.simChipTxt, { color: accent }]} numberOfLines={1}>{simEyebrow(sim)}</Text>
+                <View style={[styles.simEyebrow, { backgroundColor: "#2563EB"! + "22" }]}>
+                  <View style={[styles.simDot, { backgroundColor: "#2563EB" }]} />
+                  <Text style={[styles.simChipTxt, { color: "#2563EB" }]} numberOfLines={1}>{simEyebrow(sim)}</Text>
                 </View>
               ) : null}
             </View>
