@@ -30,5 +30,6 @@ export function navigateFromPush(data: Record<string, any>, attempt = 0): void {
   if (txId) { navRef.navigate("Tabs", { screen: "Transactions", params: { screen: "TxDetail", params: { id: String(txId) } } }); return; }
   if (data?.screen === "report" && data?.period) { navRef.navigate("Tabs", { screen: "Analytics", params: { screen: "Report", params: reportParamsFromData(data) } }); return; }
   if (data?.screen === "spending_alert") { navRef.navigate("SpendingAlerts"); return; }
-  navRef.navigate("Tabs", { screen: "Notifications" });
+  // navRef.navigate("Tabs", { screen: "Notifications" });
+  navRef.navigate("Notifications")
 }

@@ -6,6 +6,7 @@ const KEYS = {
   tipHome: "tlt_onb_tip_home",
   tipTx: "tlt_onb_tip_tx",
   tipAnalytics: "tlt_onb_tip_analytics",
+  tipAnalyticsCycle: "tlt_onb_tip_analytics_cycle",
 } as const;
 export type OnbKey = keyof typeof KEYS;
 

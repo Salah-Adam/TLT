@@ -86,6 +86,7 @@ async function spendingAlertRoutes(app: FastifyInstance): Promise<void> {
     const list = await txService.listTransactions({
       userId, lang,
       categoryId: scope.categoryId,
+      direction: "out",
       phoneNumberIds: scope.phoneNumberId ? [scope.phoneNumberId] : undefined,
       dateFrom, dateTo, cursor: q.cursor, limit: q.limit,
     });

@@ -76,7 +76,7 @@ export default function ProfileScreen() {
 
         <Text style={styles.fieldLabel}>{t("settings.sex")}</Text>
         <View style={styles.segment}>
-          {([["male", t("settings.male")], ["female", t("settings.female")], [null, t("settings.sexNone")]] as [Sex, string][]).map(([val, lbl], i) => (
+          {([["male", t("settings.male")], ["female", t("settings.female")]] as [Sex, string][]).map(([val, lbl], i) => (
             <TouchableOpacity key={String(val)} onPress={() => setSex(val)} style={[styles.seg, i > 0 && styles.segDivider, sex === val && styles.segActive]}>
               <Text style={[styles.segTxt, sex === val && styles.segTxtActive]}>{lbl}</Text>
             </TouchableOpacity>

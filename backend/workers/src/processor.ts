@@ -98,14 +98,20 @@ export async function processTransactionJob(job: NormalisedStructuredJob): Promi
   }
 
   // Transaction is durably committed. Now queue the push (best-effort).
+  const sim = (await pool.query(`SELECT number FROM phone_numbers WHERE id=$1`, [job.phoneNumberId])).rows[0];
   await enqueueTransactionNotification({
-    userId: job.userId,
-    transactionId: insertedId!,
-    direction: isIn ? "in" : "out",
-    amount: r.amount,
-    currency: r.currency,
-    balanceAfter: r.balance,
+    userId: job.userId, transactionId: insertedId!,
+    direction: isIn ? "in" : "out", amount: r.amount, currency: r.currency, balanceAfter: r.balance,
+    provider: job.provider, simNumber: sim?.number ?? null,   // ← add
   });
+  // await enqueueTransactionNotification({
+  //   userId: job.userId,
+  //   transactionId: insertedId!,
+  //   direction: isIn ? "in" : "out",
+  //   amount: r.amount,
+  //   currency: r.currency,
+  //   balanceAfter: r.balance,
+  // });
 
   console.log(`  inserted ${insertedId} + summaries${matched ? " + tracked contact" : ""} + notification queued`);
 }

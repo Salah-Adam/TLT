@@ -8,6 +8,7 @@ import { navigateFromPush } from "../navigation/navRef";
 import { syncAll } from "../data/sync";
 import { markRead } from "../data/notifications";
 import { useNetwork } from "../store/useNetwork";
+import { useUnreadTx } from "../store/useUnreadTx";
 
 // Foreground: still show a banner + list entry.
 Notifications.setNotificationHandler({
@@ -40,9 +41,14 @@ export async function registerPush(): Promise<void> {
 // Foreground receipt + tap handling + token refresh. Returns an unsubscribe.
 export function initPushListeners(): () => void {
   const onReceive = Notifications.addNotificationReceivedListener(async () => {
-    try { await syncAll(); } catch {}
+  try { await syncAll(); } catch {}
     useNotifications.getState().refresh();
+    useUnreadTx.getState().refresh();     // ← add
   });
+  // const onReceive = Notifications.addNotificationReceivedListener(async () => {
+  //   try { await syncAll(); } catch {}
+  //   useNotifications.getState().refresh();
+  // });
 
   const onTap = Notifications.addNotificationResponseReceivedListener((resp) => {
     handlePushTap((resp.notification.request.content.data ?? {}) as Record<string, any>);

@@ -268,7 +268,13 @@ export async function getReport(
   return {
     period, start: win.start, end: win.end, currency,
     total_in: tot.total_in, total_out: tot.total_out, net: tot.net, transaction_count: tot.transaction_count,
-    vs_last_period: { in_change_percent: pctChange(tot.total_in, prev.total_in), out_change_percent: pctChange(tot.total_out, prev.total_out) },
+    // vs_last_period: { in_change_percent: pctChange(tot.total_in, prev.total_in), out_change_percent: pctChange(tot.total_out, prev.total_out) },
+    vs_last_period: {
+      in_change_percent: pctChange(tot.total_in, prev.total_in),
+      out_change_percent: pctChange(tot.total_out, prev.total_out),
+      prev_out: prev.total_out,          // ← add
+    },
+
     trend,
     by_category,
     top_senders: tcp.top_senders,

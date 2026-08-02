@@ -10,6 +10,8 @@ import { readReport, type ReportData, type ReportSel } from "../data/reports";
 import { readAnalytics, type MonthlyAnalytics } from "../data/analytics";
 import { readSims, simLabel, type Sim } from "../data/phoneNumbers";
 
+
+
 const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const trendLabel = (bucket: string, period: string) => {
   if (period === "monthly") return new Date(bucket + "-01T00:00:00").toLocaleDateString([], { month: "short", year: "2-digit" });
@@ -84,12 +86,17 @@ export default function ReportScreen() {
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
   if (!data) return <View style={styles.center}><Text style={styles.empty}>{t("report.empty")}</Text></View>;
 
+  // const prevOut = data.vs_last_period?.prev_out ?? 0;
+  // const delta = data.total_out - prevOut;
+  // render: delta > 0 → hlSpendMore, < 0 → hlSpendLess, 0 → hlSpendSame
+
   const net = data.net, maxBar = Math.max(data.total_in, data.total_out, 1);
   const cats = data.by_category ?? [];
   const bigIn = (data.largest_transactions ?? []).filter((l) => l.direction === "in");
   const bigOut = (data.largest_transactions ?? []).filter((l) => l.direction === "out");
 
   const busiestCount = data.busiest_day && dailyTrend ? (dailyTrend.find((d) => d.date === data.busiest_day)?.count ?? null) : null;
+
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 28 }}
@@ -118,16 +125,33 @@ export default function ReportScreen() {
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t("report.highlights")}</Text>
-        <Line icon="trophy-outline" color={net >= 0 ? colors.moneyIn : colors.moneyOut}>
+        
+        {/* <Line icon="trophy-outline" color={net >= 0 ? colors.moneyIn : colors.moneyOut}>
           {net >= 0 ? t("report.hlAhead", { amount: money(Math.abs(net)) }) : t("report.hlBehind", { amount: money(Math.abs(net)) })}
-        </Line>
-        {data.vs_last_period?.out_change_percent != null ? (
+        </Line> */}
+
+        {data.vs_last_period?.prev_out != null && data.vs_last_period.prev_out > 0 ? (() => {
+        const prevOut = data.vs_last_period.prev_out;
+        const delta = data.total_out - prevOut;
+        const key = delta > 0 ? "report.hlSpendMore" : delta < 0 ? "report.hlSpendLess" : "report.hlSpendSame";
+        return (
+          <Line icon="trending-up-outline" color={colors.info}>
+            {renderTemplate(t(key), {
+              delta: { text: money(Math.abs(delta)), style: outStyle },
+              when:  { text: t(`report.prev_${period}`) },
+              prev:  { text: money(prevOut) },
+            })}
+          </Line>
+        );
+        })() : null}
+
+        {/* {data.vs_last_period?.out_change_percent != null ? (
           <Line icon="trending-up-outline" color={colors.info}>
             {data.vs_last_period.out_change_percent >= 0
-              ? t("report.hlSpendUp", { pct: Math.abs(data.vs_last_period.out_change_percent), prev: t(`report.prev_${period}`) })
-              : t("report.hlSpendDown", { pct: Math.abs(data.vs_last_period.out_change_percent), prev: t(`report.prev_${period}`) })}
+              ? t("report.hlSpendMore", { pct: Math.abs(data.vs_last_period.out_change_percent), prev: t(`report.prev_${period}`) })
+              : t("report.hlSpendLess", { pct: Math.abs(data.vs_last_period.out_change_percent), prev: t(`report.prev_${period}`) })}
           </Line>
-        ) : null}
+        ) : null} */}
         {period !== "daily" && data.busiest_day ? (
           <Line icon="calendar-outline" color={colors.info}>
             {busiestCount != null
@@ -163,9 +187,18 @@ export default function ReportScreen() {
 
       {cats.length > 0 && (
         <Group title={t("report.grpCategory")}>
-          {cats.map((c, i) => (
+
+          {/* {cats.map((c, i) => (
             <Line key={i} icon="pricetag-outline" color={colors.textSecondary}>
               {renderTemplate(t("report.catLine"), { amount: { text: money(c.amount), style: outStyle }, category: { text: c.name }, pct: { text: String(c.percent_of_spending) } })}
+            </Line>
+          ))} */}
+
+          {cats.map((c, i) => (
+            <Line key={i} icon="pricetag-outline" color={colors.textSecondary}>
+              {c.category_id == null
+                ? renderTemplate(t("report.uncatLine"), { amount: { text: money(c.amount), style: outStyle }, pct: { text: String(c.percent_of_spending) } })
+                : renderTemplate(t("report.catLine"), { amount: { text: money(c.amount), style: outStyle }, category: { text: c.name }, pct: { text: String(c.percent_of_spending) } })}
             </Line>
           ))}
         </Group>

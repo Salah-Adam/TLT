@@ -8,7 +8,8 @@ type Cp = { counterparty_name: string | null; counterparty_number: string | null
 export type ReportData = {
   period: "daily" | "weekly" | "monthly"; start: string; end: string; currency: string;
   total_in: number; total_out: number; net: number; transaction_count: number;
-  vs_last_period: { in_change_percent: number | null; out_change_percent: number | null };
+  // vs_last_period: { in_change_percent: number | null; out_change_percent: number | null; };
+  vs_last_period: { in_change_percent: number | null; out_change_percent: number | null; prev_out: number | null;};
   trend: { bucket: string; spent: number }[];
   by_category: { category_id: string | null; name: string; amount: number; count: number; percent_of_spending: number }[];
   top_senders: Cp[]; top_recipients: Cp[];

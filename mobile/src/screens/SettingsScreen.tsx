@@ -67,8 +67,11 @@ export default function SettingsScreen() {
 
       <Text style={styles.section}>{t("settings.about")}</Text>
       <View style={styles.group}>
-        <View style={styles.aboutRow}><Text style={styles.rowLabel}>TLT</Text><Text style={styles.muted}>v{APP_VERSION}</Text></View>
+        <Row icon="information-circle-outline" label={`TLT · v${APP_VERSION}`} onPress={() => nav.navigate("About")} />
       </View>
+      {/* <View style={styles.group}>
+        <View style={styles.aboutRow}><Text style={styles.rowLabel}>TLT</Text><Text style={styles.muted}>v{APP_VERSION}</Text></View>
+      </View> */}
 
       <TouchableOpacity style={styles.logout} onPress={onLogout} activeOpacity={0.7}>
         <Ionicons name="log-out-outline" size={20} color={colors.error} />

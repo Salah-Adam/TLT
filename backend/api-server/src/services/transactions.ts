@@ -120,6 +120,19 @@ export async function listTransactions(f: ListFilters) {
   return { transactions, cursor, has_more: hasMore };
 }
 
+// -- newly added ones. --------------------
+export async function countUnseen(userId: string): Promise<number> {
+  const r = await pool.query(`SELECT COUNT(*)::int AS n FROM transactions WHERE user_id=$1 AND is_seen=FALSE AND is_deleted=FALSE`, [userId]);
+  return r.rows[0].n;
+}
+export async function markAllSeen(userId: string): Promise<void> {
+  await pool.query(`UPDATE transactions SET is_seen=TRUE WHERE user_id=$1 AND is_seen=FALSE`, [userId]);
+}
+export async function markSeen(userId: string, id: string): Promise<void> {
+  await pool.query(`UPDATE transactions SET is_seen=TRUE WHERE id=$1 AND user_id=$2`, [id, userId]);
+}
+
+
 // ── Get one ──────────────────────────────────────────────────────
 
 export async function getTransaction(userId: string, id: string, lang: Lang) {

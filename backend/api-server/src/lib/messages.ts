@@ -12,26 +12,26 @@ export const MESSAGES: Record<string, Entry> = {
   INTERNAL_ERROR:       { en: "Something went wrong. Please try again.", so: "Wax baa qaldamay. Fadlan isku day mar kale." },
   VALIDATION_ERROR:     { en: "Some of the information you sent is invalid.", so: "Qaar ka mid ah xogta aad soo dirtay waa qaldan yihiin." },
   UNAUTHORIZED:         { en: "You are not authorized.", so: "Ma haysatid ogolaansho." },
-  INVALID_TOKEN_TYPE:   { en: "Invalid token type.", so: "Nooca calaamadda waa qaldan yahay." },
+  INVALID_TOKEN_TYPE:   { en: "Invalid token type.", so: "Nooca token-ka waa qaldan yahay." },
 
   // ── OTP ──
-  OTP_NOT_REQUESTED:    { en: "No code was requested for this number.", so: "Lambarkan llooma codsan koodh." },
-  OTP_TOO_MANY_ATTEMPTS:{ en: "Too many attempts. Please request a new code.", so: "Isku-day badan. Fadlan codso koodh cusub." },
+  OTP_NOT_REQUESTED:    { en: "No code was requested for this number.", so: "koodh Lambarkan loo codsadey Ma Jiro" },
+  OTP_TOO_MANY_ATTEMPTS:{ en: "Too many attempts. Please request a new code.", so: "Isku-day badan ayaad sameysey. Fadlan codso koodh cusub." },
   OTP_EXPIRED:          { en: "The code has expired. Please request a new one.", so: "Koodhku wuu dhacay. Fadlan codso mid cusub." },
   OTP_INVALID:          { en: "The code you entered is incorrect.", so: "Koodhka aad gelisay waa khalad." },
-  OTP_WRONG_ACCOUNT:    { en: "This code was not issued for your account.", so: "Koodhkan llooma dirin akoonkaaga." },
+  OTP_WRONG_ACCOUNT:    { en: "This code was not issued for your account.", so: "Koodhkan looma dirin akoonkaaga." },
 
   // ── Phone / provider ──
   PHONE_PREFIX_UNRECOGNISED: { en: "Phone number prefix not recognised. Only Hormuud (25261, 25277) and Somtel (25262) are supported.", so: "Horgalaha lambarka lama aqoonsan. Waxaa kaliya la taageeraa Hormuud (25261, 25277) iyo Somtel (25262)." },
   PHONE_ALREADY_REGISTERED:  { en: "This number is already registered. If it's yours, Login or reclaim.", so: "Lambarkan horey ayaa loo diiwaan geliyay. Haddii uu yahay Lambarkaaga, isticmaal Login ama dib-u-qaadasho." },
   NUMBER_OWNED_BY_OTHER:     { en: "This number is registered to another account. If it`s users, Login or reclaim.", so: "Lambarkan waxaa leh akoon kale. Hadii uu yahay Lambarkaaga, samee Login ama dib-u-qaadasho" },
   ALREADY_ADDED_NUMBER:      { en: "You have already added this number.", so: "Horey ayaad ugu dartay lambarkan." },
-  ALREADY_OWN_NUMBER:        { en: "You already own this number.", so: "Horey ayaad u leedahay lambarkan." },
-  NUMBER_NOT_ACTIVE:         { en: "This number is not active on any account.", so: "Lambarkan kuma firfircoona akoon kasta." },
-  NUMBER_NOT_REGISTERED_REGISTER: { en: "This number isn't registered to anyone. Please register instead.", so: "Lambarkan cidna kuma diiwaan gashana. Fadlan halkii is-diiwaan geli." },
-  NUMBER_NOT_REGISTERED_ADD: { en: "This number isn't registered to anyone — add it normally instead.", so: "Lambarkan cidna kuma diiwaan gashana — halkii si caadi ah ugu dar." },
-  NUMBER_JUST_TAKEN:         { en: "This number was just taken. Use reclaim.", so: "Lambarkan ayaa hadda la qaatay. Isticmaal dib-u-qaadasho." },
-  NO_PENDING_RECLAIM:        { en: "No pending reclaim found. Please start again.", so: "Dib-u-qaadasho sugaysa lama helin. Fadlan dib u bilow." },
+  ALREADY_OWN_NUMBER:        { en: "You already own this number.", so: "Horey ayaad ugu soo dartey lambarkan." },
+  NUMBER_NOT_ACTIVE:         { en: "This number is not active on any account.", so: "Lambarkan ma diiwaangashna." },
+  NUMBER_NOT_REGISTERED_REGISTER: { en: "This number isn't registered to anyone. Please register instead.", so: "Lambarkan cidna kuma diiwaan gashana. Fadlan isku-diiwaan geli." },
+  NUMBER_NOT_REGISTERED_ADD: { en: "This number isn't registered to anyone — add it normally instead.", so: "Lambarkan cidna kuma diiwaan gashana — Fadlan diiwaangasho." },
+  NUMBER_JUST_TAKEN:         { en: "This number was just taken. Use reclaim.", so: "Lambarkan waa la diiwaangashtey. hadii adiga aad leedahay, dib-u-diiwaangasho." },
+  NO_PENDING_RECLAIM:        { en: "No pending reclaim found. Please start again.", so: "Dib-u-qaadasho sugitaan ku jira lama helin. Fadlan dib u bilow." },
   PHONE_NOT_FOUND:           { en: "Phone number not found.", so: "Lambarka lama helin." },
 
   // ── Auth ──
@@ -39,25 +39,25 @@ export const MESSAGES: Record<string, Entry> = {
   ACCOUNT_NOT_FOUND:    { en: "Account not found.", so: "Akoonka lama helin." },
   ACCOUNT_DISABLED:     { en: "This account is disabled.", so: "Akoonkan waa la xannibay." },
   ACCOUNT_CREATION_FAILED: { en: "Account creation failed. Please try again.", so: "Abuurista akoonka way fashilantay. Fadlan isku day mar kale." },
-  RESET_SESSION_NOT_FOUND: { en: "Reset session not found.", so: "Habka dib-u-dejinta lama helin." },
+  RESET_SESSION_NOT_FOUND: { en: "Reset session not found.", so: "Dib u abuurista session-ka lama helin." },
   REFRESH_INVALID:      { en: "Invalid refresh token.", so: "Calaamadda cusboonaysiinta waa khalad." },
-  REFRESH_REVOKED:      { en: "This session has been revoked.", so: "Fadhigan waa la joojiyay." },
-  REFRESH_EXPIRED:      { en: "Your session has expired. Please log in again.", so: "Fadhigaagu wuu dhacay. Fadlan dib u soo gal." },
-  SESSION_MAX_LIFETIME: { en: "Session has exceeded its maximum lifetime. Please log in again.", so: "Fadhigu wuxuu dhaafay muddadiisii ugu badnayd. Fadlan dib u soo gal." },
+  REFRESH_REVOKED:      { en: "This session has been revoked.", so: "Session-kan waa la joojiyay." },
+  REFRESH_EXPIRED:      { en: "Your session has expired. Please log in again.", so: "Session-kan wuu dhacay. Fadlan dib u soo gal." },
+  SESSION_MAX_LIFETIME: { en: "Session has exceeded its maximum lifetime. Please log in again.", so: "Session-ka wuxuu dhaafay muddadiisii ugu badnayd. Fadlan dib u soo gal." },
 
   // ── Success messages ──
   LOGGED_OUT:           { en: "Logged out successfully.", so: "Si guul leh ayaad uga baxday." },
-  FORGOT_PASSWORD_SENT: { en: "If this number is registered, a code has been sent.", so: "Haddii lambarkan diiwaan gashan yahay, koodh ayaa la diray." },
+  FORGOT_PASSWORD_SENT: { en: "If this number is registered, a code has been sent.", so: "Haddii lambarkan diiwaan gashan yahay, koodh ayaa loo diray." },
   OTP_SENT:             { en: "A verification code was sent to your number.", so: "Koodh xaqiijin ayaa loo diray lambarkaaga." },
   OTP_SENT_RECLAIM:     { en: "A code was sent to the number you are reclaiming.", so: "Koodh ayaa loo diray lambarka aad dib u qaadanayso." },
   PHONE_UPDATED:        { en: "Updated successfully.", so: "Si guul leh ayaa loo cusboonaysiiyay." },
-  PHONE_REMOVED:        { en: "Number removed.", so: "Lambarka waa la saaray." },
-  PHONE_REMOVED_ACCOUNT_DELETED: { en: "Number removed and account deleted.", so: "Lambarka waa la saaray, akoonkana waa la tirtiray." },
+  PHONE_REMOVED:        { en: "Number removed.", so: "Lambarka waa la tirtirey." },
+  PHONE_REMOVED_ACCOUNT_DELETED: { en: "Number removed and account deleted.", so: "Lambarka iyo akoonka waa la tirtiray." },
 
   // ── Transactions (used in Part 3) ──
   TRANSACTION_NOT_FOUND:   { en: "Transaction not found.", so: "Dhaqdhaqaaqa lama helin." },
   CATEGORY_NOT_FOUND:      { en: "Category not found.", so: "Qaybta lama helin." },
-  RECOVERY_PERIOD_EXPIRED: { en: "The 30-day recovery period has expired.", so: "Muddada 30-cisho ee soo-celinta way dhacday." },
+  RECOVERY_PERIOD_EXPIRED: { en: "The 30-day recovery period has expired.", so: "Muddada 30-ka maalin ee soo-celinta way dhacday." },
   SEARCH_QUERY_REQUIRED:   { en: "A search term is required.", so: "Erey raadin ah ayaa loo baahan yahay." },
   TRANSACTION_DELETED:     { en: "Transaction deleted.", so: "Dhaqdhaqaaqa waa la tirtiray." },
   TRANSACTION_RESTORED:    { en: "Transaction restored.", so: "Dhaqdhaqaaqa waa la soo celiyay." },
@@ -67,58 +67,58 @@ export const MESSAGES: Record<string, Entry> = {
 
 
     // ── Report insights ──
-  INSIGHT_NO_DATA:       { en: "No transactions this month yet.", so: "Weli ma jiraan wax-ku-dhaqaaq bishaan." },
-  INSIGHT_NET_SAVED:     { en: "You came out ahead by {amount} {currency} this month.", so: "Bishaan waxaad faa'iido u heshay {amount} {currency}." },
+  INSIGHT_NO_DATA:       { en: "No transactions this month yet.", so: "Weli ma jiraan wax dhaqdhaqaaq ah bishaan." },
+  INSIGHT_NET_SAVED:     { en: "You came out ahead by {amount} {currency} this month.", so: "Bishaan waxaa kuu hartey {amount} {currency}." },
   INSIGHT_NET_DEFICIT:   { en: "You spent {amount} {currency} more than you received this month.", so: "Bishaan waxaad bixisay {amount} {currency} oo ka badan intaad heshay." },
-  INSIGHT_TOP_CATEGORY:  { en: "Most of your spending went to {category} ({amount} {currency}).", so: "Intooda badan kharashkaagu wuxuu galay {category} ({amount} {currency})." },
+  INSIGHT_TOP_CATEGORY:  { en: "Most of your spending went to {category} ({amount} {currency}).", so: "kharashkaaga ugu badan waxaad ku bixisey {category} ({amount} {currency})." },
   INSIGHT_SPENDING_UP:   { en: "You spent {pct}% more than last month.", so: "Waxaad bixisay {pct}% ka badan bishii hore." },
   INSIGHT_SPENDING_DOWN: { en: "You spent {pct}% less than last month.", so: "Waxaad bixisay {pct}% ka yar bishii hore." },
 
   CONTACT_UNKNOWN:       { en: "a contact", so: "qof" },
-  INSIGHT_TOP_SPEND:     { en: "You spent {amount} {currency} on {category} ({pct}%).", so: "Waxaad {category} ku bixisay {amount} {currency} ({pct}%)." },
+  INSIGHT_TOP_SPEND:     { en: "You spent {amount} {currency} on {category} ({pct}%).", so: "Waxaad {category} ku bixisay {amount} {currency} oo u dhiganta ({pct}%)." },
   INSIGHT_TOP_SENDER:    { en: "{name} sent you {amount} {currency} ({count}x).", so: "{name} wuxuu kuu soo diray {amount} {currency} ({count} jeer)." },
-  INSIGHT_TOP_RECIPIENT: { en: "You sent {name} {amount} {currency} ({count}x).", so: "Waxaad u dirtay {name} {amount} {currency} ({count} jeer)." },
+  INSIGHT_TOP_RECIPIENT: { en: "You sent {name} {amount} {currency} ({count}x).", so: "Waxaad {amount} {currency} u dirtay {name} ({count} jeer)." },
   INSIGHT_LARGEST_OUT:   { en: "Biggest payment: {amount} {currency} to {name}.", so: "Lacagta ugu badan ee aad bixisay: {amount} {currency} oo aad u dirtay {name}." },
   INSIGHT_LARGEST_IN:    { en: "Biggest receipt: {amount} {currency} from {name}.", so: "Lacagta ugu badan ee aad heshay: {amount} {currency} oo ka timid {name}." },
-  INSIGHT_BUSIEST_DAY:   { en: "Your busiest day was {day} with {count} transactions.", so: "Maalintaada ugu firfircoonayd waxay ahayd {day} oo leh {count} dhaqdhaqaaq." },
+  INSIGHT_BUSIEST_DAY:   { en: "Your busiest day was {day} with {count} transactions.", so: "Maalintaada ugu firfircoonayd waxay ahayd {day} oo  aad sameysey {count} dhaqdhaqaaq." },
   INSIGHT_TREND_UP:      { en: "Your spending has been trending up lately.", so: "Kharashkaagu dhawaanahan wuu kordhayaa." },
   INSIGHT_TREND_DOWN:    { en: "Your spending has been trending down lately.", so: "Kharashkaagu dhawaanahan wuu yaraanayaa." },
 
 
   // ── Tracked contacts ──
-  INVALID_TRACKED_NUMBER: { en: "Enter the number in full international format (e.g. 2526xxxxxxx).", so: "Geli lambarka qaab caalami buuxa (tusaale 2526xxxxxxx)." },
-  NUMBER_ALREADY_TRACKED: { en: "This number is already tracked under a contact.", so: "Lambarkan horey ayaa loogu xiray xiriiriye." },
+  INVALID_TRACKED_NUMBER: { en: "Enter the number in full international format (e.g. 2526xxxxxxx).", so: "U geli lambarka qaabkan: (tusaale 2526xxxxxxx)." },
+  NUMBER_ALREADY_TRACKED: { en: "This number is already tracked under a contact.", so: "Lambarkan wuxuu qeyb kale ugu tirsan lambarada la raadraaco." },
   CONTACT_NOT_FOUND:      { en: "Contact not found.", so: "Xiriiriyaha lama helin." },
   TRACKED_NUMBER_NOT_FOUND:{ en: "Tracked number not found.", so: "Lambarka la raacayo lama helin." },
   CONTACT_DELETED:        { en: "Contact removed.", so: "Xiriiriyaha waa la saaray." },
   NUMBER_ADDED:           { en: "Number added.", so: "Lambarka waa lagu daray." },
-  NUMBER_REMOVED:         { en: "Number removed.", so: "Lambarka waa la saaray." },
+  NUMBER_REMOVED:         { en: "Number removed.", so: "Lambarka waa la tirtirey." },
 
   ALERT_NOT_FOUND:        { en: "Spending alert not found.", so: "Digniinta kharashka lama helin." },
-  ALERT_ALREADY_EXISTS:   { en: "You already have an alert for this category and period.", so: "Horey ayaad u leedahay digniin qaybtan iyo muddadan." },
-  ALERT_DELETED:          { en: "Alert removed.", so: "Digniinta waa la saaray." },
+  ALERT_ALREADY_EXISTS:   { en: "You already have an alert for this category and period.", so: "Horey ayaad u sameysey digniin qarash qaybtan iyo muddadan." },
+  ALERT_DELETED:          { en: "Alert removed.", so: "Digniinta waa la tirtirey." },
   INVALID_LIMIT:          { en: "The limit must be greater than zero.", so: "Xadku waa inuu ka weynaado eber." },
 
   // ── Notifications ──
   NOTIFICATION_NOT_FOUND:    { en: "Notification not found.", so: "Ogeysiiska lama helin." },
   NOTIFICATIONS_MARKED_READ: { en: "All notifications marked as read.", so: "Dhammaan ogeysiisyada waa la akhriyay." },
-  NOTIFICATION_DELETED:      { en: "Notification removed.", so: "Ogeysiiska waa la saaray." },
+  NOTIFICATION_DELETED:      { en: "Notification removed.", so: "Ogeysiiska waa la tirtirey." },
 
   // ── Settings / users ──
   EMAIL_TAKEN:            { en: "This email is already in use.", so: "Iimaylkan horey ayaa loo isticmaalay." },
-  CURRENT_PASSWORD_WRONG: { en: "Your current password is incorrect.", so: "Furahaaga hadda waa khalad." },
-  PASSWORD_UNCHANGED:     { en: "New password must be different from the current one.", so: "Furaha cusub waa inuu ka duwanaadaa kan hadda." },
-  PASSWORD_CHANGED:       { en: "Password changed successfully.", so: "Furaha si guul leh ayaa loo beddelay." },
-  DEVICE_REGISTERED:      { en: "Device registered for notifications.", so: "Aaladda waa loo diiwaan geliyay ogeysiisyada." },
+  CURRENT_PASSWORD_WRONG: { en: "Your current password is incorrect.", so: "Furaha sirta ee hadda waa khalad." },
+  PASSWORD_UNCHANGED:     { en: "New password must be different from the current one.", so: "Furaha sirta ee cusub waa inuu ka duwanaadaa kan hadda kuu ah." },
+  PASSWORD_CHANGED:       { en: "Password changed successfully.", so: "Badelka Furaha sirta waa lagu guuleystey." },
+  DEVICE_REGISTERED:      { en: "Device registered for notifications.", so: "Aaladda (Device) waa loo diiwaan geliyay ogeysiisyada." },
 
 
-  NO_RECOVERABLE_ACCOUNT: { en: "No recoverable account for this number. You can register a new one.", so: "Ma jiro akoon dib loo soo celin karo lambarkan. Waxaad diiwaangelin kartaa mid cusub." },
+  NO_RECOVERABLE_ACCOUNT: { en: "No recoverable account for this number. You can register a new one.", so: "Ma jiro akoon dib loo soo celin karo lambarkan. Waxaad ku diiwaangelin kartaa mid cusub." },
   RECOVER_UNAVAILABLE:    { en: "This account can no longer be recovered.", so: "Akoonkan mar dambe dib looma soo celin karo." },
 
 
   OTP_RESEND_COOLDOWN:  { en: "Please wait {seconds} seconds before requesting another code.", so: "Fadlan sug {seconds} ilbiriqsi ka hor intaadan mar kale codsan koodh." },
-  OTP_TOO_MANY_REQUESTS:{ en: "Too many code requests. Please try again in about {minutes} minutes.", so: "Codsiyo koodh oo badan. Fadlan isku day mar kale qiyaastii {minutes} daqiiqo gudahood." },
-  RATE_LIMITED:         { en: "Too many requests. Please slow down and try again shortly.", so: "Codsiyo aad u badan. Fadlan yara sug oo isku day mar kale." },
+  OTP_TOO_MANY_REQUESTS:{ en: "Too many code requests. Please try again in about {minutes} minutes.", so: "Codsiyo koodh ah oo badan baad dirtey. Fadlan isku day mar kale qiyaastii {minutes} daqiiqo gudahood." },
+  RATE_LIMITED:         { en: "Too many requests. Please slow down and try again shortly.", so: "Codsiyo koodh ah oo aad u badan. Fadlan yara sug oo isku day mar kale." },
 };
 
 /** Pick one language for a code, interpolating {name}-style params. */

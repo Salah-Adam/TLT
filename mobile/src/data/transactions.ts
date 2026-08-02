@@ -211,3 +211,10 @@ export async function fetchTransactions(filters: TxFilters, limit = 100): Promis
   const data = await api.get<Tx[]>(`/api/v1/transactions${query}`);
   return data ?? [];
 }
+
+export async function unreadTxCount(): Promise<number> {
+  const r = await api.get<{ count: number }>("/api/v1/transactions/unread-count");
+  return r?.count ?? 0;
+}
+export async function markAllTxSeen(): Promise<void> { await api.post("/api/v1/transactions/mark-seen"); }
+export async function markTxSeen(id: string): Promise<void> { await api.post(`/api/v1/transactions/${id}/seen`); }

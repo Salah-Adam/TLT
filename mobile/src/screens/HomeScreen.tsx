@@ -17,6 +17,7 @@ import { TxSentence } from "../components/TxSentence";
 import { readSims, simColor, simEyebrow, type Sim } from "../data/phoneNumbers";
 import { CoachTip } from "../components/CoachTip";
 import { hasSeen, markSeen } from "../onboarding";
+import { useNotifications } from "../store/useNotifications";
 
 const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const pctW = (v: number, max: number): `${number}%` => `${max > 0 ? Math.round((v / max) * 100) : 0}%`;
@@ -66,6 +67,9 @@ export default function HomeScreen() {
   const syncTick = useSync((s) => s.tick);
   useEffect(() => { if (syncTick > 0) loadCache(); }, [syncTick, loadCache]);
 
+  const unread = useNotifications((s) => s.unread);
+  useEffect(() => { useNotifications.getState().refresh(); }, []);
+
 
   const balance = data?.balance ?? 0;
   const today = data?.today ?? { in: 0, out: 0 };
@@ -92,9 +96,22 @@ export default function HomeScreen() {
         <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
           <Text style={styles.hello} numberOfLines={1}>{`${t("home.greeting")}, ${user?.full_name ?? ""}`}</Text>
 
-          <TouchableOpacity hitSlop={10} onPress={() => setMenu(true)}>
+          {/* <TouchableOpacity hitSlop={10} onPress={() => setMenu(true)}>
             <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
+
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 18 }}>
+            <TouchableOpacity hitSlop={10} onPress={() => nav.navigate("Notifications")}>
+              <View>
+                <Ionicons name="notifications-outline" size={22} color={colors.text} />
+                {unread > 0 ? <View style={styles.badge}><Text style={styles.badgeTxt}>{unread > 9 ? "9+" : unread}</Text></View> : null}
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity hitSlop={10} onPress={() => setMenu(true)}>
+              <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+
 
           <Modal transparent visible={menu} animationType="fade" onRequestClose={() => setMenu(false)}>
             <Pressable style={mstyles.overlay} onPress={() => setMenu(false)}>
@@ -112,10 +129,10 @@ export default function HomeScreen() {
                 </TouchableOpacity>
                 <View style={mstyles.divider} />
 
-                <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("Settings"); }}>
+                {/* <TouchableOpacity style={mstyles.item} onPress={() => { setMenu(false); nav.navigate("Settings"); }}>
                   <Ionicons name="settings-outline" size={19} color={colors.text} />
                   <Text style={mstyles.itemTxt}>{t("settings.title")}</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
               </View>
             </Pressable>
@@ -311,6 +328,9 @@ const styles = StyleSheet.create({
   txAmt: { fontSize: 14, fontWeight: "600" },
   sep: { height: 1, backgroundColor: "#F1F5F9" },
   empty: { fontSize: 13, color: colors.textSecondary, marginTop: 10, textAlign: "center" },
+
+  badge: { position: "absolute", top: -5, right: -6, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.error, alignItems: "center", justifyContent: "center", paddingHorizontal: 3 },
+  badgeTxt: { color: "#fff", fontSize: 10, fontWeight: "700" },
 
 });
 

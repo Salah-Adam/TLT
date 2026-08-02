@@ -66,7 +66,8 @@ export default {
     today: "Today", yesterday: "Yesterday",
     empty: "No transactions found",
     received: "Money received", spent: "Money spent",
-    counterparty: "From / To", notAvailable: "Not available",
+    // counterparty: "From / To", notAvailable: "Not available",
+    receivedFrom: "Received from", sentTo: "Sent to", notAvailable: "Not available",
     category: "Category", uncategorized: "Uncategorized", autoTag: "Auto", pickCategory: "Choose a category",
     note: "Note", addNote: "Add a note",
     type: "Type", provider: "Provider", balanceAfter: "Balance after", charge: "Service charge",
@@ -101,7 +102,7 @@ export default {
 
     group_transactions: "Transactions", group_alerts: "Alerts", group_summaries: "Summaries", group_reports: "Reports", group_account: "Account",
 
-    emptyHint: "You'll see alerts, summaries, and reports here.",
+    emptyHint: "You'll see transactions, alerts, summaries, and reports here.",
   },
 
   analytics: {
@@ -116,7 +117,20 @@ export default {
     spendDiary: "On {day} {month}, you spent {amount}",
     viewReport: "View full report",
 
-    weekly: "Weekly"
+    weekly: "Weekly",
+
+    legendIn: "Received",
+    legendOut:  "Sent",
+    amountAxis:  "Amount",
+    trendTitleWeek: "This week's trend",
+    trendTitleMonth: "This month's trend",
+    leadDaily:  "Today",
+    leadWeekly: "This week",
+    leadMonthly: "This month",
+    sumSentencePos: "{lead}, you received {in}, sent {out}, and kept {net} across {count} transactions.",
+    sumSentenceNeg: "{lead}, you spent {deficit} more than you received — sent {out}, received {in}, across {count} transactions.",
+    trendLine:"{label}: received {in}, sent {out}.",
+
   },
 
   report: {
@@ -129,9 +143,9 @@ export default {
     whatHappened: "What happened",
     grpCategory: "Where your money went", grpSenders: "Who sent you money", grpRecipients: "Who you sent money to",
     grpBiggestIn: "Biggest money in", grpBiggestOut: "Biggest money out", grpDaily: "Daily spending",
-    catLine: "You spent {amount} on {category} ({pct}%)",
+    catLine: "You spent {amount} on {category} ({pct}% of your expenses)",
     senderLine: "{who} sent you {amount} ({count}×)",
-    recipientLine: "You sent {who} {amount} ({count}×)",
+    recipientLine: "You sent {amount} to {who} ({count}×)",
     biggestIn: "{amount} from {who}",
     biggestOut: "{amount} to {who}",
 
@@ -149,13 +163,22 @@ export default {
     hlSpendUp: "You spent {{pct}}% more than {{prev}}",
     hlSpendDown: "You spent {{pct}}% less than {{prev}}",
 
+    uncatLine: "{amount} of your spending is uncategorized ({pct}%).",
+
+
+    hlSpendMore: "You spent {delta} more than {when} ({prev}).",
+    hlSpendLess: "You spent {delta} less than {when} ({prev}).",
+    hlSpendSame: "You spent the same as {when} ({prev}).",
+
+
+
   },
 
   contacts: {
     title: "Tracked people", detailTitle: "Contact", addTitle: "Add contact", editTitle: "Edit contact",
     empty: "You're not tracking anyone yet", emptyHint: "Track a person to see your all-time totals with them.",
     addContact: "Add contact", edit: "Edit",
-    label: "Name / label", labelPlaceholder: "e.g. Hooyo, Supplier Xasan",
+    label: "Name / label", labelPlaceholder: "e.g. Supplier Xasan",
     direction: "What to track", dir_both: "Both", dir_sent: "Sent", dir_received: "Received",
     numbers: "Phone numbers", addNumber: "Add number", numberPlaceholder: "Number", removeNumber: "Remove", removeNumberTitle: "Remove this number?",
     net: "Net", txnShort: "Txns", timeline: "History",
@@ -179,7 +202,7 @@ export default {
     addAlert: "New alert",
     category: "Category", pickCategory: "Choose a category",
     limit: "Limit amount", period: "Period", weekly: "Weekly", monthly: "Monthly",
-    threshold: "Warn me at (%)", sim: "SIM (optional)", allSims: "All SIMs",
+    threshold: "Warn me at ($)", sim: "SIM (optional)", allSims: "All SIMs",
     progress: "{{spent}} of {{limit}} {{period}}", periodWeek: "this week", periodMonth: "this month",
     percentUsed: "{{percent}}% used", over: "Over by {{amount}}",
     save: "Save", create: "Create alert", cancel: "Cancel",
@@ -196,11 +219,11 @@ export default {
     fullName: "Full name", email: "Email", emailOptional: "Email (optional)",
     age: "Age", city: "City", cityOptional: "City (optional)",
     sex: "Sex", male: "Male", female: "Female", sexNone: "—",
-    phone: "Phone number", memberSince: "Member since", save: "Save",
+    phone: "Primary Phone number", memberSince: "Member since", save: "Save",
     nameShort: "Name must be at least 2 characters.", ageBad: "Age must be between 10 and 100.", emailTaken: "That email is already in use.",
     currentPassword: "Current password", newPassword: "New password", confirmPassword: "Confirm new password",
     pwShort: "Password must be at least 4 characters.", pwMismatch: "The new passwords don't match.",
-    pwSame: "New password must be different.", pwWrong: "Your current password is incorrect.",
+    pwSame: "New password must be different from previous one.", pwWrong: "Your current password is incorrect.",
     pwChangedTitle: "Password changed", pwChangedBody: "Your password has been updated.",
     logout: "Log out", logoutTitle: "Log out?", logoutBody: "You'll need to sign in again to use the app.", cancel: "Cancel",
   },
@@ -243,13 +266,21 @@ export default {
     s2Body: "See where your money goes with simple summaries, categories, and reports.",
     s3Title: "Stay in control",
     s3Body: "Set spending alerts and keep an eye on the people you pay most — in Somali or English.",
+    s4Title: "Every provider",
+    s4Body:  "Use the numbers you own across every telecom in the country.",
     tipHome: "Tap here for Settings, Spending alerts, and Tracked contacts.",
     tipTx: "Tap any transaction to categorize it or add a note.",
     tipAnalytics: "Switch between daily, weekly, and monthly here — then open a full report for the details.",
+
+    tipAnalyticsCycle: "Tap the cycle icon (↻) on the right to change how a report is shown — chart or plain words.",
+
+
+   
+
   },
 
   deleted: {
-    title: "Recently deleted",
+    title: "Recently deleted transactions",
     empty: "Nothing deleted",
     emptyHint: "Deleted transactions can be restored here within 30 days.",
     restore: "Restore",
@@ -264,4 +295,10 @@ export default {
     empty: "No transactions in this range.",
   },
 
+  about:{
+    tagline:"Understand where your money goes." ,
+    p1: "TLT automatically turns your mobile-money messages into a clear record of every transaction across all your SIMs.",
+    p2: "See reports, set spending alerts, and track contacts — online or offline.",
+    p3: "Your data is encrypted on your device and on our servers.",
+  },
 };

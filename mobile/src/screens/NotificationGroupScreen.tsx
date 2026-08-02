@@ -54,16 +54,28 @@ export default function NotificationGroupScreen() {
     setRefreshing(false);
   }, [load]);
 
+
   const onTap = (n: Notif) => {
     const d = (n.data ?? {}) as Record<string, any>;
     if ((n.type === "transaction_received" || n.type === "transaction_sent") && d.transactionId) {
-      nav.navigate("Transactions", { screen: "TxDetail", params: { id: String(d.transactionId) } });
+      nav.navigate("Tabs", { screen: "Transactions", params: { screen: "TxDetail", params: { id: String(d.transactionId) } } });
       return;
     }
     if (d.screen === "report" && d.period) {
-      nav.navigate("Analytics", { screen: "Report", params: reportParamsFromData(d) });
+      nav.navigate("Tabs", { screen: "Analytics", params: { screen: "Report", params: reportParamsFromData(d) } });
     }
   };
+
+  // const onTap = (n: Notif) => {
+  //   const d = (n.data ?? {}) as Record<string, any>;
+  //   if ((n.type === "transaction_received" || n.type === "transaction_sent") && d.transactionId) {
+  //     nav.navigate("Transactions", { screen: "TxDetail", params: { id: String(d.transactionId) } });
+  //     return;
+  //   }
+  //   if (d.screen === "report" && d.period) {
+  //     nav.navigate("Analytics", { screen: "Report", params: reportParamsFromData(d) });
+  //   }
+  // };
 
   const onLongPress = (n: Notif) => {
     if (!useNetwork.getState().online) { Alert.alert(t("notif.offlineDelete")); return; }

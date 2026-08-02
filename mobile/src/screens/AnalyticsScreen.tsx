@@ -10,19 +10,45 @@ import { useSync } from "../store/useSync";
 import { syncAll, getLastSynced } from "../data/sync";
 import { readSims, simLabel, type Sim } from "../data/phoneNumbers";
 import { MiniCalendar } from "../components/MiniCalendar";
-
 import { useNavigation } from "@react-navigation/native";
-
 import { readAnalytics, type DailyAnalytics, type WeeklyAnalytics, type MonthlyAnalytics, type AnalyticsSel } from "../data/analytics";
 import { EmptyState } from "../components/EmptyState";
-
 import { CoachTip } from "../components/CoachTip";
 import { hasSeen, markSeen } from "../onboarding";
+import { TrendChart, type TrendPoint } from "../components/TrendChart";
+
+// import { type WeeklyAnalytics, type MonthlyAnalytics } from "../data/analytics"; // (extend the existing import)
 
 const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const pctW = (v: number, max: number): `${number}%` => `${max > 0 ? Math.round((v / max) * 100) : 0}%`;
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const fmtDay = (s: string) => new Date(s + "T00:00:00").toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
+
+const fmtShort = (s: string) => new Date(s + "T00:00:00").toLocaleDateString([], { day: "numeric", month: "short" });
+const weekRange = (ws: string) => {
+  const s = new Date(ws + "T00:00:00"); const e = new Date(s); e.setDate(s.getDate() + 6);
+  const day = (x: Date) => x.getDate();
+  const mo = (x: Date) => x.toLocaleDateString([], { month: "short" });
+  return mo(s) === mo(e) ? `${day(s)}–${day(e)} ${mo(e)}` : `${day(s)} ${mo(s)} – ${day(e)} ${mo(e)}`;
+};
+const inStyle = { color: colors.moneyIn, fontWeight: "700" as const };
+const outStyle = { color: colors.moneyOut, fontWeight: "700" as const };
+const keptStyle = { color: colors.primaryDark, fontWeight: "700" as const };
+function renderTemplate(template: string, parts: Record<string, { text: string; style?: any }>) {
+  return template.split(/(\{\w+\})/g).map((seg, i) => {
+    const m = seg.match(/^\{(\w+)\}$/);
+    if (m && parts[m[1]]) return <Text key={i} style={parts[m[1]].style}>{parts[m[1]].text}</Text>;
+    return <Text key={i}>{seg}</Text>;
+  });
+}
+function BlockHeader({ title, mode, onToggle }: { title: string; mode: "chart" | "plain"; onToggle: () => void }) {
+  return (
+    <View style={styles.blockHead}>
+      <Text style={styles.cardTitle}>{title}</Text>
+      <TouchableOpacity hitSlop={8} onPress={onToggle}><Ionicons name="repeat" size={18} color={colors.textSecondary} /></TouchableOpacity>
+    </View>
+  );
+}
 
 const SO_MONTHS = ["Janaayo", "Febraayo", "Maarso", "Abriil", "Maajo", "Juun", "Luuliyo", "Ogosto", "Sebtembar", "Oktoobar", "Nofembar", "Diseembar"];
 
@@ -54,11 +80,34 @@ export default function AnalyticsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
 
+  const [mode1, setMode1] = useState<"chart" | "plain">("chart");
+  const [mode2, setMode2] = useState<"chart" | "plain">("chart");
+  const [mode3, setMode3] = useState<"chart" | "plain">("chart");
+
   useEffect(() => { readSims().then(setSims); }, []);
 
   const [tipAnalytics, setTipAnalytics] = useState(false);
   useEffect(() => { (async () => { if (await hasSeen("intro") && !(await hasSeen("tipAnalytics"))) setTipAnalytics(true); })(); }, []);
-  const dismissTipAnalytics = () => { markSeen("tipAnalytics"); setTipAnalytics(false); };
+
+  const dismissTipAnalytics = async () => {
+    markSeen("tipAnalytics"); setTipAnalytics(false);
+    if (!(await hasSeen("tipAnalyticsCycle"))) setTipCycle(true);   // show the cycle tip next
+  };
+
+  const [tipCycle, setTipCycle] = useState(false);
+  useEffect(() => { (async () => {
+    if (await hasSeen("intro") && await hasSeen("tipAnalytics") && !(await hasSeen("tipAnalyticsCycle"))) setTipCycle(true);
+  })(); }, []);
+  const dismissTipCycle = () => { markSeen("tipAnalyticsCycle"); setTipCycle(false); };
+
+  // const dismissTipAnalytics = () => { markSeen("tipAnalytics"); setTipAnalytics(false); };
+
+  // const [tipCycle, setTipCycle] = useState(false);
+  // useEffect(() => { (async () => {
+  //   if (await hasSeen("intro") && await hasSeen("tipAnalytics") && !(await hasSeen("tipAnalyticsCycle"))) setTipCycle(true);
+  // })(); }, []);
+  // const dismissTipCycle = () => { markSeen("tipAnalyticsCycle"); setTipCycle(false); };
+
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -87,6 +136,26 @@ export default function AnalyticsScreen() {
     setYm({ year: y, month: m });
   };
 
+  const stepDay = (delta: number) => { const d = new Date(date + "T00:00:00"); d.setDate(d.getDate() + delta); const s = ymd(d); if (s > ymd(now)) return; setDate(s); };
+  const atToday = date >= ymd(now);
+  // const atCurrentWeek = weekStart >= weekStartOf(now);
+  // const atCurrentMonth = ym.year === now.getFullYear() && ym.month === now.getMonth() + 1;
+
+  const atCurrentWeek = weekStart >= weekStartOf(now);
+  const atCurrentMonth = ym.year === now.getFullYear() && ym.month === now.getMonth() + 1;
+  const goBack = () => (period === "weekly" ? stepWeek(-1) : stepMonth(-1));
+  const goFwd  = () => (period === "weekly" ? stepWeek(1) : stepMonth(1));
+  const atPresent = period === "weekly" ? atCurrentWeek : atCurrentMonth;
+  const onPickDate = (f: string) => {
+    const d = new Date(f + "T00:00:00");
+    if (period === "daily") setDate(f);
+    else if (period === "weekly") setWeekStart(weekStartOf(d));
+    else setYm({ year: d.getFullYear(), month: d.getMonth() + 1 });
+  };
+  const pickerAnchor = period === "daily" ? date : period === "weekly" ? weekStart : ymd(new Date(ym.year, ym.month - 1, 1));
+
+  
+
   const stepWeek = (delta: number) => {
     const d = new Date(weekStart + "T00:00:00"); d.setDate(d.getDate() + delta * 7);
     const s = ymd(d); if (s > weekStartOf(new Date())) return; setWeekStart(s);
@@ -103,6 +172,34 @@ export default function AnalyticsScreen() {
   const maxBar = Math.max(totalIn, totalOut, 1);
   const cats = data?.by_category ?? [];
   const maxCat = Math.max(cats[0]?.amount ?? 0, 1);
+
+  const lead = period === "daily" ? t("analytics.leadDaily") : period === "weekly" ? t("analytics.leadWeekly") : t("analytics.leadMonthly");
+  const trendPoints: TrendPoint[] = (() => {
+    if (!data) return [];
+    if (period === "weekly") {
+      const byDay = new Map(((data as WeeklyAnalytics).by_day ?? []).map((d) => [d.date, d]));
+      return Array.from({ length: 7 }, (_, i) => {
+        const dt = new Date(weekStart + "T00:00:00"); dt.setDate(dt.getDate() + i); const ds = ymd(dt);
+        const d = byDay.get(ds);
+        return { label: fmtShort(ds), in: d?.total_in ?? 0, out: d?.total_out ?? 0 };
+      });
+    }
+    if (period === "monthly") {
+      const map = new Map<string, { in: number; out: number }>();
+      for (const d of ((data as MonthlyAnalytics).daily_trend ?? [])) {
+        const ws = weekStartOf(new Date(d.date + "T00:00:00"));
+        const b = map.get(ws) ?? { in: 0, out: 0 }; b.in += d.total_in; b.out += d.total_out; map.set(ws, b);
+      }
+      return [...map.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([ws, b]) => {
+        const e = new Date(ws + "T00:00:00"); e.setDate(e.getDate() + 6);
+        // return { label: fmtShort(ws), popupTitle: `${fmtShort(ws)} – ${fmtShort(ymd(e))}`, in: b.in, out: b.out };
+        return { label: weekRange(ws), popupTitle: weekRange(ws), in: b.in, out: b.out };
+      });
+    }
+    return [];
+  })();
+
+
   const isEmpty = !data || data.transaction_count === 0;
   const syncedLabel = lastSynced ? new Date(lastSynced).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
 
@@ -113,26 +210,24 @@ export default function AnalyticsScreen() {
 
         <View style={styles.controls}>
           <View style={styles.segment}>
-            {/* {(["daily", "monthly"] as Period[]).map((pd, i) => ( */}
             {(["daily", "weekly", "monthly"] as Period[]).map((pd, i) => (
               <TouchableOpacity key={pd} onPress={() => setPeriod(pd)} style={[styles.segBtn, i > 0 && styles.segDiv, period === pd && styles.segActive]}>
                 <Text style={[styles.segTxt, period === pd && styles.segTxtActive]}>{t(`analytics.${pd}`)}</Text>
               </TouchableOpacity>
             ))}
           </View>
+        </View>
+
+        <View style={styles.dateNav}>
           {period === "daily" ? (
-            <TouchableOpacity style={styles.pill} onPress={() => setDateModal(true)}><Ionicons name="calendar-outline" size={14} color={colors.textSecondary} /><Text style={styles.pillTxt}>{dateLabel}</Text></TouchableOpacity>
-          ) : period === "weekly" ? (
-            <View style={styles.stepper}>
-              <TouchableOpacity onPress={() => stepWeek(-1)} hitSlop={8}><Ionicons name="chevron-back" size={18} color={colors.text} /></TouchableOpacity>
-              <Text style={styles.stepTxt}>{weekLabel}</Text>
-              <TouchableOpacity onPress={() => stepWeek(1)} hitSlop={8}><Ionicons name="chevron-forward" size={18} color={colors.text} /></TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.pill} onPress={() => setDateModal(true)}>
+              <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} /><Text style={styles.pillTxt}>{dateLabel}</Text>
+            </TouchableOpacity>
           ) : (
             <View style={styles.stepper}>
-              <TouchableOpacity onPress={() => stepMonth(-1)} hitSlop={8}><Ionicons name="chevron-back" size={18} color={colors.text} /></TouchableOpacity>
-              <Text style={styles.stepTxt}>{monthLabel}</Text>
-              <TouchableOpacity onPress={() => stepMonth(1)} hitSlop={8}><Ionicons name="chevron-forward" size={18} color={colors.text} /></TouchableOpacity>
+              <TouchableOpacity onPress={goBack} hitSlop={8}><Ionicons name="chevron-back" size={20} color={colors.text} /></TouchableOpacity>
+              <TouchableOpacity onPress={() => setDateModal(true)}><Text style={styles.stepTxt}>{period === "weekly" ? weekLabel : monthLabel}</Text></TouchableOpacity>
+              <TouchableOpacity onPress={goFwd} hitSlop={8} disabled={atPresent}><Ionicons name="chevron-forward" size={20} color={atPresent ? colors.border : colors.text} /></TouchableOpacity>
             </View>
           )}
         </View>
@@ -150,8 +245,7 @@ export default function AnalyticsScreen() {
           // : isEmpty ? <View style={styles.card}><Text style={styles.empty}>{t("analytics.empty")}</Text></View>
           : isEmpty ? <EmptyState icon="bar-chart-outline" title={t("analytics.empty")} />
           : <>
-            <View style={styles.card}>
-              {/* <Text style={styles.cardTitle}>{period === "daily" ? dateLabel : monthLabel}</Text> */}
+            {/* <View style={styles.card}>
               <Text style={styles.cardTitle}>{period === "daily" ? dateLabel : period === "weekly" ? weekLabel : monthLabel}</Text>
               <View style={styles.keptRow}>
                 <Ionicons name={net >= 0 ? "checkmark-circle" : "alert-circle"} size={18} color={net >= 0 ? colors.success : colors.error} />
@@ -160,9 +254,9 @@ export default function AnalyticsScreen() {
               <Bar label={t("analytics.received")} value={money(totalIn)} width={pctW(totalIn, maxBar)} color={colors.moneyIn} />
               <Bar label={t("analytics.spent")} value={money(totalOut)} width={pctW(totalOut, maxBar)} color={colors.moneyOut} />
               <Text style={styles.count}>{data!.transaction_count} {t("analytics.txns")}</Text>
-            </View>
+            </View> */}
 
-            <View style={styles.card}>
+            {/* <View style={styles.card}>
               <Text style={styles.cardTitle}>{t("analytics.whereTitle")}</Text>
               {cats.length === 0 ? <Text style={styles.empty}>{t("analytics.noSpending")}</Text>
                 : cats.map((c, i) => (
@@ -171,8 +265,8 @@ export default function AnalyticsScreen() {
                     <View style={styles.track}><View style={[styles.fill, { width: pctW(c.amount, maxCat), backgroundColor: colors.primary }]} /></View>
                   </View>
                 ))}
-            </View>
-            <View style={styles.card}>
+            </View> */}
+            {/* <View style={styles.card}>
               <Text style={styles.cardTitle}>{t("analytics.highlights")}</Text>
               {period === "daily" ? <>
                 {(data as DailyAnalytics).largest_in ? <Hl icon="arrow-down" color={colors.moneyIn} text={t("analytics.largestIn", { amount: money((data as DailyAnalytics).largest_in!) })} /> : null}
@@ -182,7 +276,80 @@ export default function AnalyticsScreen() {
                 {(data as any).busiest_hour != null ? <Hl icon="time" color={colors.info} text={t("analytics.busiestHour", { hour: String((data as any).busiest_hour) })} /> : null}
                 </>
               }
+            </View> */}
+
+
+            {/* Block 1 — summary */}
+            <View style={styles.card}>
+              <BlockHeader title={period === "daily" ? dateLabel : period === "weekly" ? weekLabel : monthLabel} mode={mode1} onToggle={() => setMode1(mode1 === "chart" ? "plain" : "chart")} />
+              {mode1 === "chart" ? (
+                <>
+                  <View style={styles.keptRow}>
+                    <Ionicons name={net >= 0 ? "checkmark-circle" : "alert-circle"} size={18} color={net >= 0 ? colors.success : colors.error} />
+                    <Text style={styles.keptTxt}> {net >= 0 ? t("analytics.kept") : t("analytics.overspent")} <Text style={{ fontWeight: "700", color: net >= 0 ? colors.primaryDark : colors.error }}>{money(Math.abs(net))}</Text></Text>
+                  </View>
+                  <Bar label={t("analytics.received")} value={money(totalIn)} width={pctW(totalIn, maxBar)} color={colors.moneyIn} />
+                  <Bar label={t("analytics.spent")} value={money(totalOut)} width={pctW(totalOut, maxBar)} color={colors.moneyOut} />
+                  <Text style={styles.count}>{data!.transaction_count} {t("analytics.txns")}</Text>
+                </>
+              ) : (
+                <Text style={styles.plain}>
+                  {net >= 0
+                    ? renderTemplate(t("analytics.sumSentencePos"), { lead: { text: lead }, in: { text: money(totalIn), style: inStyle }, out: { text: money(totalOut), style: outStyle }, net: { text: money(net), style: keptStyle }, count: { text: String(data!.transaction_count), style: { fontWeight: "700" } } })
+                    : renderTemplate(t("analytics.sumSentenceNeg"), { lead: { text: lead }, deficit: { text: money(Math.abs(net)), style: outStyle }, in: { text: money(totalIn), style: inStyle }, out: { text: money(totalOut), style: outStyle }, count: { text: String(data!.transaction_count), style: { fontWeight: "700" } } })}
+                </Text>
+              )}
+              {tipCycle ? (
+                <CoachTip
+                  text={t("onboarding.tipAnalyticsCycle")}
+                  onDismiss={dismissTipCycle}
+                  arrow="top-right"
+                  style={{ top: 38, left: 12, right: 12 }}   // relative to THIS card, under the cycle icon
+                />
+              ) : null}
             </View>
+
+            {/* Block 2 — where money went */}
+            <View style={styles.card}>
+              <BlockHeader title={t("analytics.whereTitle")} mode={mode2} onToggle={() => setMode2(mode2 === "chart" ? "plain" : "chart")} />
+              {cats.length === 0 ? <Text style={styles.empty}>{t("analytics.noSpending")}</Text>
+                : mode2 === "chart" ? cats.map((c, i) => (
+                    <View key={i} style={{ marginTop: 11 }}>
+                      <View style={styles.lineTop}><Text style={styles.catName}>{c.name}</Text><Text style={styles.catAmt}>{money(c.amount)}</Text></View>
+                      <View style={styles.track}><View style={[styles.fill, { width: pctW(c.amount, maxCat), backgroundColor: colors.primary }]} /></View>
+                    </View>
+                  ))
+                : cats.map((c, i) => {
+                    const p = totalOut > 0 ? Math.round((c.amount / totalOut) * 1000) / 10 : 0;
+                    return (
+                      <View key={i} style={styles.plainLine}>
+                        <Ionicons name="pricetag-outline" size={14} color={colors.textSecondary} style={{ marginTop: 3 }} />
+                        <Text style={styles.plainLineTxt}>
+                          {c.category_id == null
+                            ? renderTemplate(t("report.uncatLine"), { amount: { text: money(c.amount), style: outStyle }, pct: { text: String(p) } })
+                            : renderTemplate(t("report.catLine"), { amount: { text: money(c.amount), style: outStyle }, category: { text: c.name }, pct: { text: String(p) } })}
+                        </Text>
+                      </View>
+                    );
+                  })}
+            </View>
+
+            {/* Block 3 — Trend (weekly + monthly only) */}
+            {period !== "daily" && (
+              <View style={styles.card}>
+                <BlockHeader title={period === "weekly" ? t("analytics.trendTitleWeek") : t("analytics.trendTitleMonth")} mode={mode3} onToggle={() => setMode3(mode3 === "chart" ? "plain" : "chart")} />
+                {trendPoints.length === 0 ? <Text style={styles.empty}>{t("analytics.noSpending")}</Text>
+                  : mode3 === "chart" ? <TrendChart points={trendPoints} />
+                  : trendPoints.map((p, i) => (
+                      <View key={i} style={styles.plainLine}>
+                        <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} style={{ marginTop: 3 }} />
+                        <Text style={styles.plainLineTxt}>
+                          {renderTemplate(t("analytics.trendLine"), { label: { text: p.popupTitle ?? p.label }, in: { text: money(p.in), style: inStyle }, out: { text: money(p.out), style: outStyle } })}
+                        </Text>
+                      </View>
+                    ))}
+              </View>
+            )}
 
 
             <TouchableOpacity style={styles.reportBtn}
@@ -214,12 +381,15 @@ export default function AnalyticsScreen() {
         <Modal transparent visible={dateModal} animationType="slide" onRequestClose={() => setDateModal(false)}>
           <Pressable style={styles.backdrop} onPress={() => setDateModal(false)}>
             <Pressable style={styles.sheet}>
-              <MiniCalendar from={date} to={null} onChange={(f) => { if (f) { setDate(f); setDateModal(false); } }} />
+              {/* <MiniCalendar from={pickerAnchor} to={null} onChange={(f) => { if (f) { onPickDate(f); setDateModal(false); } }} /> */}
+              <MiniCalendar from={pickerAnchor} to={null} 
+                onChange={(f, tt) => { const picked = tt ?? f; if (picked) { onPickDate(picked); setDateModal(false); } }} />
             </Pressable>
           </Pressable>
         </Modal>
       </ScrollView>
       {tipAnalytics ? <CoachTip text={t("onboarding.tipAnalytics")} onDismiss={dismissTipAnalytics} arrow="top-left" style={{ top: 58, left: 16, maxWidth: 280 }} /> : null}
+      {/* {tipCycle ? <CoachTip text={t("onboarding.tipAnalyticsCycle")} onDismiss={dismissTipCycle} arrow="top-right" style={{ top: 150, right: 16, maxWidth: 260 }} /> : null} */}
     </View>
   );
 }
@@ -232,9 +402,10 @@ function Bar({ label, value, width, color }: { label: string; value: string; wid
     </View>
   );
 }
-function Hl({ icon, color, text }: { icon: any; color: string; text: string }) {
-  return <View style={styles.hl}><Ionicons name={icon} size={15} color={color} /><Text style={styles.hlTxt}> {text}</Text></View>;
-}
+
+// function Hl({ icon, color, text }: { icon: any; color: string; text: string }) {
+//   return <View style={styles.hl}><Ionicons name={icon} size={15} color={color} /><Text style={styles.hlTxt}> {text}</Text></View>;
+// }
 
 
 const styles = StyleSheet.create({
@@ -291,5 +462,12 @@ const styles = StyleSheet.create({
 
   reportBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.primary, marginHorizontal: 16, marginTop: 16, borderRadius: 12, paddingVertical: 14 },
   reportBtnTxt: { color: "#fff", fontSize: 15, fontWeight: "600" },
+
+  dateNav: { flexDirection: "row", justifyContent: "center", alignItems: "center", paddingHorizontal: 16, paddingTop: 12 },
+
+  blockHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  plain: { fontSize: 15, lineHeight: 24, color: colors.text, marginTop: 10 },
+  plainLine: { flexDirection: "row", alignItems: "flex-start", marginTop: 10 },
+  plainLineTxt: { flex: 1, fontSize: 14, lineHeight: 20, color: colors.text, marginLeft: 8 },
 
 });

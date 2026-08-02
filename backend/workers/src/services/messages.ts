@@ -19,9 +19,14 @@ function money(amount: number, currency: string): string {
  * The app picks which language to display via the user's setting.
  */
 export function renderTransactionNotification(n: TransactionNotification): RenderedNotification {
+
   const amt = money(n.amount, n.currency);
   const bal = n.balanceAfter != null ? money(n.balanceAfter, n.currency) : null;
   const isOut = n.direction === "out";
+
+  const localNum = (x?: string | null) => (x ?? "").replace(/^252/, "");
+  const simTitle = n.simNumber ? `[${n.provider} · ${localNum(n.simNumber)}]` : (isOut ? "Lacag la diray" : "Lacag la helay");
+
 
   const titleEn = isOut ? "Money sent" : "Money received";
   const titleSo = isOut ? "Lacag la diray" : "Lacag la helay";
@@ -31,12 +36,14 @@ export function renderTransactionNotification(n: TransactionNotification): Rende
     : `You received ${amt}.${bal ? ` Balance: ${bal}.` : ""}`;
 
   const bodySo = isOut
-    ? `Waxaad dirtay ${amt}.${bal ? ` Hadhaaga: ${bal}.` : ""}`
-    : `Waxaad heshay ${amt}.${bal ? ` Hadhaaga: ${bal}.` : ""}`;
+    ? `Waxaad dirtay ${amt}.${bal ? ` Haragaaga waa: ${bal}.` : ""}`
+    : `Waxaad heshay ${amt}.${bal ? ` Haragaaga waa: ${bal}.` : ""}`;
 
   return {
     type: isOut ? "transaction_sent" : "transaction_received",
-    titleEn, titleSo, bodyEn, bodySo,
+    // titleEn, titleSo, bodyEn, bodySo,
+    titleEn: simTitle, titleSo: simTitle,  bodyEn, bodySo,
+
     data: {
       transactionId: n.transactionId,  
       direction: n.direction,

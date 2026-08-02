@@ -2,18 +2,20 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,
-} from "react-native";
+  KeyboardAvoidingView, Platform } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { colors } from "../theme";
 import { useNetwork } from "../store/useNetwork";
 import {
-  getTransactionDetail, setTransactionCategory, setTransactionNote, deleteTransactionTx, type Tx,
+  getTransactionDetail, setTransactionCategory, setTransactionNote, deleteTransactionTx, type Tx, markTxSeen
 } from "../data/transactions";
 import { readCategories, type Category } from "../data/categories";
 
 import { readSims, simEyebrow, type Sim } from "../data/phoneNumbers";
+import { TxSentence } from "../components/TxSentence";
+import { useUnreadTx } from "../store/useUnreadTx";
 
 const money = (n: number | null) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 
@@ -43,7 +45,9 @@ export default function TransactionDetailScreen() {
     })();
     readCategories().then(setCats);
     readSims().then(setSims);
+    markTxSeen(id).then(() => useUnreadTx.getState().refresh()).catch(() => {});
   }, [id]);
+
 
   const requireOnline = () => { if (!online) { Alert.alert(t("tx.offlineAction")); return false; } return true; };
 
@@ -94,11 +98,41 @@ export default function TransactionDetailScreen() {
         <Text style={styles.heroSub}>{isIn ? t("tx.received") : t("tx.spent")}</Text>
       </View>
 
+
+      {/* body = the same sentence shown in the transactions list */}
       <View style={styles.card}>
-        <Field label={t("tx.counterparty")} value={cpName} />
+        <TxSentence tx={tx} style={styles.bodySentence} />
+        <Text style={styles.dateline}>{new Date(tx.transacted_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</Text>
+      </View>
+
+      {/* category + note */}
+      <View style={styles.card}>
+        <TouchableOpacity style={styles.metaRow} onPress={() => setCatModal(true)} activeOpacity={0.7}>
+          <Ionicons name="pricetag-outline" size={18} color={colors.primary} />
+          <Text style={styles.metaLabel}>{t("tx.category")}</Text>
+          <View style={styles.metaRight}>
+            <Text style={styles.metaValue}>{tx.category?.name ?? t("tx.uncategorized")}</Text>
+            {tx.is_auto_categorized ? <Text style={styles.tag}>{t("tx.autoTag")}</Text> : null}
+            <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} style={{ marginLeft: 4 }} />
+          </View>
+        </TouchableOpacity>
+        <View style={styles.metaDivider} />
+        <TouchableOpacity style={styles.metaRow} onPress={openNote} activeOpacity={0.7}>
+          <Ionicons name="chatbox-ellipses-outline" size={18} color={colors.primary} />
+          <Text style={styles.metaLabel}>{t("tx.note")}</Text>
+          <View style={styles.metaRight}>
+            <Text style={[styles.metaValue, !tx.note && { color: colors.textSecondary }]} numberOfLines={1}>{tx.note || t("tx.addNote")}</Text>
+            <Ionicons name="create-outline" size={16} color={colors.textSecondary} style={{ marginLeft: 6 }} />
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* <View style={styles.card}>
+       
+        <Field label={isIn ? t("tx.receivedFrom") : t("tx.sentTo")} value={cpName} />
         {tx.counterparty_available && tx.counterparty_name && tx.counterparty_number
           ? <Field label="" value={tx.counterparty_number} /> : null}
-        {/* category (tappable) */}
+        
         <TouchableOpacity style={styles.fieldRow} onPress={() => setCatModal(true)} activeOpacity={0.7}>
           <Text style={styles.fieldLabel}>{t("tx.category")}</Text>
           <View style={styles.fieldRight}>
@@ -108,7 +142,7 @@ export default function TransactionDetailScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* note (tappable) */}
+        
         <TouchableOpacity style={styles.fieldRow} onPress={openNote} activeOpacity={0.7}>
           <Text style={styles.fieldLabel}>{t("tx.note")}</Text>
           <View style={styles.fieldRight}>
@@ -123,7 +157,7 @@ export default function TransactionDetailScreen() {
         {tx.service_charge != null && tx.service_charge > 0 ? <Field label={t("tx.charge")} value={money(tx.service_charge)} /> : null}
         <Field label={t("tx.dateTime")} value={new Date(tx.transacted_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })} />
         {tx.provider_reference ? <Field label={t("tx.reference")} value={tx.provider_reference} /> : null}
-      </View>
+      </View> */}
 
       {/* actions */}
       <View style={styles.actions}>
@@ -163,28 +197,32 @@ export default function TransactionDetailScreen() {
       </Modal>
 
       {/* note editor */}
+      {/* <Modal transparent visible={noteModal} animationType="fade" onRequestClose={() => setNoteModal(false)}>
+        <Pressable style={[styles.backdrop, { justifyContent: "center", padding: 24 }]} onPress={() => setNoteModal(false)}> */}
       <Modal transparent visible={noteModal} animationType="fade" onRequestClose={() => setNoteModal(false)}>
-        <Pressable style={[styles.backdrop, { justifyContent: "center", padding: 24 }]} onPress={() => setNoteModal(false)}>
-          <Pressable style={styles.noteBox}>
-            <Text style={styles.sheetTitle}>{t("tx.note")}</Text>
-            <TextInput
-              style={styles.noteInput}
-              value={noteDraft}
-              onChangeText={setNoteDraft}
-              placeholder={t("tx.addNote")}
-              placeholderTextColor={colors.textSecondary}
-              multiline
-            />
-            <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 12 }}>
-              <TouchableOpacity onPress={() => setNoteModal(false)} style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                <Text style={{ color: colors.textSecondary, fontWeight: "600" }}>{t("tx.cancel")}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={saveNote} disabled={saving} style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                {saving ? <ActivityIndicator color={colors.primary} /> : <Text style={{ color: colors.primary, fontWeight: "700" }}>{t("tx.save")}</Text>}
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView behavior={Platform.OS === "android" ? "padding" : "height"} style={{ flex: 1 }}>
+          <Pressable style={[styles.backdrop, { justifyContent: "center", padding: 24 }]} onPress={() => setNoteModal(false)}>
+            <Pressable style={styles.noteBox}>
+              <Text style={styles.sheetTitle}>{t("tx.note")}</Text>
+              <TextInput
+                style={styles.noteInput}
+                value={noteDraft}
+                onChangeText={setNoteDraft}
+                placeholder={t("tx.addNote")}
+                placeholderTextColor={colors.textSecondary}
+                multiline
+              />
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 12 }}>
+                <TouchableOpacity onPress={() => setNoteModal(false)} style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+                  <Text style={{ color: colors.textSecondary, fontWeight: "600" }}>{t("tx.cancel")}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={saveNote} disabled={saving} style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+                  {saving ? <ActivityIndicator color={colors.primary} /> : <Text style={{ color: colors.primary, fontWeight: "700" }}>{t("tx.save")}</Text>}
+                </TouchableOpacity>
+              </View>
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
   );
@@ -209,7 +247,7 @@ const styles = StyleSheet.create({
 
   bigAmt: { fontSize: 28, fontWeight: "700" },
   heroSub: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
-  card: { backgroundColor: colors.surface, marginTop: 12, marginHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 16 },
+  card: {height:120, backgroundColor: colors.surface, marginTop: 12, marginHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 16, paddingTop:15, },
   fieldRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
   fieldLabel: { fontSize: 13, color: colors.textSecondary, flex: 1 },
   fieldRight: { flexDirection: "row", alignItems: "center", flexShrink: 1, justifyContent: "flex-end" },
@@ -225,4 +263,14 @@ const styles = StyleSheet.create({
   catTxt: { fontSize: 15, color: colors.text },
   noteBox: { backgroundColor: colors.surface, borderRadius: 16, padding: 18 },
   noteInput: { borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, minHeight: 90, textAlignVertical: "top", color: colors.text, fontSize: 15 },
+
+
+  bodySentence: { fontSize: 20, lineHeight: 24, color: colors.text },
+  dateline: { fontSize: 12, color: colors.textSecondary, marginTop: 18 },
+  metaRow: { flexDirection: "row", alignItems: "center", paddingVertical: 13 },
+  metaLabel: { fontSize: 14, color: colors.textSecondary, marginLeft: 10, flex: 1 },
+  metaRight: { flexDirection: "row", alignItems: "center", flexShrink: 1, justifyContent: "flex-end" },
+  metaValue: { fontSize: 14, color: colors.text, fontWeight: "500", maxWidth: 190, textAlign: "right" },
+  metaDivider: { height: 2, backgroundColor: "#F1F5F9" },
+
 });

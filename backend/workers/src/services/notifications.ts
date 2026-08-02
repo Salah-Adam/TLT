@@ -9,6 +9,8 @@ export interface TransactionNotification {
   amount: number;
   currency: string;
   balanceAfter: number | null;
+  provider: string; 
+  simNumber: string | null; 
 }
 
 const notificationQueue = new Queue("notifications", {

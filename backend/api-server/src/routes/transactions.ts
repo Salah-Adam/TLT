@@ -83,6 +83,16 @@ async function transactionRoutes(app: FastifyInstance): Promise<void> {
     return ok(reply, rows);
   });
 
+
+  // newly added one --------------------
+  app.get("/api/v1/transactions/unread-count", { preHandler: app.authenticate }, async (request, reply) => {
+    return ok(reply, { count: await txService.countUnseen(request.user.sub) });
+  });
+  app.post("/api/v1/transactions/mark-seen", { preHandler: app.authenticate }, async (request, reply) => {
+    await txService.markAllSeen(request.user.sub);
+    return ok(reply, { message: "ok" });
+  });
+
   // ── Get one ────────────────────────────────────────────────────
   app.get("/api/v1/transactions/:id", {
     preHandler: app.authenticate,
@@ -138,6 +148,16 @@ async function transactionRoutes(app: FastifyInstance): Promise<void> {
     const tx = await txService.recoverTransaction(request.user.sub, id, resolveLang(request));
     return ok(reply, tx);
   });
+
+  app.post("/api/v1/transactions/:id/seen", {
+    preHandler: app.authenticate,
+    schema: { params: { type: "object", required: ["id"], properties: { id: { type: "string" } } } },
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    await txService.markSeen(request.user.sub, id);
+    return ok(reply, { message: "ok" });
+  });
+
 }
 
 export default fp(transactionRoutes);
