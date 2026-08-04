@@ -107,10 +107,27 @@ async function categoriesRaw(userId: string, start: string, end: string, phoneId
   return out.sort((a, b) => b.amount - a.amount);
 }
 
+// async function topCounterparties(userId: string, start: string, end: string, phoneIds: string[] | undefined, dek: Buffer | null) {
+//   const p: any[] = [];
+//   const where = txWhere(p, userId, start, end, phoneIds);   // ← was rangeWhere(..., scope)
+//   // …rest unchanged…
+//   const rows = (await pool.query(
+//     `SELECT counterparty_phone_hash AS hash, direction,
+//             (array_agg(counterparty_name_enc))[1]  AS name_enc,
+//             (array_agg(counterparty_phone_enc))[1] AS phone_enc,
+//             SUM(amount)::float AS total, COUNT(*)::int AS count
+//      FROM transactions t
+//      WHERE ${where} AND counterparty_phone_hash IS NOT NULL
+//      GROUP BY counterparty_phone_hash, direction`, p
+//   )).rows;
+//   const top = (dir: string) =>
+//     rows.filter((r) => r.direction === dir).sort((a, b) => b.total - a.total).slice(0, 5)
+//         .map((r) => ({ ...decodeCp(r, dek), total: r.total, count: r.count }));
+//   return { top_recipients: top("out"), top_senders: top("in") };
+// }
 async function topCounterparties(userId: string, start: string, end: string, phoneIds: string[] | undefined, dek: Buffer | null) {
   const p: any[] = [];
-  const where = txWhere(p, userId, start, end, phoneIds);   // ← was rangeWhere(..., scope)
-  // …rest unchanged…
+  const where = txWhere(p, userId, start, end, phoneIds);
   const rows = (await pool.query(
     `SELECT counterparty_phone_hash AS hash, direction,
             (array_agg(counterparty_name_enc))[1]  AS name_enc,
@@ -120,10 +137,13 @@ async function topCounterparties(userId: string, start: string, end: string, pho
      WHERE ${where} AND counterparty_phone_hash IS NOT NULL
      GROUP BY counterparty_phone_hash, direction`, p
   )).rows;
-  const top = (dir: string) =>
-    rows.filter((r) => r.direction === dir).sort((a, b) => b.total - a.total).slice(0, 5)
-        .map((r) => ({ ...decodeCp(r, dek), total: r.total, count: r.count }));
-  return { top_recipients: top("out"), top_senders: top("in") };
+  const CAP = 100;
+  const build = (dir: string) => {
+    const sorted = rows.filter((r) => r.direction === dir).sort((a, b) => b.total - a.total);
+    return { list: sorted.slice(0, CAP).map((r) => ({ ...decodeCp(r, dek), total: r.total, count: r.count })), truncated: sorted.length > CAP };
+  };
+  const rec = build("out"), snd = build("in");
+  return { top_recipients: rec.list, recipients_truncated: rec.truncated, top_senders: snd.list, senders_truncated: snd.truncated };
 }
 
 
@@ -158,31 +178,58 @@ async function busiest(userId: string, start: string, end: string, phoneIds?: st
   return { busiest_day: bd, busiest_day_count: bd ? bdc : 0, busiest_hour: bh };
 }
 
+// async function trendSeries(userId: string, period: Period, win: Win, phoneIds?: string[]) {
+//   const p: any[] = []; let sql: string; let pf = "";
+//   if (period === "daily") {
+//     p.push(userId, win.end);
+//     if (phoneIds?.length) { p.push(phoneIds); pf = `AND s.phone_number_id = ANY($${p.length}::uuid[])`; }
+//     sql = `SELECT g::date::text AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent
+//            FROM generate_series($2::date - 6, $2::date, INTERVAL '1 day') g
+//            LEFT JOIN daily_summaries s ON s.user_id=$1 AND s.summary_date = g::date ${pf}
+//            GROUP BY g ORDER BY g`;
+//   } else if (period === "weekly") {
+//     p.push(userId, win.start);
+//     if (phoneIds?.length) { p.push(phoneIds); pf = `AND s.phone_number_id = ANY($${p.length}::uuid[])`; }
+//     sql = `SELECT g::date::text AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent
+//            FROM generate_series($2::date - INTERVAL '5 weeks', $2::date, INTERVAL '1 week') g
+//            LEFT JOIN daily_summaries s ON s.user_id=$1 AND s.summary_date BETWEEN g::date AND (g::date + 6) ${pf}
+//            GROUP BY g ORDER BY g`;
+//   } else {
+//     p.push(userId, win.start);
+//     if (phoneIds?.length) { p.push(phoneIds); pf = `AND s.phone_number_id = ANY($${p.length}::uuid[])`; }
+//     sql = `SELECT to_char(g,'YYYY-MM') AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent
+//            FROM generate_series($2::date - INTERVAL '5 months', $2::date, INTERVAL '1 month') g
+//            LEFT JOIN monthly_summaries s ON s.user_id=$1 AND s.summary_year=EXTRACT(YEAR FROM g)::int AND s.summary_month=EXTRACT(MONTH FROM g)::int ${pf}
+//            GROUP BY g ORDER BY g`;
+//   }
+//   return (await pool.query(sql, p)).rows as { bucket: string; spent: number }[];
+// }
+
 async function trendSeries(userId: string, period: Period, win: Win, phoneIds?: string[]) {
   const p: any[] = []; let sql: string; let pf = "";
   if (period === "daily") {
     p.push(userId, win.end);
     if (phoneIds?.length) { p.push(phoneIds); pf = `AND s.phone_number_id = ANY($${p.length}::uuid[])`; }
-    sql = `SELECT g::date::text AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent
+    sql = `SELECT g::date::text AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent, COALESCE(SUM(s.total_in),0)::float AS received
            FROM generate_series($2::date - 6, $2::date, INTERVAL '1 day') g
            LEFT JOIN daily_summaries s ON s.user_id=$1 AND s.summary_date = g::date ${pf}
            GROUP BY g ORDER BY g`;
   } else if (period === "weekly") {
     p.push(userId, win.start);
     if (phoneIds?.length) { p.push(phoneIds); pf = `AND s.phone_number_id = ANY($${p.length}::uuid[])`; }
-    sql = `SELECT g::date::text AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent
+    sql = `SELECT g::date::text AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent, COALESCE(SUM(s.total_in),0)::float AS received
            FROM generate_series($2::date - INTERVAL '5 weeks', $2::date, INTERVAL '1 week') g
            LEFT JOIN daily_summaries s ON s.user_id=$1 AND s.summary_date BETWEEN g::date AND (g::date + 6) ${pf}
            GROUP BY g ORDER BY g`;
   } else {
     p.push(userId, win.start);
     if (phoneIds?.length) { p.push(phoneIds); pf = `AND s.phone_number_id = ANY($${p.length}::uuid[])`; }
-    sql = `SELECT to_char(g,'YYYY-MM') AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent
+    sql = `SELECT to_char(g,'YYYY-MM') AS bucket, COALESCE(SUM(s.total_out),0)::float AS spent, COALESCE(SUM(s.total_in),0)::float AS received
            FROM generate_series($2::date - INTERVAL '5 months', $2::date, INTERVAL '1 month') g
            LEFT JOIN monthly_summaries s ON s.user_id=$1 AND s.summary_year=EXTRACT(YEAR FROM g)::int AND s.summary_month=EXTRACT(MONTH FROM g)::int ${pf}
            GROUP BY g ORDER BY g`;
   }
-  return (await pool.query(sql, p)).rows as { bucket: string; spent: number }[];
+  return (await pool.query(sql, p)).rows as { bucket: string; spent: number; received: number }[];
 }
 
 function buildInsights(
@@ -222,8 +269,8 @@ function buildInsights(
   }
 
   // Top up-to-5 senders / recipients
-  for (const s of tcp.top_senders)    out.push(t("INSIGHT_TOP_SENDER",    lang, { name: nameOf(s), amount: fmt(s.total), currency, count: s.count }));
-  for (const r of tcp.top_recipients) out.push(t("INSIGHT_TOP_RECIPIENT", lang, { name: nameOf(r), amount: fmt(r.total), currency, count: r.count }));
+  for (const s of tcp.top_senders.slice(0, 5))    out.push(t("INSIGHT_TOP_SENDER",    lang, { name: nameOf(s), amount: fmt(s.total), currency, count: s.count }));
+  for (const r of tcp.top_recipients.slice(0, 5)) out.push(t("INSIGHT_TOP_RECIPIENT", lang, { name: nameOf(r), amount: fmt(r.total), currency, count: r.count }));
 
   // Top up-to-5 largest transactions
   for (const l of lrg) {
@@ -265,20 +312,36 @@ export async function getReport(
 
   const insights = buildInsights(lang, period, tot, prev, by_category, tcp, lrg, bz, trend, currency);
 
+  // return {
+  //   period, start: win.start, end: win.end, currency,
+  //   total_in: tot.total_in, total_out: tot.total_out, net: tot.net, transaction_count: tot.transaction_count,
+  //   // vs_last_period: { in_change_percent: pctChange(tot.total_in, prev.total_in), out_change_percent: pctChange(tot.total_out, prev.total_out) },
+  //   vs_last_period: {
+  //     in_change_percent: pctChange(tot.total_in, prev.total_in),
+  //     out_change_percent: pctChange(tot.total_out, prev.total_out),
+  //     prev_out: prev.total_out,          // ← add
+  //   },
+
+  //   trend,
+  //   by_category,
+  //   top_senders: tcp.top_senders,
+  //   top_recipients: tcp.top_recipients,
+  //   largest_transactions: lrg,
+  //   busiest_day: bz.busiest_day, busiest_hour: bz.busiest_hour,
+  //   insights,
+  // };
+
+
   return {
     period, start: win.start, end: win.end, currency,
     total_in: tot.total_in, total_out: tot.total_out, net: tot.net, transaction_count: tot.transaction_count,
-    // vs_last_period: { in_change_percent: pctChange(tot.total_in, prev.total_in), out_change_percent: pctChange(tot.total_out, prev.total_out) },
-    vs_last_period: {
-      in_change_percent: pctChange(tot.total_in, prev.total_in),
-      out_change_percent: pctChange(tot.total_out, prev.total_out),
-      prev_out: prev.total_out,          // ← add
-    },
-
+    vs_last_period: { in_change_percent: pctChange(tot.total_in, prev.total_in), out_change_percent: pctChange(tot.total_out, prev.total_out), prev_out: prev.total_out },
     trend,
     by_category,
     top_senders: tcp.top_senders,
     top_recipients: tcp.top_recipients,
+    recipients_truncated: tcp.recipients_truncated,   // ← add
+    senders_truncated: tcp.senders_truncated,          // ← add
     largest_transactions: lrg,
     busiest_day: bz.busiest_day, busiest_hour: bz.busiest_hour,
     insights,

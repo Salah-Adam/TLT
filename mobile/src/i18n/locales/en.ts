@@ -146,8 +146,8 @@ export default {
     catLine: "You spent {amount} on {category} ({pct}% of your expenses)",
     senderLine: "{who} sent you {amount} ({count}×)",
     recipientLine: "You sent {amount} to {who} ({count}×)",
-    biggestIn: "{amount} from {who}",
-    biggestOut: "{amount} to {who}",
+    biggestIn: "Biggest In: {amount} from {who}",
+    biggestOut: "Biggest Out: {amount} to {who}",
 
     highlights: "Highlights",
     hlAhead: "You came out ahead by {{amount}}",
@@ -171,6 +171,13 @@ export default {
     hlSpendSame: "You spent the same as {when} ({prev}).",
 
 
+
+    seeMore:  "See more",
+    cappedNote:  "Showing the top 100 only."   ,
+    hlSavingRate:  "You kept {{pct}}% of what you received."  ,
+    dailyInOutTitle: "Daily in & out" ,
+    totalSpent:     "Total spent"      ,
+    totalReceived: "Total received" ,
 
   },
 

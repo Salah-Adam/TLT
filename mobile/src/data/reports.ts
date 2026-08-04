@@ -10,9 +10,11 @@ export type ReportData = {
   total_in: number; total_out: number; net: number; transaction_count: number;
   // vs_last_period: { in_change_percent: number | null; out_change_percent: number | null; };
   vs_last_period: { in_change_percent: number | null; out_change_percent: number | null; prev_out: number | null;};
-  trend: { bucket: string; spent: number }[];
+  // trend: { bucket: string; spent: number }[];
+  trend: { bucket: string; spent: number; received: number }[]
   by_category: { category_id: string | null; name: string; amount: number; count: number; percent_of_spending: number }[];
   top_senders: Cp[]; top_recipients: Cp[];
+  recipients_truncated?: boolean; senders_truncated?: boolean;
   largest_transactions: { id: string; amount: number; direction: "in" | "out"; type: string; transacted_at: string; counterparty_name: string | null; counterparty_number: string | null; counterparty_available: boolean }[];
   busiest_day: string | null; busiest_hour: number | null;
   insights: string[];

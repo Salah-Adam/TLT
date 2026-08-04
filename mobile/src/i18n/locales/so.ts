@@ -153,8 +153,8 @@ export default {
     catLine: "Waxaad {category} ku bixisey {amount} ({pct}% kharashaadkaaga) ",
     senderLine: "{amount} ka heshey {who} ({count} jeer)",
     recipientLine: "{amount} ayaad u dirtay {who} ({count} jeer)",
-    biggestIn: "{amount} ka heshey {who}",
-    biggestOut: "{amount} u dirtey {who}",
+    biggestIn: "Lacagta ugu badan ee aad heshey waa {amount} oo ka heshey {who}",
+    biggestOut: "Lacagta ugu badan ee aad dirtey waa {amount} oo aad u dirtey {who}",
 
 
     highlights: "Waxyaabaha muhiimka ah",
@@ -178,6 +178,15 @@ export default {
     hlSpendMore: "Waxaad kharash-gareysey {delta} ka badan kharashkii {when}, oo ahaa {prev}.",
     hlSpendLess: "Waxaad kharash-gareysey {delta} ka yar kharashkii {when}, oo ahaa {prev}.",
     hlSpendSame: "Kharashkaaga wuxuu la mid noqdey {when}, oo ahaa {prev}.",
+
+    seeMore:  "Arag dheeraad",
+    cappedNote:  "Waxaa la muujinayaa 100-ka ugu badan oo keliya.",
+    hlSavingRate:  "Waxaad kaydisay {{pct}}% lacagta aad heshay.",
+    dailyInOutTitle: "Wadarta Lacaga Aad Dirtey ama Heshey",
+    totalSpent:  "Wadarta la bixiyay",
+    totalReceived: "Wadarta la helay",
+
+
 
   },
 
