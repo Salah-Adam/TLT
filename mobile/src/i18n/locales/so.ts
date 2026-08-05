@@ -60,7 +60,7 @@ export default {
 
     menuTitle: "Menu", menuAlerts: "Digniinaha kharashka",
 
-    balanceBreakdown:   "Haraaga qiyaaseed",
+    balanceBreakdown:   "Haraaga la qiyaasey",
     numberRemoved:   "Mar dambe lama diiwaangelin",
     total:  "Wadarta"
   },

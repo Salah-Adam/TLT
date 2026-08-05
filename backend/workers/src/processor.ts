@@ -1,5 +1,5 @@
 import { parsePayload } from "./services/parser";
-import { encryptField, hashValue, getUserDek } from "./services/encryption";
+import { encryptField, hashValue, getUserDek, canonicalPhone } from "./services/encryption";
 import { pool } from "./db";
 
 
@@ -34,7 +34,8 @@ export async function processTransactionJob(job: NormalisedStructuredJob): Promi
   const dek = await getUserDek(job.userId);
   const nameEnc = r.counterparty_name ? encryptField(r.counterparty_name, dek) : null;
   const phoneEnc = r.counterparty_number ? encryptField(r.counterparty_number, dek) : null;
-  const phoneHash = r.counterparty_number ? hashValue(r.counterparty_number) : null;
+  // const phoneHash = r.counterparty_number ? hashValue(r.counterparty_number) : null;
+  const phoneHash = r.counterparty_number ? hashValue(canonicalPhone(r.counterparty_number)) : null;
   const rawEnc = encryptField(r.raw_message, dek);
 
   const idempotencyKey = r.reference

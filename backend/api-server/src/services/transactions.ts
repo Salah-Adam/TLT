@@ -1,5 +1,5 @@
 import { pool } from "../db";
-import { getUserDek, decryptField, hashValue } from "../encryption";
+import { getUserDek, decryptField, hashValue, canonicalPhone } from "../encryption";
 import { AppError } from "../lib/errors";
 import { Lang } from "../lib/messages";
 import { encodeCursor, decodeCursor } from "../utils/cursor";
@@ -321,7 +321,8 @@ export async function searchTransactions(f: {
 
   // Fast path: a full phone number → blind-index hash match in SQL, no decryption.
   if (looksLikePhone(q)) {
-    params.push(hashValue(q));
+    // params.push(hashValue(q));
+    params.push(hashValue(canonicalPhone(q)));
     where.push(`t.counterparty_phone_hash = $${params.length}`);
     pushCursor();
     params.push(limit + 1);

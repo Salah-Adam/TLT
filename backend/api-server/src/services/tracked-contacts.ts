@@ -1,5 +1,5 @@
 import { pool } from "../db";
-import { getUserDek, decryptField, encryptField, hashValue } from "../encryption";
+import { getUserDek, decryptField, encryptField, hashValue, canonicalPhone } from "../encryption";
 import { AppError } from "../lib/errors";
 import { Lang } from "../lib/messages";
 import { encodeCursor, decodeCursor } from "../utils/cursor";
@@ -23,7 +23,8 @@ function decryptNum(enc: string, dek: Buffer | null): { number: string | null; a
 /** Attach a number to a contact: validate, hash, reuse a deactivated row, else insert. */
 async function attachNumber(client: PoolClient, userId: string, contactId: string, number: string, dek: Buffer) {
   assertNumber(number);
-  const hash = hashValue(number);
+  // const hash = hashValue(number);
+  const hash = hashValue(canonicalPhone(number));
   const existing = await client.query(
     `SELECT id, is_active FROM tracked_contact_numbers WHERE user_id=$1 AND tracked_number_hash=$2`,
     [userId, hash]

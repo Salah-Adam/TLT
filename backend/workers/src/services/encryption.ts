@@ -120,6 +120,14 @@ export function clearDekCache(userId?: string): void {
   }
 }
 
+
+// Canonical MSISDN for hashing/matching: digits only, drop a leading 252 and any leading 0.
+export function canonicalPhone(n: string): string {
+  let d = (n ?? "").replace(/\D/g, "");
+  if (d.startsWith("252")) d = d.slice(3);
+  return d.replace(/^0+/, "");
+}
+
 /**
  * Deterministic keyed hash of a phone number, for tracked-contact matching.
  * Same number always produces the same hash, so we can match WHERE
@@ -129,3 +137,4 @@ export function clearDekCache(userId?: string): void {
 export function hashValue(value: string): string {
   return createHmac("sha256", config.hmacSecret).update(value).digest("hex");
 }
+
