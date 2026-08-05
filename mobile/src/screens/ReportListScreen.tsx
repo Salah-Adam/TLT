@@ -218,7 +218,7 @@ export default function ReportListScreen() {
             <Text style={styles.plainTxt}>
                 {item.category_id == null
                 ? renderTemplate(t("report.uncatLine"), { amount: { text: money(item.amount), style: outStyle }, pct: { text: String(item.percent_of_spending) } })
-                : renderTemplate(t("report.catLine"), { amount: { text: money(item.amount), style: outStyle }, category: { text: item.name }, pct: { text: String(item.percent_of_spending) } })}
+                : renderTemplate(t("report.catLine"), { amount: { text: money(item.amount), style: outStyle }, category: { text: item.name, style: { fontWeight: "700" } }, pct: { text: String(item.percent_of_spending) } })}
             </Text>
             </View>
         );
@@ -373,4 +373,5 @@ const styles = StyleSheet.create({
 
   controls: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
   cycleBtn: { width: 36, height: 36, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+  
 });

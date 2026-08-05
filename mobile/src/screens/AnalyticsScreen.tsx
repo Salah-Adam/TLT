@@ -328,7 +328,7 @@ export default function AnalyticsScreen() {
                         <Text style={styles.plainLineTxt}>
                           {c.category_id == null
                             ? renderTemplate(t("report.uncatLine"), { amount: { text: money(c.amount), style: outStyle }, pct: { text: String(p) } })
-                            : renderTemplate(t("report.catLine"), { amount: { text: money(c.amount), style: outStyle }, category: { text: c.name }, pct: { text: String(p) } })}
+                            : renderTemplate(t("report.catLine"), { amount: { text: money(c.amount), style: outStyle }, category: { text: c.name, style: { fontWeight: "700" } }, pct: { text: String(p) } })}
                         </Text>
                       </View>
                     );

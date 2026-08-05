@@ -211,7 +211,7 @@ export default function ReportScreen() {
                 <Line key={i} icon="pricetag-outline" color={colors.textSecondary}>
                   {c.category_id == null
                     ? renderTemplate(t("report.uncatLine"), { amount: { text: money(c.amount), style: outStyle }, pct: { text: String(c.percent_of_spending) } })
-                    : renderTemplate(t("report.catLine"), { amount: { text: money(c.amount), style: outStyle }, category: { text: c.name }, pct: { text: String(c.percent_of_spending) } })}
+                    : renderTemplate(t("report.catLine"), { amount: { text: money(c.amount), style: outStyle }, category: { text: c.name, style: { fontWeight: "700" }}, pct: { text: String(c.percent_of_spending) } })}
                 </Line>
               ))}
           {cats.length > CAP ? <SeeMore t={t} onPress={() => goList("categories")} /> : null}

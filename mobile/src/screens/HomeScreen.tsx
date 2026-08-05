@@ -50,6 +50,8 @@ export default function HomeScreen() {
   const [monthMode, setMonthMode] = useState<"chart" | "plain">("chart");
   const [balModal, setBalModal] = useState(false);
 
+  const [catMode, setCatMode] = useState<"chart" | "plain">("chart");
+
   const [sims, setSims] = useState<Sim[]>([]);
 
   const [tipHome, setTipHome] = useState(false);
@@ -240,7 +242,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        <View style={styles.card}>
+        {/* <View style={styles.card}>
           <Text style={styles.cardTitle}>{t("home.question")}</Text>
           {cats.length === 0
             ? <Text style={styles.empty}>{t("home.empty")}</Text>
@@ -253,6 +255,42 @@ export default function HomeScreen() {
                 <View style={styles.barTrack}><View style={[styles.barFill, { width: pctW(c.amount, maxCat), backgroundColor: colors.primary }]} /></View>
               </View>
             ))}
+        </View> */}
+
+        <View style={styles.card}>
+          <View style={styles.blockHead}>
+            <Text style={styles.cardTitle}>{t("home.question")}</Text>
+            <TouchableOpacity hitSlop={8} onPress={() => setCatMode(catMode === "chart" ? "plain" : "chart")}>
+              <Ionicons name="repeat" size={18} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+          {cats.length === 0 ? (
+            <Text style={styles.empty}>{t("home.empty")}</Text>
+          ) : catMode === "chart" ? (
+            cats.map((c, i) => (
+              <View key={i} style={{ marginTop: 11 }}>
+                <View style={styles.lineTop}>
+                  <Text style={styles.catName}>{c.name}</Text>
+                  <Text style={styles.catAmt}>{money(c.amount)}</Text>
+                </View>
+                <View style={styles.barTrack}><View style={[styles.barFill, { width: pctW(c.amount, maxCat), backgroundColor: colors.primary }]} /></View>
+              </View>
+            ))
+          ) : (
+            cats.map((c, i) => {
+              const pct = month.out > 0 ? Math.round((c.amount / month.out) * 1000) / 10 : 0;
+              return (
+                <View key={i} style={styles.catPlainRow}>
+                  <Ionicons name="pricetag-outline" size={14} color={colors.textSecondary} style={{ marginTop: 3 }} />
+                  <Text style={styles.catPlainTxt}>
+                    {c.id == null
+                      ? renderTemplate(t("report.uncatLine"), { amount: { text: money(c.amount), style: outStyle }, pct: { text: String(pct) } })
+                      : renderTemplate(t("report.catLine"), { amount: { text: money(c.amount), style: outStyle }, category: { text: c.name, style: { fontWeight: "700" } }, pct: { text: String(pct) } })}
+                  </Text>
+                </View>
+              );
+            })
+          )}
         </View>
 
         <View style={styles.card}>
@@ -426,6 +464,9 @@ const styles = StyleSheet.create({
   balTotalRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border },
   balTotalLbl: { fontSize: 15, fontWeight: "700", color: colors.text },
   balTotalAmt: { fontSize: 18, fontWeight: "700", color: colors.primaryDark },
+
+  catPlainRow: { flexDirection: "row", alignItems: "flex-start", marginTop: 10 },
+  catPlainTxt: { flex: 1, fontSize: 14, lineHeight: 20, color: colors.text, marginLeft: 8 },
 
 });
 
