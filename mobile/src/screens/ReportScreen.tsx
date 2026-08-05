@@ -6,10 +6,12 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { colors } from "../theme";
-import { readReport, type ReportData } from "../data/reports";
+import { readReport, type ReportData,  readReportBudgets, readReportTracked, type ReportBudget, type ReportTracked } from "../data/reports";
 import { readAnalytics } from "../data/analytics";
 import { readSims, simLabel, type Sim } from "../data/phoneNumbers";
 import { TrendChart, type TrendPoint } from "../components/TrendChart";
+
+const barColor = (p: number, thr: number) => (p >= 100 ? colors.error : p >= thr ? colors.warning : colors.success);
 
 const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const trendLabel = (bucket: string, period: string) => {
@@ -65,12 +67,24 @@ export default function ReportScreen() {
   const [mWhere, setMWhere] = useState<"chart" | "plain">("chart");
   const [mDaily, setMDaily] = useState<"chart" | "plain">("chart");
 
+  const [budgets, setBudgets] = useState<ReportBudget[]>([]);
+  const [tracked, setTracked] = useState<ReportTracked[]>([]);
+  const [mBudgets, setMBudgets] = useState<"chart" | "plain">("chart");
+  const [mTracked, setMTracked] = useState<"chart" | "plain">("chart");
+
   useEffect(() => { readSims().then(setSims); }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     const rep = await readReport({ period, date: params.date, start: params.start, year: params.year, month: params.month, simIds: selectedSims });
     setData(rep);
+    
+    if (rep && period !== "daily") {
+    const s = { period, date: params.date, start: params.start, year: params.year, month: params.month };
+    readReportBudgets(s).then(setBudgets).catch(() => setBudgets([]));
+    readReportTracked(s).then(setTracked).catch(() => setTracked([]));
+    } else { setBudgets([]); setTracked([]); }
+
     if (rep && period === "monthly") {
       const d0 = new Date(rep.start + "T00:00:00");
       const an: any = await readAnalytics({ period: "monthly", year: params.year ?? d0.getFullYear(), month: params.month ?? d0.getMonth() + 1, simIds: selectedSims });
@@ -263,6 +277,53 @@ export default function ReportScreen() {
         </View>
       )}
 
+
+      {budgets.length > 0 && (
+        <View style={styles.card}>
+          <BlockHeader title={t("report.budgetsTitle")} mode={mBudgets} onToggle={() => setMBudgets(mBudgets === "chart" ? "plain" : "chart")} />
+          {budgets.slice(0, 5).map((b) => {
+            const pct = b.limit_amount > 0 ? Math.round((b.window_spent / b.limit_amount) * 100) : 0;
+            const over = b.window_spent - b.limit_amount;
+            return mBudgets === "chart" ? (
+              <TouchableOpacity key={b.id} style={{ marginTop: 12 }} activeOpacity={0.7} onPress={() => nav.navigate("SpendingAlertDetail", { alert: b })}>
+                <View style={styles.lineTop}><Text style={styles.catName}>{b.category.name}</Text><Text style={styles.catAmt}>{money(b.window_spent)} / {money(b.limit_amount)}</Text></View>
+                <View style={styles.track}><View style={[styles.fill, { width: `${Math.min(pct, 100)}%` as `${number}%`, backgroundColor: barColor(pct, b.alert_threshold) }]} /></View>
+                {over > 0 ? <Text style={styles.overTxt}>{t("report.budgetOver", { amount: money(over) })}</Text> : null}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity key={b.id} activeOpacity={0.7} onPress={() => nav.navigate("SpendingAlertDetail", { alert: b })}>
+                <Line icon="wallet-outline" color={over > 0 ? colors.error : colors.success}>
+                  {renderTemplate(t(over > 0 ? "report.budgetPlainOver" : "report.budgetPlainOk"), { category: { text: b.category.name }, spent: { text: money(b.window_spent), style: outStyle }, limit: { text: money(b.limit_amount) }, over: { text: money(Math.abs(over)), style: outStyle } })}
+                </Line>
+              </TouchableOpacity>
+            );
+          })}
+          {budgets.length > 5 ? <SeeMore t={t} onPress={() => goList("budgets")} /> : null}
+        </View>
+      )}
+
+      {tracked.length > 0 && (
+        <View style={styles.card}>
+          <BlockHeader title={t("report.trackedTitle")} mode={mTracked} onToggle={() => setMTracked(mTracked === "chart" ? "plain" : "chart")} />
+          {tracked.slice(0, 5).map((c) => mTracked === "chart" ? (
+            <TouchableOpacity key={c.id} style={styles.tRow} activeOpacity={0.7} onPress={() => nav.navigate("TrackedContactDetail", { id: c.id, label: c.label })}>
+              <View style={{ flex: 1 }}><Text style={styles.tName}>{c.label}</Text><Text style={styles.tMeta}>{c.count} {t("report.txns")}</Text></View>
+              <View style={{ alignItems: "flex-end" }}>
+                <Text style={[styles.tAmt, { color: colors.moneyOut }]}>− {money(c.total_sent)}</Text>
+                <Text style={[styles.tAmtSm, { color: colors.moneyIn }]}>+ {money(c.total_received)}</Text>
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity key={c.id} activeOpacity={0.7} onPress={() => nav.navigate("TrackedContactDetail", { id: c.id, label: c.label })}>
+              <Line icon="person-outline" color={colors.textSecondary}>
+                {renderTemplate(t("report.trackedPlain"), { who: { text: c.label }, sent: { text: money(c.total_sent), style: outStyle }, received: { text: money(c.total_received), style: inStyle }, count: { text: String(c.count) } })}
+              </Line>
+            </TouchableOpacity>
+          ))}
+          {tracked.length > 5 ? <SeeMore t={t} onPress={() => goList("tracked")} /> : null}
+        </View>
+      )}
+
       <Modal transparent visible={simModal} animationType="slide" onRequestClose={() => setSimModal(false)}>
         <Pressable style={styles.backdrop} onPress={() => setSimModal(false)}>
           <Pressable style={styles.sheet}>
@@ -324,6 +385,13 @@ const styles = StyleSheet.create({
   simTxt: { fontSize: 15, color: colors.text },
   applyBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 13, alignItems: "center", marginTop: 16 },
   applyTxt: { color: "#fff", fontSize: 15, fontWeight: "600" },
+
+  overTxt: { fontSize: 12, color: colors.error, fontWeight: "600", marginTop: 4 },
+  tRow: { flexDirection: "row", alignItems: "center", paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  tName: { fontSize: 14, color: colors.text, fontWeight: "500" },
+  tMeta: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  tAmt: { fontSize: 14, fontWeight: "700" },
+  tAmtSm: { fontSize: 12, fontWeight: "600", marginTop: 2 },
 });
 
 

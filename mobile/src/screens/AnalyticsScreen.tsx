@@ -313,13 +313,14 @@ export default function AnalyticsScreen() {
             <View style={styles.card}>
               <BlockHeader title={t("analytics.whereTitle")} mode={mode2} onToggle={() => setMode2(mode2 === "chart" ? "plain" : "chart")} />
               {cats.length === 0 ? <Text style={styles.empty}>{t("analytics.noSpending")}</Text>
-                : mode2 === "chart" ? cats.map((c, i) => (
+                : mode2 === "chart" ? cats.slice(0, 7).map((c, i) => (
                     <View key={i} style={{ marginTop: 11 }}>
                       <View style={styles.lineTop}><Text style={styles.catName}>{c.name}</Text><Text style={styles.catAmt}>{money(c.amount)}</Text></View>
                       <View style={styles.track}><View style={[styles.fill, { width: pctW(c.amount, maxCat), backgroundColor: colors.primary }]} /></View>
                     </View>
                   ))
-                : cats.map((c, i) => {
+                // : cats.map((c, i) => {
+                : cats.slice(0, 7).map((c, i) => {
                     const p = totalOut > 0 ? Math.round((c.amount / totalOut) * 1000) / 10 : 0;
                     return (
                       <View key={i} style={styles.plainLine}>

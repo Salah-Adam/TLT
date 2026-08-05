@@ -2,6 +2,8 @@
 // so a report a notification opened always shows its exact numbers offline. Network-first, cache fallback.
 import { api } from "../api/client";
 import { setCache, getCache } from "./cache";
+import { type SpendingAlert } from "./spendingAlerts";
+
 
 type Cp = { counterparty_name: string | null; counterparty_number: string | null; counterparty_available: boolean; total: number; count: number };
 
@@ -46,4 +48,24 @@ export async function readReport(sel: ReportSel): Promise<ReportData | null> {
   } catch {
     return (await getCache<ReportData>(k)) ?? null;
   }
+}
+
+
+export type ReportBudget = SpendingAlert & { window_spent: number; window_count: number };
+export type ReportTracked = { id: string; label: string; total_sent: number; total_received: number; count: number };
+
+function anchorKey(sel: ReportSel): string {
+  return sel.period === "daily" ? (sel.date ?? "current") : sel.period === "weekly" ? (sel.start ?? "current") : (sel.year && sel.month ? `${sel.year}-${sel.month}` : "current");
+}
+export async function readReportBudgets(sel: ReportSel): Promise<ReportBudget[]> {
+  const k = `repB:${sel.period}:${anchorKey(sel)}`;
+  const path = `/api/v1/reports/${sel.period}/budgets${qs({ date: sel.date, start: sel.start, year: sel.year, month: sel.month })}`;
+  try { const d = await api.get<ReportBudget[]>(path); setCache(k, d).catch(() => {}); return d ?? []; }
+  catch { return (await getCache<ReportBudget[]>(k)) ?? []; }
+}
+export async function readReportTracked(sel: ReportSel): Promise<ReportTracked[]> {
+  const k = `repT:${sel.period}:${anchorKey(sel)}`;
+  const path = `/api/v1/reports/${sel.period}/tracked${qs({ date: sel.date, start: sel.start, year: sel.year, month: sel.month })}`;
+  try { const d = await api.get<ReportTracked[]>(path); setCache(k, d).catch(() => {}); return d ?? []; }
+  catch { return (await getCache<ReportTracked[]>(k)) ?? []; }
 }

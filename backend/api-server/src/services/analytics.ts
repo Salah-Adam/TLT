@@ -95,12 +95,22 @@ export async function getDashboard(userId: string, phoneNumberIds?: string[]) {
   const bParams: any[] = [userId];
   let bpf = "";
   if (phoneNumberIds?.length) { bParams.push(phoneNumberIds); bpf = `AND s.phone_number_id = ANY($${bParams.length}::uuid[])`; }
+  // const balances = await pool.query(
+  //   `SELECT DISTINCT ON (s.phone_number_id)
+  //           s.phone_number_id, pn.number, pn.provider, s.closing_balance::float AS estimated_balance
+  //    FROM daily_summaries s JOIN phone_numbers pn ON pn.id = s.phone_number_id
+  //    WHERE s.user_id = $1 AND pn.is_active = TRUE AND pn.deleted_at IS NULL ${bpf}
+  //    ORDER BY s.phone_number_id, s.summary_date DESC`,
+  //   bParams
+  // );
+
   const balances = await pool.query(
     `SELECT DISTINCT ON (s.phone_number_id)
-            s.phone_number_id, pn.number, pn.provider, s.closing_balance::float AS estimated_balance
-     FROM daily_summaries s JOIN phone_numbers pn ON pn.id = s.phone_number_id
-     WHERE s.user_id = $1 AND pn.is_active = TRUE AND pn.deleted_at IS NULL ${bpf}
-     ORDER BY s.phone_number_id, s.summary_date DESC`,
+            s.phone_number_id, pn.number, pn.provider, s.closing_balance::float AS estimated_balance,
+            (pn.is_active AND pn.deleted_at IS NULL) AS active
+    FROM daily_summaries s JOIN phone_numbers pn ON pn.id = s.phone_number_id
+    WHERE s.user_id = $1 ${bpf}
+    ORDER BY s.phone_number_id, s.summary_date DESC`,
     bParams
   );
 

@@ -24,6 +24,18 @@ const pctW = (v: number, max: number): `${number}%` => `${max > 0 ? Math.round((
 
 const localNum = (n?: string | null) => (n ?? "").replace(/^252/, "");
 
+const inStyle = { color: colors.moneyIn, fontWeight: "700" as const };
+const outStyle = { color: colors.moneyOut, fontWeight: "700" as const };
+const keptStyle = { color: colors.primaryDark, fontWeight: "700" as const };
+const provName = (p: string) => (p === "evcplus" ? "EVC Plus" : p === "edahab" ? "eDahab" : p);
+function renderTemplate(template: string, parts: Record<string, { text: string; style?: any }>) {
+  return template.split(/(\{\w+\})/g).map((seg, i) => {
+    const m = seg.match(/^\{(\w+)\}$/);
+    if (m && parts[m[1]]) return <Text key={i} style={parts[m[1]].style}>{parts[m[1]].text}</Text>;
+    return <Text key={i}>{seg}</Text>;
+  });
+}
+
 export default function HomeScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -34,6 +46,9 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [menu, setMenu] = useState(false);
+
+  const [monthMode, setMonthMode] = useState<"chart" | "plain">("chart");
+  const [balModal, setBalModal] = useState(false);
 
   const [sims, setSims] = useState<Sim[]>([]);
 
@@ -70,11 +85,12 @@ export default function HomeScreen() {
   const unread = useNotifications((s) => s.unread);
   useEffect(() => { useNotifications.getState().refresh(); }, []);
 
-
+  const balances = data?.balances ?? [];
   const balance = data?.balance ?? 0;
   const today = data?.today ?? { in: 0, out: 0 };
   const week = data?.week ?? { out: 0, changePercent: null };
-  const month = data?.month ?? { in: 0, out: 0, net: 0 };
+  const month = data?.month ?? { in: 0, out: 0, net: 0, count: 0 };
+  // const month = data?.month ?? { in: 0, out: 0, net: 0 };
   const cats = data?.topCategories ?? [];
   const recent = data?.recent ?? [];
 
@@ -139,7 +155,7 @@ export default function HomeScreen() {
           </Modal>
 
         </View> 
-
+{/* 
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>{t("home.balance")}</Text>
           <Text style={styles.heroAmount}>{money(balance)}</Text>
@@ -147,7 +163,19 @@ export default function HomeScreen() {
             <Ionicons name="refresh" size={13} color="#A7F3D0" />
             <Text style={styles.heroSyncTxt}> {t("home.lastSynced")} {syncedLabel}</Text>
           </View>
-        </View>
+        </View> */}
+
+        <TouchableOpacity style={styles.hero} activeOpacity={0.85} onPress={() => setBalModal(true)}>
+          <View style={styles.heroTop}>
+            <Text style={styles.heroLabel}>{t("home.balance")}</Text>
+            <Ionicons name="chevron-forward" size={16} color="#A7F3D0" />
+          </View>
+          <Text style={styles.heroAmount}>{money(balance)}</Text>
+          <View style={styles.heroSync}>
+            <Ionicons name="refresh" size={13} color="#A7F3D0" />
+            <Text style={styles.heroSyncTxt}> {t("home.lastSynced")} {syncedLabel}</Text>
+          </View>
+        </TouchableOpacity>
 
         <View style={styles.row}>
           <View style={[styles.miniCard, { marginRight: 6 }]}>
@@ -179,7 +207,7 @@ export default function HomeScreen() {
         </View>
 
 
-        <View style={styles.card}>
+        {/* <View style={styles.card}>
           <Text style={styles.cardTitle}>{t("home.monthTitle")}</Text>
           <View style={styles.keptRow}>
             <Ionicons name="checkmark-circle" size={18} color={month.net >= 0 ? colors.success : colors.error} />
@@ -187,6 +215,29 @@ export default function HomeScreen() {
           </View>
           <BarLine label={t("home.moneyIn")} value={money(month.in)} width={pctW(month.in, maxBar)} color={colors.moneyIn} />
           <BarLine label={t("home.moneyOut")} value={money(month.out)} width={pctW(month.out, maxBar)} color={colors.moneyOut} />
+        </View> */}
+
+        <View style={styles.card}>
+          <View style={styles.blockHead}>
+            <Text style={styles.cardTitle}>{t("home.monthTitle")}</Text>
+            <TouchableOpacity hitSlop={8} onPress={() => setMonthMode(monthMode === "chart" ? "plain" : "chart")}><Ionicons name="repeat" size={18} color={colors.textSecondary} /></TouchableOpacity>
+          </View>
+          {monthMode === "chart" ? (
+            <>
+              <View style={styles.keptRow}>
+                <Ionicons name="checkmark-circle" size={18} color={month.net >= 0 ? colors.success : colors.error} />
+                <Text style={styles.keptTxt}> {t("home.kept")} <Text style={{ fontWeight: "700", color: colors.primaryDark }}>{money(month.net)}</Text></Text>
+              </View>
+              <BarLine label={t("home.moneyIn")} value={money(month.in)} width={pctW(month.in, maxBar)} color={colors.moneyIn} />
+              <BarLine label={t("home.moneyOut")} value={money(month.out)} width={pctW(month.out, maxBar)} color={colors.moneyOut} />
+            </>
+          ) : (
+            <Text style={styles.plain}>
+              {month.net >= 0
+                ? renderTemplate(t("analytics.sumSentencePos"), { lead: { text: t("analytics.leadMonthly") }, in: { text: money(month.in), style: inStyle }, out: { text: money(month.out), style: outStyle }, net: { text: money(month.net), style: keptStyle }, count: { text: String(month.count), style: { fontWeight: "700" } } })
+                : renderTemplate(t("analytics.sumSentenceNeg"), { lead: { text: t("analytics.leadMonthly") }, deficit: { text: money(Math.abs(month.net)), style: outStyle }, in: { text: money(month.in), style: inStyle }, out: { text: money(month.out), style: outStyle }, count: { text: String(month.count), style: { fontWeight: "700" } } })}
+            </Text>
+          )}
         </View>
 
         <View style={styles.card}>
@@ -226,6 +277,35 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
       {tipHome ? <CoachTip text={t("onboarding.tipHome")} onDismiss={dismissTipHome} arrow="top-right" style={{ top: insets.top + 48, right: 12, maxWidth: 260 }} /> : null}
+
+      <Modal transparent visible={balModal} animationType="fade" onRequestClose={() => setBalModal(false)}>
+        <Pressable style={styles.balBackdrop} onPress={() => setBalModal(false)}>
+          <Pressable style={styles.balCard}>
+            <View style={styles.balHead}>
+              <Text style={styles.balTitle}>{t("home.balanceBreakdown")}</Text>
+              <TouchableOpacity hitSlop={8} onPress={() => setBalModal(false)}><Ionicons name="close" size={20} color={colors.textSecondary} /></TouchableOpacity>
+            </View>
+            <ScrollView style={{ maxHeight: 320 }}>
+              {balances.length === 0 ? <Text style={styles.empty}>{t("home.empty")}</Text> : balances.map((b) => {
+                const isActive = b.active !== false;
+                return (
+                  <View key={b.phone_number_id} style={styles.balRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.balNum, !isActive && { color: colors.textSecondary }]}>{provName(b.provider)} · {localNum(b.number)}</Text>
+                      {!isActive ? <Text style={styles.balDeleted}>{t("home.numberRemoved")}</Text> : null}
+                    </View>
+                    <Text style={[styles.balAmt, !isActive && { color: colors.textSecondary }]}>{money(b.estimated_balance)}</Text>
+                  </View>
+                );
+              })}
+            </ScrollView>
+            <View style={styles.balTotalRow}>
+              <Text style={styles.balTotalLbl}>{t("home.total")}</Text>
+              <Text style={styles.balTotalAmt}>{money(balance)}</Text>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -331,6 +411,21 @@ const styles = StyleSheet.create({
 
   badge: { position: "absolute", top: -5, right: -6, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.error, alignItems: "center", justifyContent: "center", paddingHorizontal: 3 },
   badgeTxt: { color: "#fff", fontSize: 10, fontWeight: "700" },
+
+  heroTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  blockHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  plain: { fontSize: 15, lineHeight: 24, color: colors.text, marginTop: 10 },
+  balBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", alignItems: "center", justifyContent: "center", padding: 28 },
+  balCard: { width: "100%", backgroundColor: colors.surface, borderRadius: 16, padding: 16 },
+  balHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  balTitle: { fontSize: 16, fontWeight: "700", color: colors.text },
+  balRow: { flexDirection: "row", alignItems: "center", paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  balNum: { fontSize: 14, color: colors.text, fontWeight: "500" },
+  balDeleted: { fontSize: 11, color: colors.error, marginTop: 2 },
+  balAmt: { fontSize: 14, fontWeight: "600", color: colors.text },
+  balTotalRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border },
+  balTotalLbl: { fontSize: 15, fontWeight: "700", color: colors.text },
+  balTotalAmt: { fontSize: 18, fontWeight: "700", color: colors.primaryDark },
 
 });
 

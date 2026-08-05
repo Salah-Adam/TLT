@@ -32,6 +32,23 @@ async function reportRoutes(app: FastifyInstance): Promise<void> {
     const q = request.query as any;
     return ok(reply, await reports.getReport(request.user.sub, resolveLang(request), "monthly", { year: q.year, month: q.month }, parseIds(q)));
   });
+
+  const anchorFrom = (q: any) => ({ date: q.date, start: q.start, year: q.year ? Number(q.year) : undefined, month: q.month ? Number(q.month) : undefined });
+  const periodParam = { type: "object", required: ["period"], properties: { period: { type: "string", enum: ["daily", "weekly", "monthly"] } } };
+  const anchorQuery = { type: "object", properties: { date: { type: "string" }, start: { type: "string" }, year: { type: "integer" }, month: { type: "integer" } } };
+
+  app.get("/api/v1/reports/:period/budgets", { preHandler: app.authenticate, schema: { params: periodParam, querystring: anchorQuery } },
+    async (request, reply) => {
+      const { period } = request.params as any;
+      return ok(reply, await reports.getReportBudgets(request.user.sub, resolveLang(request), period, anchorFrom(request.query)));
+    });
+
+  app.get("/api/v1/reports/:period/tracked", { preHandler: app.authenticate, schema: { params: periodParam, querystring: anchorQuery } },
+    async (request, reply) => {
+      const { period } = request.params as any;
+      return ok(reply, await reports.getReportTracked(request.user.sub, resolveLang(request), period, anchorFrom(request.query)));
+    });
+
 }
 
 export default fp(reportRoutes);

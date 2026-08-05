@@ -56,6 +56,10 @@ export default {
     weekUp: "{{pct}}% more than last week", weekDown: "{{pct}}% less than last week", weekSame: "About the same as last week",
 
     menuTitle: "Menu", menuAlerts: "Spending alerts",
+
+    balanceBreakdown: "Estimated balance"   ,
+    numberRemoved:  "No longer registered" ,
+    total:   "Total" ,
   },
 
   tx: {
@@ -178,6 +182,14 @@ export default {
     dailyInOutTitle: "Daily in & out" ,
     totalSpent:     "Total spent"      ,
     totalReceived: "Total received" ,
+
+
+    budgetsTitle: "Budgets"  ,
+    trackedTitle:  "Tracked people"  ,
+    budgetOver:  "{{amount}} over" ,     
+    budgetPlainOver: "{category}: you spent {spent} — {over} over your {limit} budget.",
+    budgetPlainOk: "{category}: you spent {spent} of your {limit} budget.",
+    trackedPlain: "{who}: you sent {sent} and received {received} ({count}x).",
 
   },
 

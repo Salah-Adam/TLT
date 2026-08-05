@@ -9,11 +9,18 @@ import { readTransactions } from "./transactions";
 
 
 
+// type Dashboard = {
+//   today: { total_in: number; total_out: number };
+//   this_week: { total_out: number; vs_last_week: { out_change_percent: number | null } };
+//   this_month: { total_in: number; total_out: number; net: number };
+//   estimated_balances: { estimated_balance: number }[];
+// };
+
 type Dashboard = {
   today: { total_in: number; total_out: number };
   this_week: { total_out: number; vs_last_week: { out_change_percent: number | null } };
-  this_month: { total_in: number; total_out: number; net: number };
-  estimated_balances: { estimated_balance: number }[];
+  this_month: { total_in: number; total_out: number; net: number; transaction_count: number };
+  estimated_balances: { phone_number_id: string; number: string; provider: string; estimated_balance: number; active: boolean }[];
 };
 
 type Monthly = { by_category: { category_id: string | null; name: string; amount: number }[] };
@@ -27,11 +34,22 @@ export type TxRow = {
 };
 
 type TxList = TxRow[];
+// export type HomeData = {
+//   balance: number;
+//   today: { in: number; out: number };
+//   week: { out: number; changePercent: number | null };
+//   month: { in: number; out: number; net: number };
+//   topCategories: { id: string | null; name: string; amount: number }[];
+//   recent: TxRow[];
+// };
+
+export type Bal = { phone_number_id: string; number: string; provider: string; estimated_balance: number; active: boolean };
 export type HomeData = {
   balance: number;
+  balances: Bal[];
   today: { in: number; out: number };
   week: { out: number; changePercent: number | null };
-  month: { in: number; out: number; net: number };
+  month: { in: number; out: number; net: number; count: number };
   topCategories: { id: string | null; name: string; amount: number }[];
   recent: TxRow[];
 };
@@ -68,14 +86,27 @@ export async function readHome(): Promise<HomeData | null> {
       phone_number_id: tx.phone_number_id,
     }));
 
-  const balance = (dash.estimated_balances ?? []).reduce((s, b) => s + (b.estimated_balance ?? 0), 0);
+  // const balance = (dash.estimated_balances ?? []).reduce((s, b) => s + (b.estimated_balance ?? 0), 0);
+  // return {
+  //   balance,
+  //   today: { in: dash.today?.total_in ?? 0, out: dash.today?.total_out ?? 0 },
+  //   week: { out: dash.this_week?.total_out ?? 0, changePercent: dash.this_week?.vs_last_week?.out_change_percent ?? null },
+  //   month: { in: dash.this_month?.total_in ?? 0, out: dash.this_month?.total_out ?? 0, net: dash.this_month?.net ?? 0 },
+  //   // topCategories: (month?.by_category ?? []).slice(0, 3).map((c) => ({ name: c.name, amount: c.amount })),
+  //   topCategories: (month?.by_category ?? []).slice(0, 7).map((c) => ({ id: c.category_id, name: c.name, amount: c.amount })),
+  //   recent: recent.slice(0, 5),
+  // };
+
+  // in readHome(), replace the balance line + return:
+  const balances = (dash.estimated_balances ?? []) as Bal[];
+  const balance = balances.filter((b) => b.active !== false).reduce((s, b) => s + (b.estimated_balance ?? 0), 0);
   return {
     balance,
+    balances,
     today: { in: dash.today?.total_in ?? 0, out: dash.today?.total_out ?? 0 },
     week: { out: dash.this_week?.total_out ?? 0, changePercent: dash.this_week?.vs_last_week?.out_change_percent ?? null },
-    month: { in: dash.this_month?.total_in ?? 0, out: dash.this_month?.total_out ?? 0, net: dash.this_month?.net ?? 0 },
-    // topCategories: (month?.by_category ?? []).slice(0, 3).map((c) => ({ name: c.name, amount: c.amount })),
-    topCategories: (month?.by_category ?? []).slice(0, 3).map((c) => ({ id: c.category_id, name: c.name, amount: c.amount })),
+    month: { in: dash.this_month?.total_in ?? 0, out: dash.this_month?.total_out ?? 0, net: dash.this_month?.net ?? 0, count: dash.this_month?.transaction_count ?? 0 },
+    topCategories: (month?.by_category ?? []).slice(0, 7).map((c) => ({ id: c.category_id, name: c.name, amount: c.amount })),
     recent: recent.slice(0, 5),
   };
 }

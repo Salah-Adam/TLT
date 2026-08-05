@@ -328,3 +328,25 @@ export async function getContactTransactions(
   const next = hasMore && last ? encodeCursor(new Date(last.transacted_at).toISOString(), last.id) : null;
   return { transactions, cursor: next, has_more: hasMore, summary };
 }
+
+
+// Per-contact sent/received within a date window (for report period sections). Only contacts with activity.
+export async function contactTotalsInWindow(userId: string, start: string, end: string) {
+  const rows = (await pool.query(
+    `SELECT tc.id, tc.label,
+       COALESCE(SUM(t.amount) FILTER (WHERE t.direction='out' AND tc.tracking_direction IN ('sent','both')),0)::float    AS total_sent,
+       COALESCE(SUM(t.amount) FILTER (WHERE t.direction='in'  AND tc.tracking_direction IN ('received','both')),0)::float AS total_received,
+       COUNT(*) FILTER (WHERE (t.direction='out' AND tc.tracking_direction IN ('sent','both'))
+                           OR (t.direction='in'  AND tc.tracking_direction IN ('received','both')))::int AS transaction_count
+     FROM tracked_contacts tc
+     JOIN tracked_contact_numbers tcn ON tcn.contact_id = tc.id AND tcn.is_active = TRUE
+     JOIN transactions t ON t.user_id = tcn.user_id AND t.counterparty_phone_hash = tcn.tracked_number_hash
+     WHERE tc.user_id=$1 AND tc.deleted_at IS NULL AND t.transacted_date BETWEEN $2 AND $3
+     GROUP BY tc.id, tc.label
+     HAVING COUNT(*) FILTER (WHERE (t.direction='out' AND tc.tracking_direction IN ('sent','both'))
+                                OR (t.direction='in'  AND tc.tracking_direction IN ('received','both'))) > 0
+     ORDER BY (COALESCE(SUM(t.amount) FILTER (WHERE t.direction='out'),0) + COALESCE(SUM(t.amount) FILTER (WHERE t.direction='in'),0)) DESC`,
+    [userId, start, end]
+  )).rows;
+  return rows.map((r) => ({ id: r.id, label: r.label, total_sent: r.total_sent, total_received: r.total_received, count: r.transaction_count }));
+}

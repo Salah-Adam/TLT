@@ -2,6 +2,8 @@ import { pool } from "../db";
 import { Lang, t } from "../lib/messages";
 import { getUserDek, decryptField } from "../encryption";
 // import { Scope, scopeFilters } from "./analytics";
+import { listAlerts, spendInRange } from "./spending-alerts";
+import { contactTotalsInWindow } from "./tracked-contacts";
 
 export type Period = "daily" | "weekly" | "monthly";
 
@@ -348,3 +350,22 @@ export async function getReport(
   };
 }
 
+export async function getReportBudgets(userId: string, lang: Lang, period: Period, anchor: any) {
+  if (period === "daily") return [];               // budgets are weekly/monthly only
+  const win = await resolveWindow(period, anchor);
+  const all = await listAlerts(userId, lang);
+  const matching = all.filter((a: any) => a.period === period && a.is_active);
+  const out: any[] = [];
+  for (const a of matching) {
+    const s = await spendInRange(userId, a.category.id, win.start, win.end, a.phone_number_id);
+    out.push({ ...a, window_spent: s.spent, window_count: s.count });
+  }
+  out.sort((x, y) => (y.window_spent / (y.limit_amount || 1)) - (x.window_spent / (x.limit_amount || 1)));
+  return out;
+}
+
+export async function getReportTracked(userId: string, _lang: Lang, period: Period, anchor: any) {
+  if (period === "daily") return [];
+  const win = await resolveWindow(period, anchor);
+  return contactTotalsInWindow(userId, win.start, win.end);
+}

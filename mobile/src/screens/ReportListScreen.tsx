@@ -5,11 +5,15 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { colors } from "../theme";
-import { readReport, type ReportData } from "../data/reports";
+import { readReport, readReportBudgets, readReportTracked, type ReportData, type ReportBudget, type ReportTracked } from "../data/reports";
+//  import { readReportBudgets, readReportTracked, type ReportBudget, type ReportTracked } from "../data/reports";
 import { readAnalytics } from "../data/analytics";
 import { readSims, simLabel, type Sim } from "../data/phoneNumbers";
 
-type Kind = "categories" | "recipients" | "senders" | "dailyInOut";
+type Kind = "categories" | "recipients" | "senders" | "dailyInOut" | "budgets" | "tracked";
+
+const barColor = (p: number, thr: number) => (p >= 100 ? colors.error : p >= thr ? colors.warning : colors.success);
+
 const money = (n: number) => "$" + (n ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const localNum = (n?: string | null) => (n ?? "").replace(/^252/, "");
 const fmtDate = (s: string) => new Date(s + "T00:00:00").toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
@@ -32,6 +36,14 @@ export default function ReportListScreen() {
   const route = useRoute<any>();
   const { kind, period, date, start, year, month } = (route.params ?? {}) as { kind: Kind; period: "daily" | "weekly" | "monthly"; date?: string; start?: string; year?: number; month?: number };
 
+  // const hasCycle = kind === "categories" || kind === "dailyInOut";
+  const [mode, setMode] = useState<"chart" | "plain">("chart");
+
+  const hasCycle = kind === "categories" || kind === "dailyInOut" || kind === "budgets" || kind === "tracked";
+  const hasSim = kind !== "budgets" && kind !== "tracked";
+
+
+
   const [sims, setSims] = useState<Sim[]>([]);
   const [selectedSims, setSelectedSims] = useState<string[]>([]);
   const [simModal, setSimModal] = useState(false);
@@ -41,8 +53,10 @@ export default function ReportListScreen() {
   const [totOut, setTotOut] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const [mode, setMode] = useState<"chart" | "plain">("chart");
-  const hasCycle = kind === "categories" || kind === "dailyInOut";
+  // const [budgets, setBudgets] = useState<ReportBudget[]>([]); 
+  // const [tracked, setTracked] = useState<ReportTracked[]>([]);
+   
+
 
   useEffect(() => { readSims().then(setSims); }, []);
 //   useEffect(() => {
@@ -50,8 +64,8 @@ export default function ReportListScreen() {
 //   }, [nav, kind, t]);
 
   useEffect(() => {
-    nav.setOptions({ title: t(kind === "categories" ? "report.grpCategory" : kind === "recipients" ? "report.grpRecipients" : kind === "senders" ? "report.grpSenders" : "report.dailyInOutTitle") });
-   }, [nav, kind, t]);
+    nav.setOptions({ title: t(kind === "categories" ? "report.grpCategory" : kind === "recipients" ? "report.grpRecipients" : kind === "senders" ? "report.grpSenders"  : kind === "budgets" ? "report.budgetsTitle" : kind === "tracked" ? "report.trackedTitle" : "report.dailyInOutTitle") });
+  }, [nav, kind, t]);
 
 //   useEffect(() => {
 //     nav.setOptions({
@@ -62,17 +76,44 @@ export default function ReportListScreen() {
 //     });
 //   }, [nav, kind, t]);
 
+
+  // const load = useCallback(async () => {
+  //   setLoading(true);
+  //   if (kind === "budgets") { const b = await readReportBudgets({ period, date, start, year, month }); setBudgets(b); }
+  //   else if (kind === "tracked") { const c = await readReportTracked({ period, date, start, year, month }); setTracked(c); setTotIn(c.reduce((s, x) => s + x.total_received, 0)); setTotOut(c.reduce((s, x) => s + x.total_sent, 0)); }
+  //   else if (kind === "dailyInOut") {
+  //     const an: any = await readAnalytics(period === "weekly" ? { period: "weekly", start: start!, simIds: selectedSims } : { period: "monthly", year: year!, month: month!, simIds: selectedSims });
+  //     const days = ((period === "weekly" ? an?.by_day : an?.daily_trend) ?? []).slice().sort((a: any, b: any) => (a.date < b.date ? 1 : -1));
+  //     setPerDay(days); setTotIn(an?.total_in ?? 0); setTotOut(an?.total_out ?? 0);
+  //   }
+  //   else {
+  //     const r = await readReport({ period, date, start, year, month, simIds: selectedSims });
+  //     setRep(r); setTotIn(r?.total_in ?? 0); setTotOut(r?.total_out ?? 0);
+  //   }
+  //   setLoading(false);
+  // }, [kind, period, date, start, year, month, selectedSims]);
+  // useEffect(() => { load(); }, [load]);
+
+  const [budgets, setBudgets] = useState<ReportBudget[]>([]);
+  const [tracked, setTracked] = useState<ReportTracked[]>([]);
   const load = useCallback(async () => {
-    setLoading(true);
-    if (kind === "dailyInOut") {
-      const an: any = await readAnalytics(period === "weekly" ? { period: "weekly", start: start!, simIds: selectedSims } : { period: "monthly", year: year!, month: month!, simIds: selectedSims });
-      const days = ((period === "weekly" ? an?.by_day : an?.daily_trend) ?? []).slice().sort((a: any, b: any) => (a.date < b.date ? 1 : -1));
-      setPerDay(days); setTotIn(an?.total_in ?? 0); setTotOut(an?.total_out ?? 0);
-    } else {
-      const r = await readReport({ period, date, start, year, month, simIds: selectedSims });
-      setRep(r); setTotIn(r?.total_in ?? 0); setTotOut(r?.total_out ?? 0);
-    }
-    setLoading(false);
+      setLoading(true);
+      if (kind === "budgets") {
+        setBudgets(await readReportBudgets({ period, date, start, year, month }));
+      } else if (kind === "tracked") {
+        const c = await readReportTracked({ period, date, start, year, month });
+        setTracked(c);
+        setTotIn(c.reduce((s, x) => s + x.total_received, 0));
+        setTotOut(c.reduce((s, x) => s + x.total_sent, 0));
+      } else if (kind === "dailyInOut") {
+        const an: any = await readAnalytics(period === "weekly" ? { period: "weekly", start: start!, simIds: selectedSims } : { period: "monthly", year: year!, month: month!, simIds: selectedSims });
+        const days = ((period === "weekly" ? an?.by_day : an?.daily_trend) ?? []).slice().sort((a: any, b: any) => (a.date < b.date ? 1 : -1));
+        setPerDay(days); setTotIn(an?.total_in ?? 0); setTotOut(an?.total_out ?? 0);
+      } else {
+        const r = await readReport({ period, date, start, year, month, simIds: selectedSims });
+        setRep(r); setTotIn(r?.total_in ?? 0); setTotOut(r?.total_out ?? 0);
+      }
+      setLoading(false);
   }, [kind, period, date, start, year, month, selectedSims]);
   useEffect(() => { load(); }, [load]);
 
@@ -86,13 +127,13 @@ export default function ReportListScreen() {
   const recips = rep?.top_recipients ?? [];
   const senders = rep?.top_senders ?? [];
   const truncated = kind === "recipients" ? rep?.recipients_truncated : kind === "senders" ? rep?.senders_truncated : false;
-  const listData: any[] = kind === "categories" ? cats : kind === "recipients" ? recips : kind === "senders" ? senders : perDay;
+  const listData: any[] = kind === "categories" ? cats : kind === "recipients" ? recips : kind === "senders" ? senders : kind === "budgets" ? budgets : kind === "tracked" ? tracked : perDay;
   const maxCat = Math.max(cats[0]?.amount ?? 0, 1);
   const maxDay = Math.max(...perDay.flatMap((d) => [d.total_in, d.total_out]), 1);
 
   const header = (
     <View>
-      <View style={styles.controls}>
+      {/* <View style={styles.controls}>
         <TouchableOpacity style={[styles.pill, selectedSims.length > 0 && styles.pillActive]} onPress={() => setSimModal(true)}>
             <Ionicons name="phone-portrait-outline" size={14} color={selectedSims.length > 0 ? "#fff" : colors.textSecondary} />
             <Text style={[styles.pillTxt, selectedSims.length > 0 && { color: "#fff" }]}>{simLabelTxt}</Text>
@@ -103,23 +144,37 @@ export default function ReportListScreen() {
             <Ionicons name="repeat" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
         ) : null}
+      </View> */}
+
+      <View style={styles.controls}>
+        {hasSim ? (
+          <TouchableOpacity style={[styles.pill, selectedSims.length > 0 && styles.pillActive]} onPress={() => setSimModal(true)}>
+            <Ionicons name="phone-portrait-outline" size={14} color={selectedSims.length > 0 ? "#fff" : colors.textSecondary} />
+            <Text style={[styles.pillTxt, selectedSims.length > 0 && { color: "#fff" }]}>{simLabelTxt}</Text>
+            <Ionicons name="chevron-down" size={13} color={selectedSims.length > 0 ? "#fff" : colors.textSecondary} />
+          </TouchableOpacity>
+        ) : <View />}
+        {hasCycle ? (
+          <TouchableOpacity hitSlop={8} onPress={() => setMode((m) => (m === "chart" ? "plain" : "chart"))} style={styles.cycleBtn}>
+            <Ionicons name="repeat" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
-      {/* <View style={styles.controls}>
-        <TouchableOpacity style={[styles.pill, selectedSims.length > 0 && styles.pillActive]} onPress={() => setSimModal(true)}>
-          <Ionicons name="phone-portrait-outline" size={14} color={selectedSims.length > 0 ? "#fff" : colors.textSecondary} />
-          <Text style={[styles.pillTxt, selectedSims.length > 0 && { color: "#fff" }]}>{simLabelTxt}</Text>
-          <Ionicons name="chevron-down" size={13} color={selectedSims.length > 0 ? "#fff" : colors.textSecondary} />
-        </TouchableOpacity>
-      </View> */}
+
       <View style={styles.squares}>
-        {kind === "senders" ? <Square label={t("report.totalReceived")} value={money(totIn)} color={colors.moneyIn} />
+        {/* {kind === "senders" ? <Square label={t("report.totalReceived")} value={money(totIn)} color={colors.moneyIn} />
           : kind === "dailyInOut" ? <><Square label={t("report.totalReceived")} value={money(totIn)} color={colors.moneyIn} /><Square label={t("report.totalSpent")} value={money(totOut)} color={colors.moneyOut} /></>
+          : <Square label={t("report.totalSpent")} value={money(totOut)} color={colors.moneyOut} />} */}     
+        {kind === "senders" ? <Square label={t("report.totalReceived")} value={money(totIn)} color={colors.moneyIn} />
+          : kind === "dailyInOut" || kind === "tracked" ? <><Square label={t("report.totalReceived")} value={money(totIn)} color={colors.moneyIn} /><Square label={t("report.totalSpent")} value={money(totOut)} color={colors.moneyOut} /></>
+          : kind === "budgets" ? null
           : <Square label={t("report.totalSpent")} value={money(totOut)} color={colors.moneyOut} />}
+
       </View>
       {truncated ? <Text style={styles.note}>{t("report.cappedNote")}</Text> : null}
     </View>
-  );
+  ); 
 
 //   const renderItem = ({ item }: any) => {
 //     if (kind === "categories") {
@@ -191,6 +246,41 @@ export default function ReportListScreen() {
         </View>
         );
     }
+
+    if (kind === "budgets") {
+      const pct = item.limit_amount > 0 ? Math.round((item.window_spent / item.limit_amount) * 100) : 0;
+      const over = item.window_spent - item.limit_amount;
+      if (mode === "plain") return (
+        <TouchableOpacity activeOpacity={0.7} onPress={() => nav.navigate("SpendingAlertDetail", { alert: item })}>
+          <View style={styles.plainRow}><Ionicons name="wallet-outline" size={14} color={over > 0 ? colors.error : colors.success} style={{ marginTop: 3 }} />
+            <Text style={styles.plainTxt}>{renderTemplate(t(over > 0 ? "report.budgetPlainOver" : "report.budgetPlainOk"), { category: { text: item.category.name }, spent: { text: money(item.window_spent), style: outStyle }, limit: { text: money(item.limit_amount) }, over: { text: money(Math.abs(over)), style: outStyle } })}</Text>
+          </View>
+        </TouchableOpacity>
+      );
+      return (
+        <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => nav.navigate("SpendingAlertDetail", { alert: item })}>
+          <View style={styles.rowTop}><Text style={styles.rowName}>{item.category.name}</Text><Text style={styles.rowAmt}>{money(item.window_spent)} / {money(item.limit_amount)}</Text></View>
+          <View style={styles.track}><View style={[styles.fill, { width: `${Math.min(pct, 100)}%` as `${number}%`, backgroundColor: barColor(pct, item.alert_threshold) }]} /></View>
+          {over > 0 ? <Text style={styles.note}>{t("report.budgetOver", { amount: money(over) })}</Text> : null}
+        </TouchableOpacity>
+      );
+    }
+    if (kind === "tracked") {
+      if (mode === "plain") return (
+        <TouchableOpacity activeOpacity={0.7} onPress={() => nav.navigate("TrackedContactDetail", { id: item.id, label: item.label })}>
+          <View style={styles.plainRow}><Ionicons name="person-outline" size={14} color={colors.textSecondary} style={{ marginTop: 3 }} />
+            <Text style={styles.plainTxt}>{renderTemplate(t("report.trackedPlain"), { who: { text: item.label }, sent: { text: money(item.total_sent), style: outStyle }, received: { text: money(item.total_received), style: inStyle }, count: { text: String(item.count) } })}</Text>
+          </View>
+        </TouchableOpacity>
+      );
+      return (
+        <TouchableOpacity style={styles.cpRow} activeOpacity={0.7} onPress={() => nav.navigate("TrackedContactDetail", { id: item.id, label: item.label })}>
+          <View style={{ flex: 1 }}><Text style={styles.cpName}>{item.label}</Text><Text style={styles.cpMeta}>{item.count} {t("report.txns")}</Text></View>
+          <View style={{ alignItems: "flex-end" }}><Text style={[styles.cpAmt, { color: colors.moneyOut }]}>− {money(item.total_sent)}</Text><Text style={[styles.cpMeta, { color: colors.moneyIn }]}>+ {money(item.total_received)}</Text></View>
+        </TouchableOpacity>
+      );
+    }
+
     // daily in/out
     if (mode === "plain") {
         return (

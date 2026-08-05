@@ -59,6 +59,10 @@ export default {
 
 
     menuTitle: "Menu", menuAlerts: "Digniinaha kharashka",
+
+    balanceBreakdown:   "Haraaga qiyaaseed",
+    numberRemoved:   "Mar dambe lama diiwaangelin",
+    total:  "Wadarta"
   },
 
 
@@ -114,7 +118,7 @@ export default {
 
   analytics: {
     daily: "Maalinle", monthly: "Bille",
-    received: "Lacagta kusoo gashey", spent: "Lacagta aad bixisey", kept: "Waxaa kuu hartay", overspent: "Lacagta aad dirtey waxey ka badatey lacagta laguu soo direy qiyaastii",
+    received: "Lacagta kusoo gashey", spent: "Lacagta aad bixisey", kept: "Waxaa kuu hartay", overspent: "Lacagaha aad dirtey waxey ka badan yihiin lacagaha laguu soo direy qiyaastii",
     txns: "dhaqdhaqaaq",
     whereTitle: "Meelaha lacagtaadu ku bixisey", noSpending: "Wax lacag ah ma aadan Kharash-gareyn muddadan",
     trendTitle: "Kharashka maalinlaha ah", highlights: "Waxyaabaha muhiimka ah",
@@ -187,6 +191,12 @@ export default {
     totalReceived: "Wadarta la helay",
 
 
+    budgetsTitle:  "Mizaaniyadaha",
+    trackedTitle:  "Dadka aad raacdo",
+    budgetOver:   "{{amount}} dhaaf" ,
+    budgetPlainOver: "{category}: waxaad bixisay {spent}, oo {over} ka badan mizaaniyaddaada {limit}.",
+    budgetPlainOk:  "{category}: waxaad bixisay {spent} oo ka mid ah mizaaniyaddaada {limit}.",
+    trackedPlain:  "{who}: waxaad dirtay {sent}, waxaadna heshay {received} ({count} jeer).",
 
   },
 
